@@ -272,6 +272,7 @@ RE = {
     "travel": re.compile(r'luamanager\.(?:SetCurrentTravelScript\(|SetTempScript\(\d+, )"([^"]+)"\)'),
     "curscript": re.compile(r'luamanager\.SetCurrentStoryScript\("([^"]+)"\)'),
     "save": re.compile(r"luamanager\.(ToggleSaveButton\(1\)|AutoSave\(\))"),
+    "char": re.compile(r'characters\.Get\("([^"]+)"\)'),
 }
 
 
@@ -363,7 +364,7 @@ def parse_script(text):
         if m:
             vars_[m.group(1)] = {"kind": "position", "name": m.group(2)}
         stmt = []
-        for k in ("next", "curscript", "travel", "lover", "scene", "mission", "setflag", "story", "text", "time", "ending", "cg", "save"):
+        for k in ("next", "curscript", "travel", "lover", "scene", "mission", "setflag", "story", "text", "time", "ending", "cg", "save", "char"):
             for mm in RE[k].finditer(s):
                 stmt.append((k, mm.groups()))
         for k, g in stmt:
@@ -402,6 +403,8 @@ def parse_script(text):
                 cur().append({"t": "cg", "id": g[0]})
             elif k == "save":
                 cur().append({"t": "save"})
+            elif k == "char" and g[0] != "player":
+                cur().append({"t": "char", "c": g[0]})
     return root, vars_
 
 
@@ -1284,7 +1287,7 @@ POSITION_GROUPS = [
     ("青城（留學）", "祖師壽誕（第2年11月下旬）", "（考較期間）", ["Ch_3_1_7_2_01"]),
     ("江陵／襄陽", "南宮世家（第2年9月）", "上街消遣", ["Ch_3_6_1_01"]),
     ("江陵／襄陽", "襄陽（與小梅同行）", "閒逛", ["S2321_04_03_02", "S2321_04_03_03"]),
-    ("武林大會・錦香宮", "錦香宮", "（作客期間）", ["Ch_6_4_3_2_01"]),
+    ("武林大會・錦香宮", "錦香宮", "華音閣（聽曲）", ["Ch_6_4_3_2_01"]),
     ("大雪山", "雪山", "修練武功", ["Travel_S2503_01"]),
     ("旅途（移動途中）", "大師兄找譚霸刀（第1年10月）", "途中", ["Travel_001"]),
     ("旅途（移動途中）", "前往南宮壽宴（第1年11月）", "途中", ["Travel_002"]),
@@ -1402,6 +1405,39 @@ def eff_texts(block, vars_):
     return texts
 
 
+LOVER_NAMES = {k[len("PlayerInfo/Lover/"):]: v for k, v in loc.items() if k.startswith("PlayerInfo/Lover/")}
+FLAG_NOTE = {o["m_Name"]: (o.get("_devNote") or "") for o in by_name["FlagData"].values()}
+
+
+def heroine_of(name):
+    for nick, full in NICKNAMES.items():
+        if nick in name:
+            name = name.replace(nick, full)
+    return [h for h in HEROINE_NAMES if h in name]
+
+
+def block_heroines(block, out):
+    for it in block:
+        if it["t"] == "char":
+            n = char_names.get(it["c"], it["c"])
+            if not CHILD_FORM.search(n):
+                out.update(heroine_of(n))
+        elif it["t"] == "if":
+            for br in it["branches"]:
+                block_heroines(br["block"], out)
+    return out
+
+
+def label_heroines(label):
+    names = set(heroine_of(re.sub(r"旗標 [A-Za-z0-9_]+", "", label)))
+    for n in re.findall(r"愛人 = (\d+)", label):
+        if LOVER_NAMES.get(n) in HEROINE_NAMES:
+            names.add(LOVER_NAMES[n])
+    for f in re.findall(r"旗標 ([A-Za-z0-9_]+)", label):
+        names.update(heroine_of(FLAG_NOTE.get(f, "")))
+    return names
+
+
 def unread_reasons(block, vars_, path, out):
     for it in block:
         if it["t"] != "if":
@@ -1421,7 +1457,8 @@ def unread_reasons(block, vars_, path, out):
                 m = re.match(r"^([a-z0-9]+)\+(work|free)", label)
                 if m:
                     label = loc.get("Position/title/" + m.group(1), label)
-                out.append({"kind": kind, "label": label, "path": path[-3:], "lines": len(set(t))})
+                who = block_heroines(br["block"], set()) | label_heroines(label)
+                out.append({"kind": kind, "label": label, "path": path[-3:], "lines": len(set(t)), "heroines": sorted(who)})
             elif r < 1:
                 unread_reasons(br["block"], vars_, path + [label], out)
 

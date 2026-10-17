@@ -196,6 +196,32 @@ internal static class DrawLog
         public string Time;
         public string Rates;
         public bool Played;
+        public bool Written;
+        public DateTime At = DateTime.Now;
+    }
+
+    // 每筆抽籤確定有沒有播出後，寫進 TimeMachine/<SteamID>/draw_log.csv（Excel 可直接開）
+    private static void Flush(Entry e)
+    {
+        if (e.Written)
+        {
+            return;
+        }
+        e.Written = true;
+        try
+        {
+            string path = System.IO.Path.Combine(TimeStore.Root, "draw_log.csv");
+            bool create = !System.IO.File.Exists(path);
+            string rates = "\"" + e.Rates.Replace("\"", "\"\"") + "\"";
+            string played = e.Played ? "是" : "否";
+            string line = $"{e.At:yyyy-MM-dd HH:mm:ss},{e.Time},{e.Group},{e.Result},{played},{rates}\r\n";
+            string header = create ? "記錄時間,遊戲時間,組,結果,有播出,當時各候選權重\r\n" : "";
+            System.IO.File.AppendAllText(path, header + line, new System.Text.UTF8Encoding(true));
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"[TimeMachine] 抽籤紀錄寫檔失敗：{ex.Message}");
+        }
     }
 
     // 結果腳本真的開始執行時標記（被前一層事件接走、直接進戰鬥時就不會播）
@@ -208,6 +234,7 @@ internal static class DrawLog
                 if (!Entries[i].Played && string.Equals(Entries[i].Result, script, StringComparison.OrdinalIgnoreCase))
                 {
                     Entries[i].Played = true;
+                    Flush(Entries[i]);
                     return;
                 }
             }
@@ -221,6 +248,11 @@ internal static class DrawLog
         lock (Entries)
         {
             Entries.Add(entry);
+            // 往前數第 5 筆以前的已經不會再被標成播出：確定沒播出，寫檔
+            for (int i = 0; i <= Entries.Count - 5; i++)
+            {
+                Flush(Entries[i]);
+            }
             if (Entries.Count > 40)
             {
                 Entries.RemoveAt(0);

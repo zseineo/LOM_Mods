@@ -160,7 +160,7 @@ body.show-time .stime { display: inline; }
 <body class="spoil">
 <header>
   <h1>5塊錢</h1>
-  <span class="tabs"><button id="tabChart" class="on">流程圖</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabLibrary">汗青書・結局・死法</button><button id="tabPlaces">地點事件</button><button id="tabUnread">五塊錢</button></span>
+  <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabLibend">汗青書</button><button id="tabLibcg">結局</button><button id="tabLibdead">死法</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabChart" title="流程圖（點一下展開）">▸</button></span>
   <span class="stats" id="stats"></span>
   <span class="live" id="live">離線預覽</span>
   <input type="search" id="q" placeholder="搜尋事件、選項、腳本、旗標…">
@@ -206,7 +206,6 @@ body.show-time .stime { display: inline; }
   }
   let currentView = 'chart';
   let LIVE_POS = null;
-  let LIVE_DRAWS = [];
   let lastSig = null;
   async function poll() {
     if (!ONLINE) return;
@@ -232,11 +231,11 @@ body.show-time .stime { display: inline; }
     if (sig === lastSig) return;
     lastSig = sig;
     if (ONLINE && currentView === 'places') {
-      try { const pj = await (await fetch('/api/positions', {cache: 'no-store'})).json(); LIVE_POS = pj.groups; LIVE_DRAWS = pj.draws || []; } catch (e) { LIVE_POS = null; }
+      try { LIVE_POS = (await (await fetch('/api/positions', {cache: 'no-store'})).json()).groups; } catch (e) { LIVE_POS = null; }
     }
     if (currentView === 'romance') renderRomance(true);
     else if (currentView === 'targets') renderTargets(true);
-    else if (currentView === 'library') renderLibrary(true);
+    else if (currentView.startsWith('lib')) renderLibrary(true);
     else if (currentView === 'places') renderPlaces(true);
     else drawNowLine();
   }
@@ -747,7 +746,7 @@ body.show-time .stime { display: inline; }
   detail.addEventListener('click', ev => {
     const el = ev.target.closest('[data-lib],[data-ev],[data-flag],[data-script],.unreadtxt');
     if (!el) return;
-    if (el.dataset.lib) { setView('library'); document.getElementById('lib-' + el.dataset.lib)?.scrollIntoView({block: 'center'}); }
+    if (el.dataset.lib) { setView('lib' + (G.library[el.dataset.lib]?.kind || 'end')); document.getElementById('lib-' + el.dataset.lib)?.scrollIntoView({block: 'center'}); }
     else if (el.dataset.script) showScript(el.dataset.script);
     else if (el.dataset.ev) { const n = nodes.get(el.dataset.ev); select(el.dataset.ev, true); n?.scrollIntoView({block: 'center', inline: 'center', behavior: 'smooth'}); }
     else if (el.dataset.flag) showFlag(el.dataset.flag, ev);
@@ -966,7 +965,9 @@ body.show-time .stime { display: inline; }
   }
   function guideItems(items) {
     return items.map(it => {
-      let html = `<li>${checkMark(it.check)}<span class="gtext">${esc(it.text)}</span>${it.any ? '<span class="anyhint">（以下任一）</span>' : ''}`;
+      // ||…|| 是防雷：未讀內容模糊，點一下顯示
+      const text = esc(it.text).replace(/\|\|(.+?)\|\|/g, '<span class="unreadtxt">$1</span>');
+      let html = `<li>${checkMark(it.check)}<span class="gtext">${text}</span>${it.any ? '<span class="anyhint">（以下任一）</span>' : ''}`;
       if (it.sub) html += `<ul>${guideItems(it.sub)}</ul>`;
       return html + '</li>';
     }).join('');
@@ -1040,13 +1041,16 @@ body.show-time .stime { display: inline; }
   const RESIDENTS = new Set(['大師兄', '二師兄', '三師兄', '四師兄', '小師妹', '掌門人', '主角']);
   // 還沒有結局事件的女主角：五塊錢、唐門地點事件先不列
   const HIDDEN_HEROINES = new Set(['魏菊', '上官螢', '瑞杏']);
-  const shownName = n => n !== '主角' && !HIDDEN_HEROINES.has(n);
+  // 只留有名有姓的角色（大～四師兄、小師妹也算）；路人、職稱、編號角色不列
+  const NOT_NAMED = /\d$|弟子|女子|少俠|和尚|鐵匠|長老|鬼卒|問號|夫人$|^(掌門人|主角|假趙活)$/;
+  const shownName = n => !NOT_NAMED.test(n) && !HIDDEN_HEROINES.has(n);
   // 從條件找出「誰要在／不在唐門」
   function presence(cond) {
     const inn = new Set(), out = new Set();
     for (const m of String(cond).matchAll(FLAG_ATOM)) {
       const note = (G.flagNotes || {})[m[1]] || '';
-      const who = note.match(/^(.+?)(不在|在|加入)唐門$/);
+      let who = note.match(/^(.+?)(不在|在|加入)唐門$/);
+      if (!who) { const c = note.match(/^([^\s\d]{2,3})同行/); if (c) who = [c[0], c[1], '在']; }
       if (!who || who[1] === '主角') continue;
       const n = Number(m[3]);
       const truthy = (m[2] === '=' && n >= 1) || (m[2] === '≥' && n >= 1) || (m[2] === '>' && n >= 0) || (m[2] === '≠' && n === 0);
@@ -1162,29 +1166,6 @@ body.show-time .stime { display: inline; }
       預設列出角色事件和特殊事件，平常、成功、失敗這些一般結果可勾選顯示；橘色標籤是要多人同時在唐門才會出現的。
       最前面的「已讀／部分／未讀」是重建頁面當下的閱讀紀錄。
       ${LIVE && LIVE.inGame ? (LIVE_POS ? '連上遊戲時顯示「目前權重・機率」（由遊戲本身計算，紅字是目前不成立的條件）。' : '正在向遊戲取得目前機率…（需要時光機 Mod 0.6.0 以上）') : ''}點事件會在右側顯示劇情。${LIVE && LIVE.inGame ? '✓／✗ 是依目前存檔的旗標與時間判斷（其他屬性條件不判斷）。' : ''}</div>`;
-    if (LIVE_DRAWS.length) {
-      // 最近的實際抽籤：結果腳本對到候選事件，附上當時這個事件的機率
-      const where = new Map(), titleOf = new Map();
-      G.positions.forEach(p => p.layers.forEach(L => {
-        where.set(L.group, `${p.place}・${p.action}`);
-        L.candidates.forEach(c => titleOf.set(c.script, c));
-      }));
-      const rows = LIVE_DRAWS.slice().reverse().filter(d => where.has(d.group)).slice(0, 12).map((d, i) => {
-        const c = titleOf.get(String(d.result).toLowerCase());
-        const ids = Object.keys(d.rates);
-        const list = ids.map(id => ({id, code: (G.positions.flatMap(p => p.layers).find(L => L.group === d.group)?.candidates.find(x => x.id === id) || {}).code, rate: d.rates[id]}));
-        const seen = new Set(), picks = [];
-        list.forEach(x => { if (x.rate > 0 && !seen.has(x.code)) { seen.add(x.code); picks.push(x); } });
-        const total = picks.reduce((a, x) => a + x.rate, 0);
-        let lo = 1, prob = 0;
-        picks.forEach(x => { const hi = lo + x.rate; if (c && x.id === c.id) prob = Math.max(0, Math.min(hi, total) - lo + 1) / total; lo = hi + 1; });
-        const name = c ? (c.note || (c.title || '').slice(0, 24) || c.script) : d.result;
-        // 不是最新一筆、卻沒有執行：被第一層事件接走（例如龍湘的挑戰選了用劍直接開打）
-        const skipped = d.played === false && i > 1;
-        return `<li${skipped ? ' style="opacity:.6"' : ''}>${esc(d.time)}　${esc(where.get(d.group))} → <b>${esc(name)}</b>${c ? `（當時機率 ${(prob * 100).toFixed(1)}%）` : ''}${skipped ? '　<span class="bad">抽到但沒有播出</span>' : ''}</li>`;
-      });
-      if (rows.length) html += `<details class="plcard" open><summary style="cursor:pointer"><b>最近的抽籤結果</b>（遊戲實際抽到的，最新在上）</summary><ul class="need" style="margin:4px 0;padding-left:18px">${rows.join('')}</ul></details>`;
-    }
     html += `<div class="libtools"><label>角色 <select id="plWho"><option value="">全部</option>${[...allWho].sort().map(n => `<option${n === pick ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select></label>`
       + `<label><input type="checkbox" id="plAll"${showAll ? ' checked' : ''}>也列出一般結果（平常、成功、失敗等）</label></div>`;
     let lastArea = '';
@@ -1248,11 +1229,13 @@ body.show-time .stime { display: inline; }
     const st = document.getElementById('urState')?.value || '';
     const who = document.getElementById('urWho')?.value || '';
     const heroines = [...new Set(G.unread.flatMap(u => u.heroines))].filter(shownName).sort();
-    const list = G.unread.filter(u => (!st || (st === 'none' ? u.read === 0 : u.read > 0)) && (!who || u.heroines.includes(who)));
+    // 整段未讀：看場景裡有沒有她；部分已讀：看沒讀到的那幾段有沒有她
+    const relevant = u => !who || (u.read === 0 ? u.heroines.includes(who) : (u.reasons || []).some(r => (r.heroines || []).includes(who)));
+    const list = G.unread.filter(u => (!st || (st === 'none' ? u.read === 0 : u.read > 0)) && relevant(u));
     const unreadLines = list.reduce((a, u) => a + Math.round(u.lines * (1 - u.read)), 0);
     let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落（以重建頁面時的「已讀」紀錄計算）。
       只因性情、道德、處世、修養或技能／天賦而換台詞、走向相同的地方算「差分」，看過其中一種就算讀過；
-      其他沒讀到的地方會列出原因（沒選過的選項、沒達成的條件、擲骰、戰鬥勝負）。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
+      其他沒讀到的地方會列出原因（沒選過的選項、沒達成的條件、擲骰、戰鬥勝負）。選了女主角時，只列「沒讀到的部分」有她出場或和她有關的段落。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
     html += `<div class="libtools"><label>狀態 <select id="urState"><option value="">全部</option><option value="none"${st === 'none' ? ' selected' : ''}>未讀</option><option value="part"${st === 'part' ? ' selected' : ''}>部分已讀</option></select></label>`
       + `<label>登場的女主角 <select id="urWho"><option value="">全部</option>${heroines.map(h => `<option${h === who ? ' selected' : ''}>${esc(h)}</option>`).join('')}</select></label>`
       + `<span class="tag" style="color:var(--muted)">${list.length} 段，約 ${unreadLines} 句沒讀過</span></div>`;
@@ -1288,7 +1271,8 @@ body.show-time .stime { display: inline; }
           }).filter(Boolean);
           html += `<div class="need">${steps.length ? '進入條件：' + steps.join(' → ') : '還沒進入過（事件開始或前一段結束就會接到）'}</div>`;
         } else if ((u.reasons || []).length) {
-          html += `<ul class="need" style="margin:2px 0 0 0;padding-left:18px">${u.reasons.map(r => reasonHtml(r, ctx, u.s)).join('')}</ul>`;
+          const reasons = who ? u.reasons.filter(r => (r.heroines || []).includes(who)) : u.reasons;
+          html += `<ul class="need" style="margin:2px 0 0 0;padding-left:18px">${reasons.map(r => reasonHtml(r, ctx, u.s)).join('')}</ul>`;
         }
         html += '</div>';
       }
@@ -1335,11 +1319,11 @@ body.show-time .stime { display: inline; }
     const top = romance.scrollTop;
     const open = keepScroll ? [...romance.querySelectorAll('details')].map(d => d.open) : [];
     const onlyMissing = document.getElementById('libMissing')?.checked;
-    let html = `<div class="rintro">遊戲講經堂的三本圖鑑。✓ 是已取得（${LIVE && LIVE.lib ? '遊戲目前的紀錄' : '重建頁面當時的紀錄'}）。
-      達成條件取自 smilin.net 活俠傳 wiki（汗青書、生死簿）；wiki 沒有的新內容只列遊戲資料推出的取得位置。點事件會跳到流程圖。</div>`;
+    const libKind = {libend: 'end', libcg: 'cg', libdead: 'dead'}[currentView] || 'end';
+    let html = `<div class="rintro">遊戲講經堂的圖鑑。✓ 是已取得（${LIVE && LIVE.lib ? '遊戲目前的紀錄' : '重建頁面當時的紀錄'}）。
+      ${libKind === 'cg' ? '結緣結局的條件看「結緣條件」分頁。' : '達成條件取自 smilin.net 活俠傳 wiki（汗青書、生死簿）；wiki 沒有的新內容只列遊戲資料推出的取得位置。沒取得的連條件都防雷，點一下顯示。'}點事件會跳到流程圖。</div>`;
     html += `<div class="libtools"><label><input type="checkbox" id="libMissing"${onlyMissing ? ' checked' : ''}>只看未取得</label></div>`;
-    // 結緣結局條件很明顯（看結緣條件分頁），不另外收錄
-    for (const [kind, title] of [['end', '汗青書'], ['dead', '死法（生死簿）']]) {
+    for (const [kind, title] of [['end', '汗青書'], ['cg', '結緣結局'], ['dead', '死法（生死簿）']].filter(([k]) => k === libKind)) {
       const ids = Object.keys(G.library).filter(id => G.library[id].kind === kind).sort();
       const got = ids.filter(libGot).length;
       html += `<h2 style="margin:18px 0 6px">${LIB_ICON[kind]} ${title}　<span class="tag" style="font-size:13px;color:var(--muted)">${got} / ${ids.length}</span></h2><div class="libsec">`;
@@ -1380,29 +1364,21 @@ body.show-time .stime { display: inline; }
     else if (el.dataset.flag) showFlag(el.dataset.flag, ev);
     else el.classList.add('reveal');
   });
+  const TAB_IDS = {unread: 'tabUnread', places: 'tabPlaces', libend: 'tabLibend', libcg: 'tabLibcg', libdead: 'tabLibdead', romance: 'tabRomance', targets: 'tabTargets', chart: 'tabChart'};
   function setView(v) {
-    const list = v === 'romance' || v === 'targets' || v === 'library' || v === 'places' || v === 'unread';
-    document.body.classList.toggle('view-romance', list);
-    document.getElementById('tabChart').classList.toggle('on', v === 'chart');
-    document.getElementById('tabRomance').classList.toggle('on', v === 'romance');
-    document.getElementById('tabTargets').classList.toggle('on', v === 'targets');
-    document.getElementById('tabLibrary').classList.toggle('on', v === 'library');
-    document.getElementById('tabPlaces').classList.toggle('on', v === 'places');
-    document.getElementById('tabUnread').classList.toggle('on', v === 'unread');
+    document.body.classList.toggle('view-romance', v !== 'chart');
+    for (const [view, id] of Object.entries(TAB_IDS)) document.getElementById(id).classList.toggle('on', view === v);
+    // 流程圖分頁平常摺疊成「▸」，切過去時才向右展開
+    document.getElementById('tabChart').textContent = v === 'chart' ? '流程圖 ◂' : '▸';
     document.getElementById('hiddenToggle').style.display = 'none';
     currentView = v;
     if (v === 'romance') renderRomance();
     if (v === 'targets') renderTargets();
-    if (v === 'library') renderLibrary();
+    if (v.startsWith('lib')) renderLibrary();
     if (v === 'places') renderPlaces();
     if (v === 'unread') renderUnread();
   }
-  document.getElementById('tabChart').onclick = () => setView('chart');
-  document.getElementById('tabRomance').onclick = () => setView('romance');
-  document.getElementById('tabTargets').onclick = () => setView('targets');
-  document.getElementById('tabLibrary').onclick = () => setView('library');
-  document.getElementById('tabPlaces').onclick = () => setView('places');
-  document.getElementById('tabUnread').onclick = () => setView('unread');
+  for (const [view, id] of Object.entries(TAB_IDS)) document.getElementById(id).onclick = () => setView(view);
   document.getElementById('showHidden').addEventListener('change', renderRomance);
 
   async function showMonth(mc) {
@@ -1438,7 +1414,12 @@ body.show-time .stime { display: inline; }
   if (ONLINE) setInterval(poll, 3000);
   if (/view=romance/.test(location.hash)) setView('romance');
   if (/view=targets/.test(location.hash)) setView('targets');
-  if (/view=library/.test(location.hash)) setView('library');
+  if (/view=(library|libend)/.test(location.hash)) setView('libend');
+  if (/view=libcg/.test(location.hash)) setView('libcg');
+  if (/view=libdead/.test(location.hash)) setView('libdead');
+  if (/view=chart/.test(location.hash)) setView('chart');
+  // 預設打開五塊錢
+  if (!/view=|ev=/.test(location.hash)) setView('unread');
   if (/view=places/.test(location.hash)) setView('places');
   if (/view=unread/.test(location.hash)) setView('unread');
   const m = location.hash.match(/ev=([^&]+)/);
