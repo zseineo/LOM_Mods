@@ -1,0 +1,13 @@
+# 編譯產物
+bin/
+obj/
+
+# 從遊戲抽出的資料與產生的頁面（遊戲文字，體積大，可用 tools/refresh_data.sh、rebuild_guide.sh 重建）
+data/
+data_old_*/
+preview/
+
+# 暫存
+refresh.log
+xm*.txt
+__pycache__/

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>LOM_TimeMachine</AssemblyName>
+    <RootNamespace>LOM.TimeMachine</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <DebugType>none</DebugType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\LegendOfMortal</GameDir>
+    <ManagedDir>$(GameDir)\Mortal_Data\Managed</ManagedDir>
+    <BepInExDir>$(GameDir)\BepInEx\core</BepInExDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="$(BepInExDir)\BepInEx.Core.dll" Private="false" />
+    <Reference Include="$(BepInExDir)\BepInEx.Unity.Mono.dll" Private="false" />
+    <Reference Include="$(BepInExDir)\0Harmony.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\Mortal.Core.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\Mortal.Story.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\Mortal.Free.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\UnityEngine.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\UnityEngine.IMGUIModule.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\UnityEngine.TextRenderingModule.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\UnityEngine.UI.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\Unity.InputSystem.dll" Private="false" />
+  </ItemGroup>
+</Project>

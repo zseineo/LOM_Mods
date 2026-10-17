@@ -1,0 +1,2 @@
+# shell 腳本保持 LF，Git Bash 遇到 CRLF 會出錯
+*.sh text eol=lf
