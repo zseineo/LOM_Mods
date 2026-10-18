@@ -1574,6 +1574,40 @@ def heroines_in(script):
     return sorted(names)
 
 
+# 整段沒讀過的劇情：從它往回追到事件開頭，列出每一條走得到的路線（沿途要選的選項、要符合的條件）。
+# 只沿同一個事件裡的腳本往回追；有多個入口時每個入口各算一條路線。
+event_by_id_lower = {e["id"].lower(): e for e in events}
+
+
+def entry_routes(script, ev):
+    e = event_by_id_lower.get((ev or "").lower())
+    chain = set(e["scripts"]) if e else None
+    start = e["start"] if e else None
+    routes = []
+
+    def walk(cur, acc, seen):
+        if len(routes) >= 40:
+            return
+        parents = [x for x in entry_paths.get(cur, []) if x["from"] not in seen and (chain is None or x["from"] in chain)]
+        if cur == start or cur in entry_scripts or not parents or len(acc) >= 10:
+            routes.append(acc[::-1])
+            return
+        for x in parents:
+            walk(x["from"], acc + ([{"from": x["from"], "path": x["path"]}] if x["path"] else []), seen | {x["from"]})
+
+    walk(script, [], {script})
+    out, sigs = [], set()
+    for r in routes:
+        sig = tuple((x["from"], tuple(x["path"])) for x in r)
+        if sig not in sigs:
+            sigs.add(sig)
+            out.append(r)
+    # 有一條不用任何條件就走得到：其他路線都不必列
+    if any(not r for r in out):
+        return [[]]
+    return sorted(out, key=len)[:6]
+
+
 unread = []
 if read_keys:
     for name, (block, vars_) in scripts.items():
@@ -1587,7 +1621,7 @@ if read_keys:
                 "place": script_place(name, ev), "title": first_line(name) or (
                     re.sub(r"<[^>]+>|\{[^}]*\}", "", loc.get("Story/" + script_first_say[name], "")).replace("\n", "") if script_first_say.get(name) else "")}
         if r == 0:
-            item["entry"] = entry_conditions(name)
+            item["routes"] = entry_routes(name, ev)
         else:
             reasons = []
             unread_reasons(block, vars_, [], reasons)

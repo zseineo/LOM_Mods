@@ -139,6 +139,15 @@ body.view-romance .chartonly { display: none; }
 .rd.r-unread { background: var(--chip); color: var(--muted); }
 .plev .bad, .plev .bad .flag { color: #d9534f; font-weight: 700; }
 .plev .live { color: var(--read); font-weight: 700; }
+.routes { margin: 2px 0 0 0; padding-left: 22px; }
+/* 事件劇情樹：分支底下接著的段落縮排、左邊一條線 */
+.tkids { margin: 6px 0 2px 2px; padding-left: 10px; border-left: 2px solid var(--accent); }
+.tkids > .script { margin-top: 6px; }
+.tref { font-size: 12px; color: var(--muted); margin: 4px 0; }
+.script .sname b { color: var(--accent); margin-right: 6px; }
+.script .sname .pct { margin-right: 6px; }
+.script.flash { outline: 2px solid var(--accent); }
+.script > .sname { justify-content: flex-start; gap: 4px; }
 .forcebtn { float: right; background: var(--chip); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 1px 10px; font: inherit; font-size: 12px; cursor: pointer; }
 .forcebtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .plev .multi { display: inline-block; background: var(--accent); color: #fff; border-radius: 4px; padding: 0 5px; font-size: 11px; margin-left: 6px; }
@@ -701,7 +710,44 @@ body.show-time .stime { display: inline; }
     if (affects.length) out.push(`📌 會影響之後：${affects.slice(0, 2).map(evLink).join('')}${affects.length > 2 ? `等 ${affects.length} 個事件` : ''}`);
     return out.length ? `<div class="out">${[...new Set(out)].join('　')}</div>` : '';
   }
-  function plainItems(items, depth, ctx, near) {
+  const inEvent = (it, ctx) => it.t === 'next' && ctx && ctx.scripts.includes(it.s.toLowerCase());
+  // 「→ 接到 #N」：編號等整棵樹畫完才知道，先放記號最後再換
+  const segRef = s => `<div class="tref">→ 接到  ${s} </div>`;
+  // 接到下一段：只有一個入口的縮排畫在這裡；多個入口（劇情合流）的放回最外層，這裡只放連結
+  function treeChild(s, ctx, st) {
+    if (st.num.has(s) || (st.inCount.get(s) || 0) > 1) { if (!st.num.has(s)) st.root.push(s); return segRef(s); }
+    return treeHtml(s, ctx, st);
+  }
+  function treeHtml(s, ctx, st) {
+    if (st.num.has(s)) return segRef(s);
+    const info = G.scripts[s];
+    if (!info) return '';
+    st.num.set(s, st.num.size + 1);
+    const hide = unread(info.read) ? ' unreadtxt' : '';
+    const body = legendBlock(info.legend, hide) + plainItems(info.items, 0, ctx, s, st);
+    const pct = info.read == null ? '' : `<span class="pct">${Math.round(info.read * 100)}% 已讀</span>`;
+    let html = `<div class="script" id="seg-${esc(s)}"><div class="sname"><b>#${st.num.get(s)}</b>${pct}${stime(s)}</div>${body || '<div class="empty">過場對話</div>'}</div>`;
+    for (const it of info.items) if (inEvent(it, ctx)) html += treeChild(it.s.toLowerCase(), ctx, st);
+    return html;
+  }
+  function eventTree(e) {
+    const inCount = new Map();
+    const walkNext = (items, f) => (items || []).forEach(it => { if (it.t === 'next') f(it.s.toLowerCase()); else if (it.t === 'branch') it.branches.forEach(b => walkNext(b.items, f)); });
+    for (const s of e.scripts) walkNext((G.scripts[s] || {}).items, t => { if (t !== s && e.scripts.includes(t)) inCount.set(t, (inCount.get(t) || 0) + 1); });
+    const st = {num: new Map(), inCount, root: [e.start]};
+    let html = '';
+    while (st.root.length) { const s = st.root.shift(); if (!st.num.has(s)) html += treeHtml(s, e, st); }
+    // 從開頭追不到的段落（經由旅途、戰鬥後接續等）放最後
+    const rest = e.scripts.filter(s => !st.num.has(s));
+    if (rest.length) {
+      let more = '';
+      st.root = rest;
+      while (st.root.length) { const s = st.root.shift(); if (!st.num.has(s)) more += treeHtml(s, e, st); }
+      if (more) html += `<h3>其他段落（經由旅途、戰鬥後接續等）</h3>${more}`;
+    }
+    return html.replace(/ ([^ ]+) /g, (m, s) => st.num.has(s) ? `<span class="chip link" data-seg="${esc(s)}">#${st.num.get(s)}</span>` : esc(s));
+  }
+  function plainItems(items, depth, ctx, near, st) {
     let html = plainOutcomes(items.filter(it => it.t !== 'branch'), ctx);
     for (const it of items) {
       if (it.t !== 'branch') continue;
@@ -711,7 +757,8 @@ body.show-time .stime { display: inline; }
         if (/^(exit\+|~x)/.test(b.label)) continue;
         const pct = b.read == null ? '' : `${Math.round(b.read * 100)}% 已讀`;
         const hide = unread(b.read) ? ' unreadtxt' : '';
-        const body = legendBlock(b.legend, hide) + (depth < 6 ? plainItems(b.items, depth + 1, ctx, near) : '');
+        const kids = st ? b.items.filter(x => inEvent(x, ctx)).map(x => treeChild(x.s.toLowerCase(), ctx, st)).join('') : '';
+        const body = legendBlock(b.legend, hide) + (depth < 6 ? plainItems(b.items, depth + 1, ctx, near, st) : '') + (kids ? `<div class="tkids">${kids}</div>` : '');
         if (body) any = true;
         inner += `<div class="opt"><div class="olabel${it.kind === 'choice' ? hide : ''}">${branchLabel(it.kind, b.label, ctx, near)}<span class="pct">${pct}</span></div>${body}</div>`;
       }
@@ -749,16 +796,16 @@ body.show-time .stime { display: inline; }
       if (others.length) html += `<details><summary class="bkind" style="cursor:pointer">⋯ 這個事件的其他段落</summary>${others.map(s => scriptHtml(s, e)).join('')}</details>`;
     } else {
       html += '<h3>劇情</h3>';
-      const parts = e.scripts.map(s => scriptHtml(s, e)).filter(Boolean);
-      html += parts.length ? parts.join('') : '<div class="empty">只有過場對話，沒有選項或分歧。</div>';
+      html += eventTree(e) || '<div class="empty">只有過場對話，沒有選項或分歧。</div>';
     }
     html += `<div class="note">只列出：選項、擲骰、戰鬥勝敗、會改變劇情走向的條件。有底線的條件可以點開看它在哪裡決定。摘要文字取自遊戲的「傳說」紀錄。</div>`;
     detail.innerHTML = html;
   }
 
   detail.addEventListener('click', ev => {
-    const el = ev.target.closest('[data-lib],[data-ev],[data-flag],[data-script],.unreadtxt');
+    const el = ev.target.closest('[data-seg],[data-lib],[data-ev],[data-flag],[data-script],.unreadtxt');
     if (!el) return;
+    if (el.dataset.seg) { const t = document.getElementById('seg-' + el.dataset.seg); t?.scrollIntoView({block: 'center', behavior: 'smooth'}); t?.classList.add('flash'); setTimeout(() => t?.classList.remove('flash'), 1200); return; }
     // 結緣結局沒有圖鑑分頁，跳到結緣條件
     if (el.dataset.lib) {
       const kind = G.library[el.dataset.lib]?.kind || 'end';
@@ -1293,6 +1340,25 @@ body.show-time .stime { display: inline; }
   }
   const iconImg = n => ICONS && ICONS.has(n) ? `<img src="/api/icon?name=${encodeURIComponent(n)}" alt="">` : '';
   let urState = PREFS.urState || '', urWho = PREFS.urWho || '';
+  // 整段未讀：每條走得到的路線（沿途要選的選項、要符合的條件），最多列 3 條；
+  // 事件本身還沒觸發時先列事件的觸發時間與條件
+  function routesHtml(u, ctx) {
+    let html = '';
+    const startRead = ctx ? (G.scripts[ctx.start] || {}).read : null;
+    if (ctx && !startRead) {
+      const conds = ctx.conds.filter(c => c !== '（無條件）');
+      html += `<div class="need">事件還沒觸發：${esc(whenText(ctx))}${ctx.pos ? `到「${esc(ctx.pos)}」` : ''}${conds.length ? '，' + conds.map(c => plainCondHtml(c, ctx)).join('；') : '（沒有其他條件）'}</div>`;
+    }
+    const routes = (u.routes || []).map(r => r.map(x => pathHtml(x.path, ctx, x.from)).filter(Boolean)).filter(r => r.length);
+    if (!routes.length) {
+      if (!(ctx && !startRead)) html += `<div class="need">${ctx ? '事件開始後沒有要經過的分歧（可能經由旅途、地點選單接過來）' : '沒有找到要經過的分歧（日常、地點選單或閒聊接過來）'}</div>`;
+      return html;
+    }
+    const shown = routes.slice(0, 3).map(r => r.join(' → '));
+    const more = (u.routes || []).length > 3 ? `<span class="need">　還有其他路線</span>` : '';
+    if (shown.length === 1) return html + `<div class="need">進入條件：${shown[0]}${more}</div>`;
+    return html + `<div class="need">進入條件（任一條路線）：</div><ol class="need routes">${shown.map(r => `<li>${r}</li>`).join('')}</ol>${more}`;
+  }
   function renderUnread(keepScroll) {
     const top = romance.scrollTop;
     const open = keepScroll ? [...romance.querySelectorAll('details')].map(d => d.open) : [];
@@ -1339,11 +1405,7 @@ body.show-time .stime { display: inline; }
         html += `<div class="plev" data-script="${esc(u.s)}"><span class="need">${chip}</span>　<span class="ttl${hide}">${esc((u.title || u.s).slice(0, 40))}</span>`
           + `${u.heroines.some(shownName) ? `<span class="who">${esc(u.heroines.filter(shownName).join('、'))}</span>` : ''}${u.place ? `<span class="need">　${esc(u.place)}</span>` : ''}`;
         if (u.read === 0) {
-          const steps = (u.entry || []).slice().reverse().map(stp => {
-            const alts = [...new Set(stp.options.map(o => pathHtml(o.path, ctx, o.from)).filter(Boolean))];
-            return alts.length > 1 ? `以下任一（${alts.join('／')}）` : (alts[0] || '');
-          }).filter(Boolean);
-          html += `<div class="need">${steps.length ? '進入條件：' + steps.join(' → ') : '還沒進入過（事件開始或前一段結束就會接到）'}</div>`;
+          html += routesHtml(u, ctx);
         } else if ((u.reasons || []).length) {
           const reasons = who ? u.reasons.filter(r => hits(r.heroines || [])) : u.reasons;
           html += `<ul class="need" style="margin:2px 0 0 0;padding-left:18px">${reasons.map(r => reasonHtml(r, ctx, u.s)).join('')}</ul>`;
