@@ -615,6 +615,10 @@ def name_text(name):
     for x, y in NAME_OPS:
         name = name.replace(x, y)
     name = re.sub(r"^數值_", "", name)
+    # 百分比：「05PCT」「PCT50」→「5%」「50%」
+    name = re.sub(r"PCT_?0*(\d+)|0*(\d+)_?PCT", lambda m: (m.group(1) or m.group(2)) + "%", name)
+    if name.startswith("旗標"):
+        name = re.sub(r"^旗標_?", "旗標 ", name)
     return re.sub(r"\b0+(\d)", r"\1", name).replace("_", "")
 
 
@@ -624,7 +628,7 @@ def combat_cond(ref):
         return ref_tail(ref)
     if t == "CombatEventConditionRound":
         r, op = o["_round"], o["_op"]
-        return f"撐到第 {r} 回合" if op == 0 else f"第 {r} 回合起" if op == 5 else f"回合數 {CMP.get(op, op)} {r}"
+        return (f"撐到第 {r} 回合" if r > 1 else "第 1 回合") if op == 0 else f"第 {r} 回合起" if op == 5 else f"回合數 {CMP.get(op, op)} {r}"
     if t == "CombatEventConditionEffectState":
         return f"{SIDE.get(o.get('_character'), '')}身上有「{ref_tail(o.get('_effectState'))}」"
     if t == "CombatEventConditionRoundFlag":
@@ -1894,7 +1898,11 @@ TARGETS = [
              "若當下處世 ≤ 40 且修養 ≥ 60 會設為 2，結局段落有些內容要 M60075 ≥ 2。",
      "ending": None},
     {"name": "開啟養成地點：鶴崖（崆峒）", "flag": "M00030", "val": 1,
-     "note": "崆峒留學期間養成選單的「鶴崖」：M00030 = 1 後一直開著；沒開之前，身上有睡丹且還有 2 次以上行動時也會出現。",
+     "note": "崆峒留學期間養成選單的「鶴崖」：M00030 = 1 後一直開著（第2年7月鶴崖事件結束時關閉）；沒開的話，身上帶著睡丹、還剩 2 次以上行動時也會出現。"
+             "M00030 只在飛天門事件「拜碼頭」裡設：加入飛天門 → 第2年3月下旬到飛天殿修練觸發 → 和顏疆打一場（輸贏都會往下接）"
+             "→ 擲骰逃脫，一般要 ≥ 60；若曾在南宮家宴為南宮淺出頭、擲骰 ≥ 50 選「看不下去」讓南宮淺一起參戰，要 ≥ 70 → 成功就在鶴崖會合並開啟。"
+             "逃脫失敗會入獄：瑞笙參戰（南宮淺那條，或瑞笙好感 ≥ 7）的話，之後小梅劫獄時選「乖」也會開啟。"
+             "沒加入飛天門只能靠睡丹（睡丹藥方在加入玄功門、奪魄門時取得，崆峒探險隊、四師兄那邊也有）。",
      "ending": None},
     {"name": "開啟養成地點：奪魄森林（崆峒）", "flag": "S0014_02", "val": 1,
      "note": "崆峒留學期間養成選單的「奪魄森林」：拜夏侯蘭為師（S0014_02 = 1）後才會出現。",
