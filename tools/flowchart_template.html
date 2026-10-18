@@ -944,7 +944,7 @@ body.show-time .stime { display: inline; }
     const t = e.time;
     let when = '不限時間';
     if (t && t.type === 'at' && valid(t.from)) when = tstr(t.from);
-    else if (t && t.type === 'range' && valid(t.from)) when = t.open ? `${tstr(t.from)} 起` : `${tstr(t.from)} ～ ${valid(t.to) ? tstr(t.to) : '?'}`;
+    else if (t && t.type === 'range' && valid(t.from)) when = t.open ? `${tstr(t.from)} 起${t.after ? '（條件最早在這時才湊得齊）' : ''}` : `${tstr(t.from)} ～ ${valid(t.to) ? tstr(t.to) : '?'}`;
     else if (t && t.type === 'period') when = `每月${STAGE[t.stage]}`;
     const read = e._read == null ? '無對話' : `${Math.round(e._read * 100)}% 已讀`;
     const full = e.desc || e.title || e.start || e.key;
@@ -1061,7 +1061,7 @@ body.show-time .stime { display: inline; }
     const t = e && e.time;
     if (!t) return '不限時間';
     if (t.type === 'at' && valid(t.from)) return tstr(t.from);
-    if (t.type === 'range' && valid(t.from)) return t.open ? `${tstr(t.from)} 起` : `${tstr(t.from)} ～ ${valid(t.to) ? tstr(t.to) : '?'}`;
+    if (t.type === 'range' && valid(t.from)) return t.open ? `${tstr(t.from)} 起${t.after ? '（條件最早在這時才湊得齊）' : ''}` : `${tstr(t.from)} ～ ${valid(t.to) ? tstr(t.to) : '?'}`;
     return '不限時間';
   }
   // ---------- 結緣步驟：把前置條件樹攤平成依時間排序的段落 ----------

@@ -1884,6 +1884,26 @@ for e in events:
     via = event_via(e)
     if via:
         e["via"] = via
+        # 任務檢查點停用、實際由養成行動等接進來的事件：時間改用觸發路線裡的時間條件
+        if not e["active"]:
+            los, his = [], []
+            for r in via:
+                lo = hi = None
+                for x in r:
+                    for label in x.get("path", []):
+                        for op, y, m, st in NOW_COND.findall(re.sub(r"　〔前提不是：.*〕$", "", label)):
+                            t = (int(y), int(m), "上中下".index(st) + 1)
+                            if op in ("=", "≥", ">"):
+                                lo = t if not lo or t > lo else lo
+                            if op in ("=", "≤", "<"):
+                                hi = t if not hi or t < hi else hi
+                los.append(lo)
+                his.append(hi)
+            if los and all(los):
+                lo = min(los)
+                hi = max(his) if all(his) else None
+                tt = lambda t: {"y": t[0], "m": t[1], "s": t[2]}
+                e["time"] = {"type": "at", "from": tt(lo)} if hi == lo else                     {"type": "range", "from": tt(lo), "to": tt(hi)} if hi else {"type": "range", "from": tt(lo), "to": {"y": 4, "m": 3, "s": 3}, "open": True}
 
 # 每支腳本最短的進入路線（只留最後幾個標籤）：網頁把「一進這段就設的暫存旗標」翻成是哪個選項接過來的
 script_via = {}
@@ -1927,6 +1947,35 @@ TARGETS = [
 for t in TARGETS:
     t["routes"] = [requirement(x["s"], x["path"], 0, {t["flag"]}) for x in flag_setters.get(t["flag"], [])
                    if x.get("op") == "SetFlag" and x["v"] == t["val"]]
+
+# 沒有設時間的事件（例如到某地點就觸發）：觸發條件要的旗標最早什麼時候才會被設定，就從那時起
+TKEY = lambda t: (t["y"], t["m"], t["s"])
+# 一段劇情可能同時算在好幾個事件裡（例如經由留學養成選單）：名稱和事件編號相同的（s2900_03 ↔ S2900）最準，其次是所屬事件
+script_starts = {}
+for e in events:
+    t = (e["time"] or {}).get("from")
+    if t and t.get("y", 0) >= 1:
+        for sc in e["scripts"]:
+            if sc.startswith(e["mission"].lower() + "_") or sc not in script_starts:
+                if sc.startswith(e["mission"].lower() + "_") or (find_owner(sc)[0] or "").lower() == e["id"].lower():
+                    script_starts[sc] = t
+for e in events:
+    if e["time"]:
+        continue
+    ts = []
+    for f, op, v in re.findall(r"旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≥|>) (\d+)", " ".join(e["conds"])):
+        v = int(v)
+        if op == "=" and v == 0:
+            continue
+        for x in flag_setters.get(f, []):
+            if x.get("op") != "SetFlag" or not satisfies(x["v"], op, v):
+                continue
+            # 設定點所在事件的開始時間（腳本推算時間取的是最晚的那條路徑，不準）
+            t = script_starts.get(x["s"]) or script_time.get(x["s"])
+            if t and t.get("y", 0) >= 1:
+                ts.append(t)
+    if ts:
+        e["time"] = {"type": "range", "from": min(ts, key=TKEY), "to": {"y": 4, "m": 3, "s": 3}, "open": True, "after": True}
 
 out = {
     "heroines": heroines,
