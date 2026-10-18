@@ -24,6 +24,7 @@
     <Reference Include="$(ManagedDir)\UnityEngine.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.CoreModule.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.IMGUIModule.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\UnityEngine.ImageConversionModule.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.TextRenderingModule.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.UI.dll" Private="false" />
     <Reference Include="$(ManagedDir)\Unity.InputSystem.dll" Private="false" />

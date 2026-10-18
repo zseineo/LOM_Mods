@@ -119,6 +119,12 @@ body.view-romance .chartonly { display: none; }
 .libitem .wiki .tag { color: var(--year); font-size: 12px; margin-right: 4px; }
 .libitem.got { border-left: 4px solid var(--read); }
 .libtools { display: flex; gap: 14px; align-items: center; margin-bottom: 10px; font-size: 13px; flex-wrap: wrap; }
+/* 橫向篩選：一列選項，選中的反白 */
+.fchips { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.fchips > span { color: var(--muted); margin-right: 4px; }
+.fchips button { display: inline-flex; align-items: center; gap: 5px; background: var(--chip); color: var(--ink); border: 1px solid transparent; border-radius: 14px; padding: 3px 10px; font: inherit; cursor: pointer; }
+.fchips button.on { background: var(--accent); color: #fff; }
+.fchips button img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; object-position: top; margin: -2px 0 -2px -6px; background: var(--panel); }
 .plcard { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 10px 14px; margin-bottom: 12px; max-width: 980px; }
 .plcard h2 { margin: 0 0 4px; font-size: 17px; }
 .plcard h4 { margin: 10px 0 4px; font-size: 13px; color: var(--year); letter-spacing: .06em; }
@@ -1223,11 +1229,24 @@ body.show-time .stime { display: inline; }
     }
     return `<li><b>${REASON_KIND[r.kind] || '分歧'}</b>　${what}${where}<span class="need">　${r.lines} 句</span></li>`;
   }
+  // 角色頭像：Mod 開的網頁才有（遊戲執行時從遊戲資料轉出來，不存檔案）；本機開檔或還沒轉好就只顯示名字
+  let ICONS = null, iconTries = 0;
+  async function loadIcons() {
+    if (ICONS || !location.protocol.startsWith('http') || iconTries > 5) return;
+    iconTries++;
+    try {
+      const j = await (await fetch('/api/icons', {cache: 'no-store'})).json();
+      if (j.ready) { ICONS = new Set(j.names); if (currentView === 'unread') renderUnread(true); }
+      else setTimeout(loadIcons, 1000);
+    } catch (e) { }
+  }
+  const iconImg = n => ICONS && ICONS.has(n) ? `<img src="/api/icon?name=${encodeURIComponent(n)}" alt="">` : '';
+  let urState = '', urWho = '';
   function renderUnread(keepScroll) {
     const top = romance.scrollTop;
     const open = keepScroll ? [...romance.querySelectorAll('details')].map(d => d.open) : [];
-    const st = document.getElementById('urState')?.value || '';
-    const who = document.getElementById('urWho')?.value || '';
+    loadIcons();
+    const st = urState, who = urWho;
     const heroines = [...new Set(G.unread.flatMap(u => u.heroines))].filter(shownName).sort();
     // 整段未讀：看場景裡有沒有她；部分已讀：看沒讀到的那幾段有沒有她
     const relevant = u => !who || (u.read === 0 ? u.heroines.includes(who) : (u.reasons || []).some(r => (r.heroines || []).includes(who)));
@@ -1236,9 +1255,10 @@ body.show-time .stime { display: inline; }
     let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落（以重建頁面時的「已讀」紀錄計算）。
       只因性情、道德、處世、修養或技能／天賦而換台詞、走向相同的地方算「差分」，看過其中一種就算讀過；
       其他沒讀到的地方會列出原因（沒選過的選項、沒達成的條件、擲骰、戰鬥勝負）。選了女主角時，只列「沒讀到的部分」有她出場或和她有關的段落。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
-    html += `<div class="libtools"><label>狀態 <select id="urState"><option value="">全部</option><option value="none"${st === 'none' ? ' selected' : ''}>未讀</option><option value="part"${st === 'part' ? ' selected' : ''}>部分已讀</option></select></label>`
-      + `<label>登場的女主角 <select id="urWho"><option value="">全部</option>${heroines.map(h => `<option${h === who ? ' selected' : ''}>${esc(h)}</option>`).join('')}</select></label>`
-      + `<span class="tag" style="color:var(--muted)">${list.length} 段，約 ${unreadLines} 句沒讀過</span></div>`;
+    const fchip = (attr, v, cur, label) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${label}</button>`;
+    html += `<div class="libtools"><div class="fchips"><span>狀態</span>${[['', '全部'], ['none', '未讀'], ['part', '部分已讀']].map(([v, l]) => fchip('ur-st', v, st, l)).join('')}</div>`
+      + `<span class="tag" style="color:var(--muted)">${list.length} 段，約 ${unreadLines} 句沒讀過</span></div>`
+      + `<div class="libtools"><div class="fchips"><span>登場的女主角</span>${fchip('ur-who', '', who, '全部')}${heroines.map(h => fchip('ur-who', h, who, iconImg(h) + esc(h))).join('')}</div></div>`;
     // 依所屬事件分組，事件依時間排序；不屬於任務事件的歸到最後
     const groups = new Map();
     for (const u of list) {
@@ -1279,8 +1299,8 @@ body.show-time .stime { display: inline; }
       html += '</details>';
     }
     romance.innerHTML = html;
-    document.getElementById('urState').onchange = () => renderUnread();
-    document.getElementById('urWho').onchange = () => renderUnread();
+    romance.querySelectorAll('[data-ur-st]').forEach(b => b.onclick = () => { urState = b.dataset.urSt; renderUnread(); });
+    romance.querySelectorAll('[data-ur-who]').forEach(b => b.onclick = () => { urWho = b.dataset.urWho; renderUnread(); });
     if (keepScroll) {
       romance.querySelectorAll('details').forEach((d, i) => { if (open[i]) d.open = true; });
       romance.scrollTop = top;

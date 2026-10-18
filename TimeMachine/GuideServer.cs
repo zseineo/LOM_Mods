@@ -32,6 +32,10 @@ internal sealed class GuideServer
     private volatile string _lastLoadResult = "";
     private volatile string _positionsJson = "{\"groups\":{}}";
     private long _lastPositionsRequestTicks;
+    // 角色頭像（遊戲裡的小頭像轉成 PNG，只放記憶體）：網頁第一次來要時才在主執行緒轉
+    private readonly ConcurrentDictionary<string, byte[]> _icons = new ConcurrentDictionary<string, byte[]>();
+    private volatile bool _iconsWanted;
+    private volatile bool _iconsReady;
 
     internal string Url => $"http://localhost:{_port}/";
 
@@ -75,6 +79,10 @@ internal sealed class GuideServer
         while (_loadRequests.TryDequeue(out string key))
         {
             _lastLoadResult = LoadByKey(key);
+        }
+        if (_iconsWanted && !_iconsReady)
+        {
+            BuildIcons();
         }
         bool active = DateTime.UtcNow.Ticks - Interlocked.Read(ref _lastRequestTicks) < TimeSpan.FromSeconds(10).Ticks;
         if (!active || Time.unscaledTime < _nextSnapshot)
@@ -166,6 +174,29 @@ internal sealed class GuideServer
             case "/api/lastload":
                 Write(context, "{\"result\":" + Json.Str(_lastLoadResult) + "}", "application/json; charset=utf-8");
                 return;
+            case "/api/icons":
+                _iconsWanted = true;
+                StringBuilder names = new StringBuilder();
+                foreach (string name in _icons.Keys)
+                {
+                    names.Append(names.Length > 0 ? "," : "").Append(Json.Str(name));
+                }
+                Write(context, "{\"ready\":" + (_iconsReady ? "true" : "false") + ",\"names\":[" + names + "]}", "application/json; charset=utf-8");
+                return;
+            case "/api/icon":
+                // 中文名字自己解碼，不靠 QueryString 的預設編碼
+                string query = context.Request.Url.Query;
+                string iconName = query.StartsWith("?name=") ? Uri.UnescapeDataString(query.Substring(6)) : "";
+                if (_icons.TryGetValue(iconName, out byte[] png))
+                {
+                    context.Response.ContentType = "image/png";
+                    context.Response.Headers["Cache-Control"] = "max-age=86400";
+                    context.Response.ContentLength64 = png.Length;
+                    context.Response.OutputStream.Write(png, 0, png.Length);
+                    context.Response.Close();
+                    return;
+                }
+                break;
         }
         context.Response.StatusCode = 404;
         context.Response.Close();
@@ -238,6 +269,58 @@ internal sealed class GuideServer
         AppendPairs(sb, save.SubMissions, m => m.Name, m => 0, m => Json.Str(m.Key));
         sb.Append("},\"main\":").Append(Json.Str(save.MainMission.Key));
         return sb.Append('}').ToString();
+    }
+
+    // 好感度資料裡每個角色的小頭像（沒有就用半身頭像），以角色名（列舉名稱）為鍵
+    private void BuildIcons()
+    {
+        _iconsReady = true;
+        RelationshipData relationships = PlayerStatManagerData.Instance?.Relationships;
+        if (relationships?.List == null)
+        {
+            return;
+        }
+        foreach (RelationshipStat stat in relationships.List)
+        {
+            Sprite sprite = stat == null ? null : stat.Icon != null ? stat.Icon : stat.HeadIcon;
+            if (sprite == null)
+            {
+                continue;
+            }
+            try
+            {
+                _icons[stat.Type.ToString()] = SpriteToPng(sprite);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogWarning($"[Guide] 頭像轉換失敗（{stat.Type}）：{e.Message}");
+            }
+        }
+        Plugin.Log.LogInfo($"[Guide] 已轉換 {_icons.Count} 個角色頭像");
+    }
+
+    // 圖集裡的貼圖通常不可讀：先畫到 RenderTexture 再讀回該 Sprite 的範圍
+    private static byte[] SpriteToPng(Sprite sprite)
+    {
+        Texture2D source = sprite.texture;
+        Rect rect = sprite.textureRect;
+        RenderTexture rt = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32);
+        RenderTexture previous = RenderTexture.active;
+        Texture2D copy = new Texture2D((int)rect.width, (int)rect.height, TextureFormat.RGBA32, false);
+        try
+        {
+            Graphics.Blit(source, rt);
+            RenderTexture.active = rt;
+            copy.ReadPixels(rect, 0, 0);
+            copy.Apply();
+            return copy.EncodeToPNG();
+        }
+        finally
+        {
+            RenderTexture.active = previous;
+            RenderTexture.ReleaseTemporary(rt);
+            UnityEngine.Object.Destroy(copy);
+        }
     }
 
     private static readonly FieldInfo ToggleConditionField = AccessTools.Field(typeof(PositionEventData), "_toggleCondition");
