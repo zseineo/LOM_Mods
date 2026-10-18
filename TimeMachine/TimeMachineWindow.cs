@@ -17,6 +17,8 @@ internal sealed class TimeMachineWindow
     private const int WindowId = 0x544D31;
     private const float WindowWidth = 1360f;
     private const float WindowHeight = 710f;
+    private const float UiScale = 1.15f;
+    private const float DoubleClickSeconds = 0.4f;
     private const float YearLabelWidth = 84f;
     private const float StageWidth = 32f;
     private const float CellWidth = StageWidth * 3 + 4f;
@@ -63,6 +65,10 @@ internal sealed class TimeMachineWindow
     private GUIStyle _empty;
     private GUIStyle _field;
     private GUIStyle _toggle;
+    private GUIStyle _warn;
+    private GUIStyle _nowrap;
+    private TimeEntry _lastClicked;
+    private float _lastClickTime;
     private GUIStyle _node;
     private GUIStyle _nodeDim;
     private Texture2D _lineOn;
@@ -189,7 +195,7 @@ internal sealed class TimeMachineWindow
 
     private static string KeyName(ConfigEntry<Key> entry)
     {
-        return entry == Plugin.ToggleKey ? "時光機視窗" : "5塊錢網頁";
+        return entry == Plugin.ToggleKey ? "時光機" : "五塊錢";
     }
 
     private string FindKeyConflict(ConfigEntry<Key> target, Key key)
@@ -267,7 +273,7 @@ internal sealed class TimeMachineWindow
             return;
         }
         EnsureStyles();
-        float scale = Mathf.Max(0.5f, Screen.height / 1080f);
+        float scale = Mathf.Max(0.5f, Mathf.Min(Screen.height / 1080f * UiScale, Screen.width / (WindowWidth + 40f)));
         Matrix4x4 previous = GUI.matrix;
         GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(scale, scale, 1f));
         float width = Screen.width / scale;
@@ -306,7 +312,12 @@ internal sealed class TimeMachineWindow
     private void DrawHeader()
     {
         GUILayout.BeginHorizontal();
-        GUILayout.Label(CurrentTimeText(), _label);
+        GUILayout.Label(CurrentTimeText(), _nowrap);
+        if (!Plugin.AutoCapture.Value)
+        {
+            GUILayout.Space(12f);
+            GUILayout.Label("自動存檔暫停中", _warn);
+        }
         GUILayout.FlexibleSpace();
         if (_modes.Count > 1)
         {
@@ -330,12 +341,19 @@ internal sealed class TimeMachineWindow
             DrawKeyButton(Plugin.GuideKey);
         }
         GUILayout.Space(16f);
-        bool paused = GUILayout.Toggle(Plugin.Paused, " 暫停自動存檔", _toggle, GUILayout.Width(170f));
-        if (paused != Plugin.Paused)
+        bool paused = GUILayout.Toggle(!Plugin.AutoCapture.Value, " 暫停自動存檔", _toggle, GUILayout.Width(170f));
+        if (paused == Plugin.AutoCapture.Value)
         {
-            Plugin.Paused = paused;
-            _message = paused ? "已暫停自動存檔：時光機存檔與關鍵節點都不會寫入，直到取消勾選或重開遊戲。" : "已恢復自動存檔。";
+            Plugin.AutoCapture.Value = !paused;
+            _message = paused ? "已暫停自動存檔：時光機存檔與關鍵節點都不會寫入，直到取消勾選（重開遊戲也會保持暫停）。" : "已恢復自動存檔。";
             Plugin.Log.LogInfo($"[TimeMachine] 自動存檔{(paused ? "暫停" : "恢復")}");
+        }
+        bool quick = GUILayout.Toggle(Plugin.QuickLoad.Value, " 快速讀取", _toggle, GUILayout.Width(120f));
+        if (quick != Plugin.QuickLoad.Value)
+        {
+            Plugin.QuickLoad.Value = quick;
+            _confirm = false;
+            _message = quick ? "快速讀取：雙擊時間點直接讀取，按「讀取這個時間點」也不再確認。" : "已關閉快速讀取。";
         }
         GUILayout.Space(8f);
         if (GUILayout.Button("重新整理", _button, GUILayout.Width(110f)))
@@ -352,7 +370,7 @@ internal sealed class TimeMachineWindow
     private void DrawKeyButton(ConfigEntry<Key> entry)
     {
         string text = _capturing == entry ? "請按新按鍵（Esc 取消）" : $"{KeyName(entry)}：{entry.Value}";
-        if (GUILayout.Button(text, _button, GUILayout.Width(220f)))
+        if (GUILayout.Button(text, _button, GUILayout.MinWidth(130f)))
         {
             _capturing = _capturing == entry ? null : entry;
             _message = _capturing != null ? $"請按下「{KeyName(entry)}」的新快捷鍵，按 Esc 取消。" : null;
@@ -535,6 +553,7 @@ internal sealed class TimeMachineWindow
                             _selectedNode = null;
                             _confirm = false;
                             _message = null;
+                            CheckDoubleClick(entry);
                         }
                     }
                     else
@@ -617,7 +636,21 @@ internal sealed class TimeMachineWindow
                 _selected = item.entry;
                 _confirm = false;
                 _message = null;
+                CheckDoubleClick(item.entry);
             }
+        }
+    }
+
+    // 快速讀取：同一個存檔在短時間內點兩下就直接讀取
+    private void CheckDoubleClick(TimeEntry entry)
+    {
+        float now = Time.unscaledTime;
+        bool twice = entry != null && entry == _lastClicked && now - _lastClickTime <= DoubleClickSeconds;
+        _lastClicked = twice ? null : entry;
+        _lastClickTime = now;
+        if (twice && Plugin.QuickLoad.Value)
+        {
+            _pendingLoad = entry;
         }
     }
 
@@ -659,7 +692,14 @@ internal sealed class TimeMachineWindow
             GUI.enabled = canLoad;
             if (GUILayout.Button("讀取這個時間點", _button, GUILayout.Width(200f)))
             {
-                _confirm = true;
+                if (Plugin.QuickLoad.Value)
+                {
+                    _pendingLoad = entry;
+                }
+                else
+                {
+                    _confirm = true;
+                }
             }
             GUI.enabled = true;
             if (!canLoad)
@@ -697,8 +737,7 @@ internal sealed class TimeMachineWindow
             return "目前在標題畫面";
         }
         GameTime time = PlayerStatManagerData.Instance.GameTime;
-        return $"目前：第{time.Year}年{time.Month}月{time.Stage}　{ModeName(TimeStore.CurrentMode())}　路線：{TimeStore.CurrentRoute}"
-            + (Plugin.Paused ? "　（自動存檔暫停中）" : "");
+        return $"目前：第{time.Year}年{time.Month}月{time.Stage}";
     }
 
     private static string ModeName(string mode)
@@ -747,6 +786,9 @@ internal sealed class TimeMachineWindow
 
         _button = new GUIStyle(GUI.skin.button) { font = font, fontSize = 18 };
         _field = new GUIStyle(GUI.skin.textField) { font = font, fontSize = 18 };
+        _nowrap = new GUIStyle(_label) { wordWrap = false };
+        _warn = new GUIStyle(_nowrap);
+        _warn.normal.textColor = new Color(0.95f, 0.6f, 0.4f);
         _toggle = new GUIStyle(GUI.skin.toggle) { font = font, fontSize = 18 };
         _toggle.normal.textColor = _label.normal.textColor;
         _toggle.onNormal.textColor = new Color(0.95f, 0.6f, 0.4f);

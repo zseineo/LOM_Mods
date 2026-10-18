@@ -36,7 +36,7 @@ internal static class Capture
     // 尚未執行這步的時間點（養成回合開始且關閉「回家自動存檔」時）改在存檔副本上補上，不動到遊戲本身的狀態。
     internal static void TryCapture(string source, bool useCurrentScriptAsStart)
     {
-        if (!Plugin.Capturing)
+        if (!Plugin.AutoCapture.Value)
         {
             return;
         }

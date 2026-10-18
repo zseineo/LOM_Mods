@@ -63,12 +63,12 @@ internal static class KeyNodes
     // 養成回合開始（行動次數全滿）時記下狀態，等節點劇情觸發才寫檔
     internal static void OnFreeRoundStart()
     {
-        if (Plugin.Paused)
+        if (!Plugin.AutoCapture.Value)
         {
             // 暫停期間經過的回合不記；恢復後節點才不會存到暫停前的舊狀態
             _snapshot = null;
         }
-        if (!Plugin.Capturing || TimeStore.CurrentMode() != TimeStore.MainMode)
+        if (!Plugin.AutoCapture.Value || TimeStore.CurrentMode() != TimeStore.MainMode)
         {
             return;
         }
@@ -95,7 +95,7 @@ internal static class KeyNodes
 
     internal static void OnScript(string script)
     {
-        if (!Plugin.Capturing || string.IsNullOrEmpty(script) || TimeStore.CurrentMode() != TimeStore.MainMode)
+        if (!Plugin.AutoCapture.Value || string.IsNullOrEmpty(script) || TimeStore.CurrentMode() != TimeStore.MainMode)
         {
             return;
         }
@@ -139,7 +139,7 @@ internal static class KeyNodes
         }
         try
         {
-            if (!Plugin.Capturing || TimeStore.CurrentMode() != TimeStore.MainMode)
+            if (!Plugin.AutoCapture.Value || TimeStore.CurrentMode() != TimeStore.MainMode)
             {
                 return;
             }
