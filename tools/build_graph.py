@@ -715,6 +715,32 @@ def time_after(script):
     return last
 
 
+def trace_chain(start, start_time, stop=()):
+    """從開頭一路追到底（不設上限），順便推算每支腳本開始時的遊戲時間。stop：追到就停的腳本。"""
+    chain, queue = [], [(start, start_time)] if start else []
+    # 多條路徑到同一支腳本時取較晚的時間；時間變晚才重新往下傳
+    in_chain, t_of = set(), {}
+    tkey = lambda t: (t["y"], t["m"], t["s"]) if t else (0, 0, 0)
+    while queue:
+        s, t = queue.pop(0)
+        if s not in script_info:
+            continue
+        if s in in_chain and tkey(t) <= tkey(t_of.get(s)):
+            continue
+        if s not in in_chain:
+            chain.append(s)
+            in_chain.add(s)
+        t_of[s] = t
+        after = time_after(s) or t
+        for n in next_scripts(s):
+            if n not in entry_scripts and n not in stop:
+                queue.append((n, after))
+    for s, t in t_of.items():
+        if t and tkey(t) > tkey(script_time.get(s)):
+            script_time[s] = t
+    return chain
+
+
 events = []
 entry_scripts = set()
 for mission_name in [main_name] + sub_names:
@@ -744,29 +770,8 @@ for mission_name in [main_name] + sub_names:
                 time = {"type": "period", "stage": c["_periodStage"]}
         if time is None:
             time = time_from_conditions(c.get("_conditions", []))
-        # 從事件開頭一路追到底（不設上限），順便推算每支腳本開始時的遊戲時間
         start_time = time.get("from") if time and time.get("from", {}).get("y", 0) >= 1 else None
-        chain, queue = [], [(c["_startScript"].lower(), start_time)] if c["_startScript"] else []
-        # 多條路徑到同一支腳本時取較晚的時間；時間變晚才重新往下傳
-        in_chain, t_of = set(), {}
-        tkey = lambda t: (t["y"], t["m"], t["s"]) if t else (0, 0, 0)
-        while queue:
-            s, t = queue.pop(0)
-            if s not in script_info:
-                continue
-            if s in in_chain and tkey(t) <= tkey(t_of.get(s)):
-                continue
-            if s not in in_chain:
-                chain.append(s)
-                in_chain.add(s)
-            t_of[s] = t
-            after = time_after(s) or t
-            for n in next_scripts(s):
-                if n not in entry_scripts:
-                    queue.append((n, after))
-        for s, t in t_of.items():
-            if t and tkey(t) > tkey(script_time.get(s)):
-                script_time[s] = t
+        chain = trace_chain(c["_startScript"].lower(), start_time)
         events.append({
             "id": f"{mission_name}/{c['_key']}",
             "mission": mission_name,
@@ -780,6 +785,69 @@ for mission_name in [main_name] + sub_names:
             "nextState": c["_nextStateName"],
             "dialogs": [loc.get("Mission/" + d["_dialog"]) or d["_dialog"] for d in c.get("_startDialogs", [])],
             "scripts": chain,
+        })
+
+def satisfies(v, op, n):
+    return {"=": v == n, "≠": v != n, "<": v < n, "≤": v <= n, ">": v > n, "≥": v >= n}[op]
+
+
+# ---------- 唐門月會 ----------
+# 每個月的月會事件（S1108、S1109…）和幾段主線結尾都接到同一個選單 meeting_option_01，
+# 選單的 24 個選項各有條件（時間、旗標、門派規模…），所以每個月份的事件底下內容都一樣。
+# 改成：月份事件只留選單本身，每個選項各自一個事件，月份用選項條件從「有開月會的月份」篩出來。
+MEETING_START, MEETING_MENU = "meeting_start_01", "meeting_option_01"
+NOW_COND = re.compile(r"目前時間 (=|≠|<|≤|>|≥) 第(\d+)年(\d+)月(上|中|下)旬")
+meeting_months = set()
+for e in events:
+    t = e["time"]
+    if not t or t["type"] != "at":
+        continue
+    if e["start"] == MEETING_START or any(MEETING_START in next_scripts(sc) for sc in e["scripts"]):
+        meeting_months.add((t["from"]["y"], t["from"]["m"], t["from"]["s"]))
+meeting_months = sorted(meeting_months)
+hub_scripts = [MEETING_START, MEETING_MENU]
+for e in events:
+    if e["start"] == MEETING_START:
+        e["scripts"] = hub_scripts
+        e["meeting"] = True
+ids_seen = set()
+for it in script_info[MEETING_MENU]["items"]:
+    if it["t"] != "branch":
+        continue
+    for br in it["branches"]:
+        start = next((x["s"].lower() for x in br["items"] if x["t"] == "next"), None)
+        name, _, need = br["label"].partition("　〔需：")
+        need = need.rstrip("〕")
+        # 條件只寫了名字（遊戲裡沒有這個條件，例如 Meeting_Option_703_02_XXX）的選項不會出現
+        if not start or start in entry_scripts or f"Meeting/{start}" in ids_seen or re.fullmatch(r"[A-Za-z0-9_]+", need):
+            continue
+        ids_seen.add(f"Meeting/{start}")
+        months = meeting_months
+        # 時間條件只在全部用「且」連接時才拿來篩月份
+        if "或" not in need:
+            for op, y, m, st in NOW_COND.findall(need):
+                v = (int(y), int(m), "上中下".index(st) + 1)
+                months = [t for t in months if satisfies(t, op, v)]
+        # 選不到的選項（例如第2年2月的留學走另一個臨時選單）不另列
+        if not months:
+            continue
+        first, last = ({"y": t[0], "m": t[1], "s": t[2]} for t in (months[0], months[-1]))
+        events.append({
+            "id": f"Meeting/{start}",
+            "mission": "Meeting",
+            "main": False,
+            "key": start,
+            "active": True,
+            "time": {"type": "at", "from": first} if first == last else {"type": "range", "from": first, "to": last},
+            "pos": "",
+            "conds": [f"唐門月會選「{name}」"] + ([need] if need else []),
+            "start": start,
+            "nextState": "",
+            "dialogs": [],
+            # 選完回到選單的不再往下追
+            "scripts": trace_chain(start, first, stop=hub_scripts),
+            "meetingMonths": [{"y": t[0], "m": t[1], "s": t[2]} for t in months],
+            "meetingOption": name,
         })
 
 # 旗標反查：哪個腳本、哪個分支把旗標設成多少
@@ -867,6 +935,10 @@ for e in events:
             if text:
                 title = "「" + re.sub(r"<[^>]+>|\{[^}]*\}", "", text).replace("\n", "") + "」"
                 break
+    if e.get("meeting"):
+        title = "唐門月會（選單）"
+    elif e.get("meetingOption") and not e["hasLegend"]:
+        title = f"月會：{e['meetingOption']}"
     e["title"] = title
 
 # 腳本 → 所屬事件：先看事件腳本鏈，找不到就沿「誰接到這支腳本」往上追
@@ -994,10 +1066,6 @@ for setters in flag_setters.values():
 # 暫存／戰鬥用的旗標（同一段劇情裡馬上設、馬上判斷）不往前追。
 LOCAL_FLAG = re.compile(r"^(C\d|TC\d|A\d|B\d|Talk_Option|BattleResult|Prologue|ActionCheck)")
 FLAG_COND = re.compile(r"旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) (-?\d+)")
-
-
-def satisfies(v, op, n):
-    return {"=": v == n, "≠": v != n, "<": v < n, "≤": v <= n, ">": v > n, "≥": v >= n}[op]
 
 
 def unit_steps(script, path):
@@ -1156,6 +1224,9 @@ def event_place(e):
                     break
         if score:
             return score.most_common(1)[0][0]
+    # 月會選項：背景圖分不出來就是在唐門開會
+    if e.get("meetingOption"):
+        return "唐門"
     # 背景圖都分不出來：才看傳說裡提到的地名（內文常順帶提到別處，所以放最後）
     score = collections.Counter()
     for sc in e["scripts"][:3]:
