@@ -1396,6 +1396,13 @@ def action_title(key):
 
 
 positions = []
+pos_chain_label = {}
+# 腳本 → 它設成 1 的旗標
+sets_one_by_script = collections.defaultdict(set)
+for f, setters in flag_setters.items():
+    for x in setters:
+        if x["v"] == 1 and x["op"] == "SetFlag":
+            sets_one_by_script[x["s"]].add(f)
 for area, place, action, groups, *option in POSITION_GROUPS:
     layers = []
     for gname in groups:
@@ -1413,18 +1420,34 @@ for area, place, action, groups, *option in POSITION_GROUPS:
             info = script_info.get(script)
             if info:
                 used.add(script)
+            # 結果腳本常常沒有台詞、只是接到另一支（例如 door_02_501 → door_girl_03_01）：
+            # 已讀、標題、出場角色看接下去第一支有台詞的；接下去設成 1 的旗標若也是出現條件（= 0），就是只會發生一次
+            chain = trace_chain(script, None) if info else []
+            content = next((sc for sc in chain if script_info[sc]["lines"]), script)
+            cinfo = script_info.get(content)
+            cond = cond_item_text(o["_activeCondition"]) if o.get("_toggleCondition") else ""
+            sets_one = set().union(*(sets_one_by_script.get(sc, set()) for sc in chain))
+            once = next((f for f in re.findall(r"旗標 ([A-Za-z0-9_]+) = 0", cond) if f in sets_one), None)
+            for sc in chain:
+                pos_chain_label.setdefault(sc, (place, (o.get("_devNote") or "").strip() or action_title(action)))
             cands.append({
                 "id": o["m_Name"], "code": code, "script": script, "note": (o.get("_devNote") or "").strip(),
-                "cond": cond_item_text(o["_activeCondition"]) if o.get("_toggleCondition") else "",
+                "cond": cond, "once": once,
                 "rate": o.get("_defaultRate", 0),
                 "bonus": [{"cond": cond_item_text(r["_condition"]), "rate": r["_rate"]} for r in o.get("_eventRateItem", [])],
-                "chars": result_chars(script), "read": info["read"] if info else None,
-                "title": first_line(script) or (re.sub(r"<[^>]+>|\{[^}]*\}", "", loc.get("Story/" + script_first_say[script], "")).replace("\n", "")
-                                                if script_first_say.get(script) else ""),
+                "chars": sorted(set(result_chars(script)) | set(result_chars(content))), "read": cinfo["read"] if cinfo else None,
+                "title": first_line(content) or (re.sub(r"<[^>]+>|\{[^}]*\}", "", loc.get("Story/" + script_first_say[content], "")).replace("\n", "")
+                                                 if script_first_say.get(content) else ""),
             })
         layers.append({"group": gname, "candidates": cands})
     need = condition_text(option[0]).strip("（）") if option else ""
     positions.append({"area": area, "place": place, "action": action_title(action), "need": need, "layers": layers})
+
+# 不屬於任務事件、在地點事件裡設的旗標：標上是哪個地點的哪個事件，網頁才寫得出「在哪裡」
+for setters in flag_setters.values():
+    for x in setters:
+        if "ev" not in x and x["s"] in pos_chain_label:
+            x["pos"] = "・".join(pos_chain_label[x["s"]])
 
 # ---------- 五塊錢：有台詞但還沒讀完的場景，以及沒讀到的原因 ----------
 # 只因性格／技能而換台詞的分歧（走向相同）算「差分」：看過其中一個版本就算讀過

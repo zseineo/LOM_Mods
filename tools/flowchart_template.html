@@ -577,7 +577,9 @@ body.show-time .stime { display: inline; }
     const t = ev && ev.time && valid(ev.time.from) ? ev.time.from : G.scriptTime[x.s];
     const where = [t ? tstr(t) : '', ev && ev.place && ev.place !== '旅途／其他' ? ev.place : ''].filter(Boolean).join('・');
     const how = choiceOf(x);
-    return {how: how ? (ev && /^戰鬥/.test(how) ? `「${evShort(ev)}」${how}` : how) : (ev ? `經過「${evShort(ev)}」` : '經過某段劇情'), where};
+    // 不屬於任務事件的腳本：地點事件裡設的寫出地點與事件名
+    const fallback = ev ? `經過「${evShort(ev)}」` : x.pos ? `地點事件「${x.pos}」` : '經過某段劇情';
+    return {how: how ? (ev && /^戰鬥/.test(how) ? `「${evShort(ev)}」${how}` : how) : fallback, where};
   }
   function originList(list) {
     const seen = new Map();
@@ -1083,7 +1085,8 @@ body.show-time .stime { display: inline; }
     return {inn: [...inn], out: [...out]};
   }
   // 只發生一次：條件裡有「這個事件自己的旗標 = 0」
-  const onceFlag = c => [...String(c.cond).matchAll(FLAG_ATOM)].find(m => m[2] === '=' && m[3] === '0' && m[1] === c.id);
+  // 只會發生一次：條件要求「旗標 = 0」，而這個旗標在事件自己（或接下去的腳本）裡設成 1
+  const onceFlag = c => [...String(c.cond).matchAll(FLAG_ATOM)].find(m => m[2] === '=' && m[3] === '0' && (m[1] === c.id || m[1] === c.once));
   // 連上遊戲時判斷「現在能不能抽到」：只看旗標與時間，其他條件不明就不標
   function condNow(cond) {
     if (!cond) return true;
@@ -1177,7 +1180,8 @@ body.show-time .stime { display: inline; }
     const live = lv ? (lv.rate > 0 ? `　<span class="live">目前權重 ${lv.rate}・機率 ${(lv.prob * 100).toFixed(1)}%</span>` : '　<span class="bad">目前不會出現</span>') : '';
     const condHtml = lv && c.cond ? condAtomsHtml(c.cond, lv.atoms, once && once[0]) : null;
     const forced = LIVE_FORCED.has(c.id);
-    const force = LIVE && LIVE.inGame && LIVE_POS ? `<button class="forcebtn${forced ? ' on' : ''}" data-force="${esc(c.id)}" data-pass="${esc(pass || '')}"`
+    // 目前抽不到（權重 0）的不給鎖；已鎖定的照樣顯示，才能取消
+    const force = LIVE && LIVE.inGame && LIVE_POS && (forced || (lv && lv.rate > 0)) ? `<button class="forcebtn${forced ? ' on' : ''}" data-force="${esc(c.id)}" data-pass="${esc(pass || '')}"`
       + ` title="${forced ? '已鎖定：條件成立時一定抽到，播出後自動解除。點一下取消' : '條件成立時不擲骰、直接觸發這個事件（播出後自動解除）'}">${forced ? '🔒 已鎖定' : '強制'}</button>` : '';
     return `<div class="plev" data-script="${esc(c.script)}">${force}${readBadge(c.script, c.read)}${mark}<span class="ttl${hide}">${esc(title)}</span>`
       + `${who.length ? `<span class="who">${esc(who.join('、'))}</span>` : ''}${inn.length > 1 ? `<span class="multi">需同時在唐門：${esc(inn.join('＋'))}</span>` : ''}`
