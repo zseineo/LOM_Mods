@@ -540,11 +540,10 @@ def summarize(block, vars_, depth=0):
                 significant = False
             if significant and depth < 12:
                 branches = []
+                # 選項文字不算已讀：遊戲的已讀紀錄（ReadStoryData）從來不記選項
                 for br, (label, key) in zip(it["branches"], labels):
                     sub = summarize(br["block"], vars_, depth + 1)
                     sub_texts = sub.pop("_texts")
-                    if key:
-                        sub_texts = [key] + sub_texts
                     branches.append({"label": label, "read": read_ratio(sub_texts), **sub})
                     texts.extend(sub_texts)
                 node = {"t": "branch", "kind": kind, "name": name, "branches": branches}
@@ -1188,7 +1187,7 @@ VIEW_PLACE = [
     (re.compile(r"^section_100"), "錦香宮"),
     (re.compile(r"^snow_mountain"), "大雪山"),
     (re.compile(r"^(battlefield|boat2|bamboo_villa|center2|citygate|backyard1|ferry_day|banquet|champaign_night)"), "江陵／襄陽"),
-    (re.compile(r"^(tang_|center|alchemy|room|study|kitchen|backmountain|martial|princess|cellar|forge|champaign)"), "唐門"),
+    (re.compile(r"^(fortress|tang_|center|alchemy|room|study|kitchen|backmountain|martial|princess|cellar|forge|champaign)"), "唐門"),
     (re.compile(r"^(inn|teashop|mall1|outsideshop|paddy|temple_|house1)"), "唐門山下"),
 ]
 WORD_PLACE = {"江陵": "江陵／襄陽", "襄陽": "江陵／襄陽", "南宮世家": "江陵／襄陽", "錦香宮": "武林大會・錦香宮",
@@ -1234,7 +1233,9 @@ def event_place(e):
         text = "".join(info["legend"]) if info else ""
         for word, place in WORD_PLACE.items():
             score[place] += text.count(word)
-    return score.most_common(1)[0][0] if score else "旅途／其他"
+    # 每個地名都算過一次（次數 0 也在 Counter 裡），要看最高分是不是真的有出現
+    best = score.most_common(1)
+    return best[0][0] if best and best[0][1] > 0 else "旅途／其他"
 
 
 for e in events:
@@ -1452,8 +1453,9 @@ def is_variant(kind, labels, block):
 def branch_texts(it, vars_):
     kind, name, labels, _ = resolve_if(it, vars_)
     out = []
+    # 選項文字不算（遊戲不記選項的已讀）
     for br, (label, key) in zip(it["branches"], labels):
-        out.append((label, ([key] if key else []) + eff_texts(br["block"], vars_), br))
+        out.append((label, eff_texts(br["block"], vars_), br))
     return kind, labels, out
 
 
