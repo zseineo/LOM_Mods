@@ -14,10 +14,13 @@ public class Plugin : BaseUnityPlugin
 {
     public const string GUID = "zseineo.mortal.timemachine";
     public const string NAME = "LOM TimeMachine";
-    public const string VERSION = "0.7.1";
+    public const string VERSION = "0.7.2";
 
     internal static ManualLogSource Log;
     internal static ConfigEntry<bool> AutoCapture;
+    // 時光機視窗的「暫停自動存檔」：只在這次執行有效，重開遊戲恢復
+    internal static bool Paused;
+    internal static bool Capturing => AutoCapture.Value && !Paused;
     internal static ConfigEntry<Key> ToggleKey;
     internal static ConfigEntry<bool> GuideEnabled;
     internal static ConfigEntry<int> GuidePort;

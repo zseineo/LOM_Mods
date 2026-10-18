@@ -62,6 +62,7 @@ internal sealed class TimeMachineWindow
     private GUIStyle _cellCurrent;
     private GUIStyle _empty;
     private GUIStyle _field;
+    private GUIStyle _toggle;
     private GUIStyle _node;
     private GUIStyle _nodeDim;
     private Texture2D _lineOn;
@@ -329,6 +330,14 @@ internal sealed class TimeMachineWindow
             DrawKeyButton(Plugin.GuideKey);
         }
         GUILayout.Space(16f);
+        bool paused = GUILayout.Toggle(Plugin.Paused, " 暫停自動存檔", _toggle, GUILayout.Width(170f));
+        if (paused != Plugin.Paused)
+        {
+            Plugin.Paused = paused;
+            _message = paused ? "已暫停自動存檔：時光機存檔與關鍵節點都不會寫入，直到取消勾選或重開遊戲。" : "已恢復自動存檔。";
+            Plugin.Log.LogInfo($"[TimeMachine] 自動存檔{(paused ? "暫停" : "恢復")}");
+        }
+        GUILayout.Space(8f);
         if (GUILayout.Button("重新整理", _button, GUILayout.Width(110f)))
         {
             Refresh();
@@ -688,7 +697,8 @@ internal sealed class TimeMachineWindow
             return "目前在標題畫面";
         }
         GameTime time = PlayerStatManagerData.Instance.GameTime;
-        return $"目前：第{time.Year}年{time.Month}月{time.Stage}　{ModeName(TimeStore.CurrentMode())}　路線：{TimeStore.CurrentRoute}";
+        return $"目前：第{time.Year}年{time.Month}月{time.Stage}　{ModeName(TimeStore.CurrentMode())}　路線：{TimeStore.CurrentRoute}"
+            + (Plugin.Paused ? "　（自動存檔暫停中）" : "");
     }
 
     private static string ModeName(string mode)
@@ -737,6 +747,11 @@ internal sealed class TimeMachineWindow
 
         _button = new GUIStyle(GUI.skin.button) { font = font, fontSize = 18 };
         _field = new GUIStyle(GUI.skin.textField) { font = font, fontSize = 18 };
+        _toggle = new GUIStyle(GUI.skin.toggle) { font = font, fontSize = 18 };
+        _toggle.normal.textColor = _label.normal.textColor;
+        _toggle.onNormal.textColor = new Color(0.95f, 0.6f, 0.4f);
+        _toggle.hover.textColor = Color.white;
+        _toggle.onHover.textColor = _toggle.onNormal.textColor;
 
         _cell = new GUIStyle(GUI.skin.button) { font = font, fontSize = 17, alignment = TextAnchor.MiddleCenter };
         _cellCurrent = new GUIStyle(_cell);
