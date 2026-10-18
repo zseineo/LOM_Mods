@@ -1296,6 +1296,36 @@ def event_via(e):
     return simplify_routes([r for r in out if r])[:3]
 
 
+mission_points = collections.defaultdict(list)
+
+
+def index_missions(script, items, path):
+    for it in items:
+        if it["t"] == "mission":
+            mission_points[(it["m"], it["k"])].append({"from": script, "path": path})
+        elif it["t"] == "branch":
+            for br in it["branches"]:
+                index_missions(script, br["items"], path + [br["label"]])
+
+
+for _name, _info in script_info.items():
+    index_missions(_name, _info["items"], [])
+
+
+def event_activate(e):
+    """事件要先被別段劇情啟動（Mission）：列出啟動它的路線。"""
+    out = []
+    for x in mission_points.get((e["mission"], e["key"]), [])[:4]:
+        owner_ev, _ = find_owner(x["from"])
+        last = [{"from": x["from"], "path": x["path"]}] if x["path"] else []
+        for r in entry_routes(x["from"], owner_ev)[:2]:
+            steps = [{k: v for k, v in y.items() if k != "into"} for y in r] + last
+            if owner_ev and owner_ev != e["id"] and not (steps and steps[0].get("hub")):
+                steps = [{"from": x["from"], "path": [], "ev": owner_ev}] + steps
+            out.append(steps)
+    return simplify_routes([r for r in out if any(y["path"] for y in r)])[:3]
+
+
 def entry_conditions(script):
     """舊格式（由近到遠的步驟，每步列出可選的入口）：只有一條路線時逐步列；多條路線時合成一步「以下任一」。"""
     ev, _ = find_owner(script)
@@ -1881,6 +1911,9 @@ if read_keys:
         unread.append(item)
 
 for e in events:
+    act = event_activate(e)
+    if act:
+        e["activate"] = act
     via = event_via(e)
     if via:
         e["via"] = via
@@ -1932,6 +1965,16 @@ TARGETS = [
      "note": "第3年10月中旬武林大會期間的客棧：先選「叫一桶水洗澡」，再選「下樓喝酒」；"
              "此時要葉雲裳已結緣（G11002 = 1）且 E12100 = 1（而且 M60083 不是 1），才會進到遇見南溪的劇情（M60075 = 1）。"
              "若當下處世 ≤ 40 且修養 ≥ 60 會設為 2，結局段落有些內容要 M60075 ≥ 2。",
+     "ending": None},
+    {"name": "唐大鯨加入唐門", "flag": "E13002", "val": 1,
+     "note": "先完成支線「乞丐與和尚」（E20004 = 1）→ 第1年9月中旬～第2年4月下旬到「大門」觸發 → 擲骰後的三個選項："
+             "「我還是先不插手」、「惡霸，我來接你的招！」（和許大鯨打一場，輸贏都行）都會讓他加入；"
+             "「竟敢得罪我唐門的好朋友，和尚看拳！」（和福韞打）要打輸才會加入，打贏就不會。",
+     "ending": None},
+    {"name": "唐嬌嬌加入唐門", "flag": "E13003", "val": 1,
+     "note": "留在唐門（不去留學、主角在唐門）且練武場的掃除／團練做過 2 次以上 → 第2年5月自動觸發 → 選「我就偏不信，上前領教」"
+             "→ 和狄傲決鬥打贏 → 不要選「好，成親吧」，選另外兩個（「那我就安心了，妳總不能看上我」「妳擦亮眼看看我！」）。"
+             "第4年1月「峨嵋回音」的某些分支會讓她離開。",
      "ending": None},
     {"name": "開啟養成地點：鶴崖（崆峒）", "flag": "M00030", "val": 1,
      "note": "崆峒留學期間養成選單的「鶴崖」：M00030 = 1 後一直開著（第2年7月鶴崖事件結束時關閉）；沒開的話，身上帶著睡丹、還剩 2 次以上行動時也會出現。"
