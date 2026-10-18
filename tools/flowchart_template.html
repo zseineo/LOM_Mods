@@ -231,8 +231,35 @@ body.show-time .stime { display: inline; }
   const PREFS = (() => { try { return JSON.parse(localStorage.getItem('wukuai.prefs') || '{}') || {}; } catch (e) { return {}; } })();
   function savePref(k, v) { PREFS[k] = v; try { localStorage.setItem('wukuai.prefs', JSON.stringify(PREFS)); } catch (e) { } }
   let lastSig = null;
+  // 遊戲目前的已讀紀錄：第一次全部抓，之後只抓新增的；有變就重算五塊錢、地點事件、流程圖的已讀
+  const LIVE_READ = new Set();
+  let liveReadCount = 0;
+  async function syncRead() {
+    let j;
+    try { j = await (await fetch(`/api/readkeys?from=${liveReadCount}`, {cache: 'no-store'})).json(); } catch (e) { return false; }
+    if (!j || j.count == null || !j.count) return false;
+    if (j.reset) { LIVE_READ.clear(); }
+    j.keys.forEach(k => LIVE_READ.add(k));
+    const changed = j.keys.length > 0;
+    liveReadCount = j.count;
+    if (!changed) return false;
+    for (const u of G.unread) {
+      const keys = u.ks.map(k => u.kp + k);
+      const r = keys.length ? keys.filter(k => LIVE_READ.has(k)).length / keys.length : 1;
+      if (Math.abs(r - u.read) < 1e-9) continue;
+      u.read = r;
+      if (G.scripts[u.s]) G.scripts[u.s].read = r;
+    }
+    G.positions.forEach(p => p.layers.forEach(L => L.candidates.forEach(c => {
+      const u = G.unread.find(x => x.s === c.script);
+      if (u) c.read = u.read;
+    })));
+    G.events.forEach(e => e._read = eventRead(e));
+    return true;
+  }
   async function poll() {
     if (!ONLINE) return;
+    const readChanged = LIVE && LIVE.live ? await syncRead() : false;
     try {
       const res = await fetch('/api/state', {cache: 'no-store'});
       LIVE = await res.json();
@@ -252,8 +279,10 @@ body.show-time .stime { display: inline; }
     }
     // 狀態沒變就不重畫，避免展開的區塊被收起
     const sig = LIVE ? JSON.stringify([LIVE.time, LIVE.flags, LIVE.stats, LIVE.rel, LIVE.talents]) : '';
-    if (sig === lastSig) return;
+    if (sig === lastSig && !readChanged) return;
     lastSig = sig;
+    if (readChanged && currentView === 'unread') renderUnread(true);
+    if (readChanged && currentView === 'chart') layout();
     if (ONLINE && currentView === 'places') {
       try { const pj = await (await fetch('/api/positions', {cache: 'no-store'})).json(); LIVE_POS = pj.groups; LIVE_FORCED = new Set(pj.forced || []); } catch (e) { LIVE_POS = null; }
     }
@@ -293,17 +322,21 @@ body.show-time .stime { display: inline; }
       if (it.t === 'branch') it.branches.forEach(b => walkItems(b.items, fn, path.concat(b.label)));
     }
   }
+  function eventRead(e) {
+    let lines = 0, readSum = 0;
+    e.scripts.forEach(s => { const info = G.scripts[s]; if (info && info.read != null) { lines += info.lines; readSum += info.read * info.lines; } });
+    return lines ? readSum / lines : null;
+  }
   G.events.forEach(e => {
-    let lines = 0, readSum = 0, choice = false; const triggers = new Set();
+    let choice = false; const triggers = new Set();
     e.scripts.forEach(s => {
       const info = G.scripts[s]; if (!info) return;
-      if (info.read != null) { lines += info.lines; readSum += info.read * info.lines; }
       walkItems(info.items, it => {
         if (it.t === 'branch' && it.kind === 'choice') choice = true;
         if (it.t === 'mission') triggers.add(`${it.m}/${it.k}`.toLowerCase());
       });
     });
-    e._read = lines ? readSum / lines : null;
+    e._read = eventRead(e);
     e._choice = choice;
     e._triggers = [...triggers].filter(id => byId.has(id) && id !== e.id.toLowerCase());
   });
@@ -1302,9 +1335,9 @@ body.show-time .stime { display: inline; }
       unreadIndex = new Map();
       for (const u of G.unread) unreadIndex.set(u.s, u);
     }
-    const parts = [...unreadIndex.values()].filter(u => u.s === script || u.s.startsWith(script + '_'));
+    const parts = [...unreadIndex.values()].filter(u => u.read < 1 && (u.s === script || u.s.startsWith(script + '_')));
     const main = unreadIndex.get(script);
-    const r = main ? main.read : 1;
+    const r = main && main.read < 1 ? main.read : 1;
     if (!parts.length) return '<span class="rd r-read" title="這段劇情都看過了">已讀</span>';
     if (r === 0 && parts.every(u => u.read === 0)) return '<span class="rd r-unread" title="還沒看過">未讀</span>';
     const left = parts.reduce((a, u) => a + Math.round(u.lines * (1 - u.read)), 0);
@@ -1521,7 +1554,7 @@ body.show-time .stime { display: inline; }
     const NONE = '__none';
     const hits = hs => who === NONE ? !hs.some(shownName) : hs.includes(who);
     const relevant = u => !who || (u.read === 0 ? hits(u.heroines) : (u.reasons || []).some(r => hits(r.heroines || [])));
-    const list = G.unread.filter(u => (!st || (st === 'none' ? u.read === 0 : u.read > 0)) && relevant(u));
+    const list = G.unread.filter(u => u.read < 1 && (!st || (st === 'none' ? u.read === 0 : u.read > 0)) && relevant(u));
     const unreadLines = list.reduce((a, u) => a + Math.round(u.lines * (1 - u.read)), 0);
     let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落（以重建頁面時的「已讀」紀錄計算）。
       只因性情、道德、處世、修養或技能／天賦而換台詞、走向相同的地方算「差分」，看過其中一種就算讀過；

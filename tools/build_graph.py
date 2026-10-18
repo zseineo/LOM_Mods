@@ -1853,7 +1853,11 @@ if read_keys:
         if r is None or r >= 1:
             continue
         ev, _ = find_owner(name)
+        # 台詞鍵（去掉共同前綴）：網頁連上遊戲時用遊戲目前的已讀紀錄即時重算
+        uniq = list(dict.fromkeys(texts))
+        kp = os.path.commonprefix(uniq)
         item = {"s": name, "ev": ev, "read": r, "lines": len(set(texts)), "heroines": heroines_in(name),
+                "kp": kp, "ks": [k[len(kp):] for k in uniq],
                 "place": script_place(name, ev), "title": first_line(name) or (
                     re.sub(r"<[^>]+>|\{[^}]*\}", "", loc.get("Story/" + script_first_say[name], "")).replace("\n", "") if script_first_say.get(name) else "")}
         if r == 0:

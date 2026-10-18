@@ -36,6 +36,9 @@ internal sealed class GuideServer
     private readonly ConcurrentDictionary<string, byte[]> _icons = new ConcurrentDictionary<string, byte[]>();
     private volatile bool _iconsWanted;
     private volatile bool _iconsReady;
+    // 遊戲目前的已讀台詞鍵（ReadStorySystem 的字典，依加入順序）：主執行緒在數量變了時重新拍一份
+    private static readonly FieldInfo ReadIndexField = AccessTools.Field(typeof(ReadStorySystem), "_dicStoryIndex");
+    private volatile string[] _readKeys = new string[0];
 
     internal string Url => $"http://localhost:{_port}/";
 
@@ -92,6 +95,10 @@ internal sealed class GuideServer
         _nextSnapshot = Time.unscaledTime + 1f;
         try
         {
+            if (ReadStorySystem.Instance != null && ReadIndexField.GetValue(ReadStorySystem.Instance) is Dictionary<string, bool> read && read.Count != _readKeys.Length)
+            {
+                _readKeys = new List<string>(read.Keys).ToArray();
+            }
             _stateJson = BuildState();
             _timeMachineJson = BuildTimeMachineList();
             // 地點隨機事件的目前權重：只有網頁正在看「唐門地點事件」時才算
@@ -184,6 +191,23 @@ internal sealed class GuideServer
                 return;
             case "/api/lastload":
                 Write(context, "{\"result\":" + Json.Str(_lastLoadResult) + "}", "application/json; charset=utf-8");
+                return;
+            case "/api/readkeys":
+                // 從第 from 個開始的已讀台詞鍵；數量比 from 少（重新讀了已讀紀錄）就從頭給、標 reset
+                string[] keys = _readKeys;
+                int.TryParse(context.Request.QueryString["from"], out int from);
+                bool reset = from > keys.Length;
+                if (reset || from < 0)
+                {
+                    from = 0;
+                }
+                StringBuilder readJson = new StringBuilder(Math.Max(64, (keys.Length - from) * 20));
+                readJson.Append("{\"count\":").Append(keys.Length).Append(",\"reset\":").Append(reset ? "true" : "false").Append(",\"keys\":[");
+                for (int i = from; i < keys.Length; i++)
+                {
+                    readJson.Append(i > from ? "," : "").Append(Json.Str(keys[i]));
+                }
+                Write(context, readJson.Append("]}").ToString(), "application/json; charset=utf-8");
                 return;
             case "/api/icons":
                 _iconsWanted = true;
