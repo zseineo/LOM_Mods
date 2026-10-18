@@ -144,6 +144,7 @@ body.view-romance .chartonly { display: none; }
 .plev .bad, .plev .bad .flag { color: #d9534f; font-weight: 700; }
 .plev .live { color: var(--read); font-weight: 700; }
 .routes { margin: 2px 0 0 0; padding-left: 22px; }
+.curev { margin: 0 0 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: 13px; }
 .steps { margin: 2px 0 0 0; padding-left: 22px; }
 .steps li { margin: 1px 0; }
 .steps .or { color: var(--accent); font-weight: 700; }
@@ -281,10 +282,10 @@ body.show-time .stime { display: inline; }
       badge.textContent = '未連線';
     }
     // 狀態沒變就不重畫，避免展開的區塊被收起
-    const sig = LIVE ? JSON.stringify([LIVE.time, LIVE.flags, LIVE.stats, LIVE.rel, LIVE.talents]) : '';
+    const sig = LIVE ? JSON.stringify([LIVE.time, LIVE.flags, LIVE.stats, LIVE.rel, LIVE.talents, LIVE.recent]) : '';
     if (sig === lastSig && !readChanged) return;
     lastSig = sig;
-    if (readChanged && currentView === 'unread') renderUnread(true);
+    if (currentView === 'unread') renderUnread(true);
     if (readChanged && currentView === 'chart') layout();
     if (ONLINE && currentView === 'places') {
       try { const pj = await (await fetch('/api/positions', {cache: 'no-store'})).json(); LIVE_POS = pj.groups; LIVE_FORCED = new Set(pj.forced || []); } catch (e) { LIVE_POS = null; }
@@ -1442,6 +1443,7 @@ body.show-time .stime { display: inline; }
       最前面的「已讀／部分／未讀」是重建頁面當下的閱讀紀錄。
       ${LIVE && LIVE.inGame ? (LIVE_POS ? '連上遊戲時顯示「目前權重・機率」（由遊戲本身計算，紅字是目前不成立的條件）。' : '正在向遊戲取得目前機率…（需要時光機 Mod 0.6.0 以上）') : ''}點事件會在右側顯示劇情。${LIVE && LIVE.inGame ? '✓／✗ 是依目前存檔的旗標與時間判斷（其他屬性條件不判斷）。' : ''}</div>`;
     const fchip = (v, label) => `<button data-pl-who="${esc(v)}"${v === pick ? ' class="on"' : ''}>${label}</button>`;
+    html += currentEventHtml();
     html += `<div class="libtools"><label><input type="checkbox" id="plAll"${showAll ? ' checked' : ''}>也列出一般結果（平常、成功、失敗等）</label></div>`
       + `<div class="libtools"><div class="fchips"><span>角色</span>${fchip('', '全部')}${[...allWho].sort().map(n => fchip(n, iconImg(n) + esc(n))).join('')}</div></div>`;
     let lastArea = '';
@@ -1588,6 +1590,17 @@ body.show-time .stime { display: inline; }
     const more = u.moreRoutes ? `<span class="need">　還有其他路線</span>` : '';
     return html + routesBlock(routes.slice(0, 3), ctx, isBranch(u) ? '沒走過的分支' : '進入條件', more);
   }
+  // 目前的事件：Mod 回報最近執行的劇情腳本，從新的往回找第一個屬於任務事件的
+  function currentEventHtml() {
+    if (!LIVE || !LIVE.inGame) return '';
+    const recent = (LIVE.recent || []).slice().reverse();
+    const s = recent.find(x => scriptOwner.has(x.toLowerCase()));
+    const ev = s ? byId.get(scriptOwner.get(s.toLowerCase())) : null;
+    const t = LIVE.time ? `第${LIVE.time.y}年${LIVE.time.m}月${STAGE[LIVE.time.s]}` : '';
+    const body = ev ? `<span class="chip link" data-goto="${esc(ev.id.toLowerCase())}">${esc(evShort(ev))}</span>${ev.desc && ev.title ? `<span class="need">　${esc(ev.title.slice(0, 30))}…</span>` : ''}`
+      : '<span class="need">養成中（沒有進行中的任務事件）</span>';
+    return `<div class="curev"><b>目前</b>　${esc(t)}　${body}${recent[0] ? `<span class="need" style="font-family:Consolas,monospace">　${esc(recent[0])}</span>` : ''}</div>`;
+  }
   function renderUnread(keepScroll) {
     const top = romance.scrollTop;
     const open = keepScroll ? [...romance.querySelectorAll('details')].map(d => d.open) : [];
@@ -1606,6 +1619,7 @@ body.show-time .stime { display: inline; }
       只因性情、道德、處世、修養或技能／天賦而換台詞、走向相同的地方算「差分」，看過其中一種就算讀過；
       其他沒讀到的地方會列出原因（沒選過的選項、沒達成的條件、擲骰、戰鬥勝負）。玩過的事件裡整段沒走到的標「◇ 分支」。選了女主角時，只列「沒讀到的部分」有她出場或和她有關的段落；「其他」是沒有女主角的。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
     const fchip = (attr, v, cur, label) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${label}</button>`;
+    html += currentEventHtml();
     html += `<div class="libtools"><div class="fchips"><span>狀態</span>${[['', '全部'], ['none', '未讀'], ['part', '部分已讀']].map(([v, l]) => fchip('ur-st', v, st, l)).join('')}</div>`
       + `<span class="tag" style="color:var(--muted)">${list.length} 段，約 ${unreadLines} 句沒讀過</span></div>`
       + `<div class="libtools"><div class="fchips"><span>登場的女主角</span>${fchip('ur-who', '', who, '全部')}${heroines.map(h => fchip('ur-who', h, who, iconImg(h) + esc(h))).join('')}${fchip('ur-who', NONE, who, '其他')}</div></div>`;

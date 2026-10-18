@@ -1236,12 +1236,14 @@ def entry_routes(script, ev):
 
 
 def branch_read(script, labels):
-    """沿著分支標籤往下找，回傳最深那個分支的已讀比例（找不到或沒有台詞就是 None）。"""
+    """沿著分支標籤往下找，回傳最深那個分支的已讀比例；路上有條件分歧（不是選項、擲骰、戰鬥）就回傳 None。"""
     items, read = script_info.get(script, {}).get("items", []), None
     for label in labels:
-        found = next((br for it in items if it["t"] == "branch" for br in it["branches"] if br["label"] == label), None)
+        node, found = next(((it, br) for it in items if it["t"] == "branch" for br in it["branches"] if br["label"] == label), (None, None))
         if not found:
             return read
+        if node["kind"] not in ("choice", "dice", "battle"):
+            return None
         read, items = found.get("read"), found["items"]
     return read
 

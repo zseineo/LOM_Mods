@@ -93,6 +93,7 @@ internal static class CapturePatches
     {
         KeyNodes.OnScript(__instance.ScriptName);
         DrawLog.MarkPlayed(__instance.ScriptName);
+        EventLog.Script(__instance.ScriptName);
         ForcedDraws.OnScript(__instance.ScriptName);
     }
 

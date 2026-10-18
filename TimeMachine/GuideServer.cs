@@ -290,6 +290,14 @@ internal sealed class GuideServer
           .Append(",\"s\":").Append((int)save.CurrentStage).Append('}');
         sb.Append(",\"scene\":").Append(Json.Str(save.CurrentScene));
         sb.Append(",\"script\":").Append(Json.Str(PlayerStatManagerData.Instance.CurrentStoryScript));
+        // 最近執行的劇情腳本（新的在後）：網頁顯示「目前的事件」
+        sb.Append(",\"recent\":[");
+        string[] recent = EventLog.RecentScripts();
+        for (int i = 0; i < recent.Length; i++)
+        {
+            sb.Append(i > 0 ? "," : "").Append(Json.Str(recent[i]));
+        }
+        sb.Append(']');
         sb.Append(",\"mode\":").Append(Json.Str(TimeStore.CurrentMode()));
         sb.Append(",\"route\":").Append(Json.Str(TimeStore.CurrentRoute));
         sb.Append(",\"flags\":{");
