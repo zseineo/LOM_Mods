@@ -144,6 +144,10 @@ body.view-romance .chartonly { display: none; }
 .plev .bad, .plev .bad .flag { color: #d9534f; font-weight: 700; }
 .plev .live { color: var(--read); font-weight: 700; }
 .routes { margin: 2px 0 0 0; padding-left: 22px; }
+.reltab { border-collapse: collapse; width: 100%; font-size: 13px; }
+.reltab td, .reltab th { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; }
+.reltab img { width: 22px; height: 22px; border-radius: 50%; vertical-align: middle; margin-right: 4px; object-fit: cover; object-position: top; }
+.reltab .forcebtn { float: none; margin-right: 2px; }
 .tabs .extra { display: none; }
 body.moretabs .tabs .extra { display: inline-block; }
 .rtag { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 9px; font-size: 12px; font-weight: 400; background: #6b3fa0; color: #fff; }
@@ -1600,6 +1604,7 @@ body.show-time .stime { display: inline; }
     return html + routesBlock(routes.slice(0, 3), ctx, isBranch(u) ? '沒走過的分支' : '進入條件', more);
   }
   // 目前的事件：Mod 回報最近執行的劇情腳本，從新的往回找第一個屬於任務事件的
+  const HEROINE_NAMES_ALL = (G.heroines || []).map(h => h.name).concat(['上官螢', '魏菊', '瑞杏']);
   const routeTag = e => (e && e.routeOnly || []).map(r => `<span class="rtag" title="只有走這條路線才會發生">限定：${esc(r)}</span>`).join('');
   function currentEventHtml() {
     if (!LIVE || !LIVE.inGame) return '';
@@ -1841,12 +1846,51 @@ body.show-time .stime { display: inline; }
       const on = !!(state && state[c.id]);
       html += `<div class="hcard"><h2>${esc(c.name)}<button class="forcebtn${on ? ' on' : ''}" data-cheat="${c.id}" ${state ? '' : 'disabled'}>${on ? '已開啟' : '關閉中'}</button></h2><div class="rintro">${esc(c.desc)}</div></div>`;
     }
+    html += await relCheatHtml(!!state);
     romance.innerHTML = html;
     romance.querySelectorAll('[data-cheat]').forEach(b => b.onclick = async () => {
       const on = !(state && state[b.dataset.cheat]);
       try { await fetch(`/api/cheat?id=${b.dataset.cheat}&on=${on ? 1 : 0}`, {method: 'POST'}); } catch (e) { }
       renderCheat();
     });
+    // 好感：加減、設成、結識（Mod 排到遊戲主執行緒做，約 1 秒後重抓）
+    const relPost = async (key, args) => {
+      try { await fetch(`/api/rel?key=${encodeURIComponent(key)}&${args}`, {method: 'POST'}); } catch (e) { }
+      setTimeout(renderCheat, 1300);
+    };
+    romance.querySelectorAll('[data-rel-add]').forEach(b => b.onclick = () => relPost(b.dataset.key, `add=${b.dataset.relAdd}`));
+    romance.querySelectorAll('[data-rel-set]').forEach(b => b.onclick = () => {
+      const v = b.parentElement.querySelector('input').value;
+      if (v !== '') relPost(b.dataset.key, `set=${encodeURIComponent(v)}`);
+    });
+    romance.querySelectorAll('[data-rel-meet]').forEach(b => b.onclick = () => relPost(b.dataset.key, `meet=1${b.dataset.flag ? '&flag=' + b.dataset.flag : ''}`));
+  }
+  // 「認識 X」旗標（開發備註）對應到角色：備註用小名
+  const MEET_NICK = {'小梅': '虞小梅', '小蘭': '夏侯蘭', '小竹': '郁竹', '小菊': '魏菊', '馬富貴': '李富貴', '毛二壯': '王二壯'};
+  const MEET_FLAG = Object.fromEntries(Object.entries(G.flagNotes || {}).map(([f, n]) => {
+    const m = n.match(/^認識(.+)$/);
+    return m ? [MEET_NICK[m[1]] || m[1], f] : null;
+  }).filter(Boolean));
+  async function relCheatHtml(online) {
+    let html = `<div class="hcard"><h2>好感與結識</h2><div class="rintro">直接改目前遊戲裡的好感（0～100）。「設成已結識」會讓角色出現在人際關係，並把劇情條件用的「認識 X」旗標設成 1（有這個旗標的角色才會設）。改完約 1 秒後更新；記得存檔。</div>`;
+    if (!online) return html + '<div class="empty">要從遊戲裡按 F7 開這個網頁才能使用。</div></div>';
+    let rels = [];
+    try { rels = await (await fetch('/api/rels', {cache: 'no-store'})).json(); } catch (e) { }
+    if (!rels.length) return html + '<div class="empty">讀檔進入遊戲後才能使用。</div></div>';
+    const hero = new Set(HEROINE_NAMES_ALL);
+    rels = rels.filter(r => r.key !== '主角').sort((a, b) => (hero.has(b.key) - hero.has(a.key)) || b.value - a.value);
+    html += '<table class="reltab"><tr><th>角色</th><th>好感</th><th>調整</th><th>結識</th></tr>';
+    for (const r of rels) {
+      const flag = MEET_FLAG[r.key];
+      const flagOn = flag ? liveValue('flag', flag) === 1 : true;
+      const met = r.active && flagOn;
+      html += `<tr><td>${iconImg(r.key)}${esc(r.key)}</td><td><b>${r.value}</b></td><td>`
+        + [-10, -1, 1, 10].map(d => `<button class="forcebtn" data-key="${esc(r.key)}" data-rel-add="${d}">${d > 0 ? '+' : ''}${d}</button>`).join('')
+        + `　<input type="number" min="0" max="100" style="width:56px"><button class="forcebtn" data-key="${esc(r.key)}" data-rel-set="1">設成</button></td>`
+        + `<td>${met ? '<span class="need">已結識</span>' : `<button class="forcebtn" data-key="${esc(r.key)}" data-rel-meet="1" data-flag="${flag || ''}">設成已結識</button>`}`
+        + `${flag ? `<span class="need">　${esc(flag)}${flagOn ? ' ✓' : ''}</span>` : ''}</td></tr>`;
+    }
+    return html + '</table></div>';
   }
   for (const [view, id] of Object.entries(TAB_IDS)) document.getElementById(id).onclick = () => setView(view);
   document.getElementById('showHidden').addEventListener('change', renderRomance);

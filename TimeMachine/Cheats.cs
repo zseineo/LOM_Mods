@@ -34,6 +34,79 @@ internal static class Cheats
         return false;
     }
 
+    // 網頁送來的修改：排到主執行緒做（GuideServer.Tick 呼叫 RunPending）
+    private static readonly System.Collections.Concurrent.ConcurrentQueue<System.Action> Pending = new System.Collections.Concurrent.ConcurrentQueue<System.Action>();
+
+    internal static void RunPending()
+    {
+        while (Pending.TryDequeue(out System.Action action))
+        {
+            try
+            {
+                action();
+            }
+            catch (System.Exception e)
+            {
+                Plugin.Log.LogWarning($"[TimeMachine] 作弊失敗：{e.Message}");
+            }
+        }
+    }
+
+    // 好感：set（設成）或 add（加減），夾在 0～100；meet = 1 時設成已結識，flag 是一起設成 1 的「認識 X」旗標
+    internal static bool QueueRelationship(string key, string set, string add, bool meet, string flag)
+    {
+        if (!System.Enum.TryParse(key, out Mortal.Core.RelationshipStatType type))
+        {
+            return false;
+        }
+        if (!string.IsNullOrEmpty(flag) && !System.Text.RegularExpressions.Regex.IsMatch(flag, "^G(1000|300)\\d+$"))
+        {
+            return false;
+        }
+        Pending.Enqueue(() =>
+        {
+            Mortal.Core.RelationshipStat stat = Mortal.Core.PlayerStatManagerData.Instance.Relationships.Get(type);
+            if (stat == null)
+            {
+                return;
+            }
+            if (int.TryParse(set, out int value))
+            {
+                stat.SetValue(UnityEngine.Mathf.Clamp(value, 0, 100));
+            }
+            else if (int.TryParse(add, out int delta))
+            {
+                stat.AddValue(delta);
+            }
+            if (meet)
+            {
+                stat.SetActive(true);
+                if (!string.IsNullOrEmpty(flag))
+                {
+                    Mortal.Core.MissionManagerData.Instance.SetFlag(flag, 1);
+                }
+            }
+            EventLog.Write("作弊", $"好感 {type} = {stat.Value}{(meet ? "，已結識" : "")}{(string.IsNullOrEmpty(flag) || !meet ? "" : "，" + flag + " = 1")}");
+        });
+        return true;
+    }
+
+    // 好感一覽（主執行緒呼叫）
+    internal static string RelationshipsJson()
+    {
+        System.Text.StringBuilder sb = new System.Text.StringBuilder("[");
+        foreach (Mortal.Core.RelationshipStat stat in Mortal.Core.PlayerStatManagerData.Instance.Relationships.List)
+        {
+            if (stat == null)
+            {
+                continue;
+            }
+            sb.Append(sb.Length > 1 ? "," : "").Append("{\"key\":").Append(LOM.TimeMachine.Json.Str(stat.Type.ToString()))
+              .Append(",\"value\":").Append(stat.Value).Append(",\"active\":").Append(stat.Active ? "true" : "false").Append('}');
+        }
+        return sb.Append(']').ToString();
+    }
+
     // 只改條件判斷的結果，排在事件紀錄之前，紀錄會記到改過的結果
     [HarmonyPostfix]
     [HarmonyPriority(Priority.First)]

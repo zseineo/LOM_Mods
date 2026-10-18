@@ -14,7 +14,7 @@ public class Plugin : BaseUnityPlugin
 {
     public const string GUID = "zseineo.mortal.timemachine";
     public const string NAME = "LOM TimeMachine";
-    public const string VERSION = "0.7.7";
+    public const string VERSION = "0.7.8";
 
     internal static ManualLogSource Log;
     internal static ConfigEntry<bool> AutoCapture;
