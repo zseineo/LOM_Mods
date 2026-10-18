@@ -712,7 +712,7 @@ body.show-time .stime { display: inline; }
   }
   const inEvent = (it, ctx) => it.t === 'next' && ctx && ctx.scripts.includes(it.s.toLowerCase());
   // 「→ 接到 #N」：編號等整棵樹畫完才知道，先放記號最後再換
-  const segRef = s => `<div class="tref">→ 接到  ${s} </div>`;
+  const segRef = s => `<div class="tref">→ 接到 \u0000${s}\u0000</div>`;
   // 接到下一段：只有一個入口的縮排畫在這裡；多個入口（劇情合流）的放回最外層，這裡只放連結
   function treeChild(s, ctx, st) {
     if (st.num.has(s) || (st.inCount.get(s) || 0) > 1) { if (!st.num.has(s)) st.root.push(s); return segRef(s); }
@@ -745,7 +745,7 @@ body.show-time .stime { display: inline; }
       while (st.root.length) { const s = st.root.shift(); if (!st.num.has(s)) more += treeHtml(s, e, st); }
       if (more) html += `<h3>其他段落（經由旅途、戰鬥後接續等）</h3>${more}`;
     }
-    return html.replace(/ ([^ ]+) /g, (m, s) => st.num.has(s) ? `<span class="chip link" data-seg="${esc(s)}">#${st.num.get(s)}</span>` : esc(s));
+    return html.replace(/\u0000([^\u0000]+)\u0000/g, (m, s) => st.num.has(s) ? `<span class="chip link" data-seg="${esc(s)}">#${st.num.get(s)}</span>` : esc(s));
   }
   function plainItems(items, depth, ctx, near, st) {
     let html = plainOutcomes(items.filter(it => it.t !== 'branch'), ctx);
@@ -959,7 +959,8 @@ body.show-time .stime { display: inline; }
     return steps.map(st => {
       const alts = [...new Set(st.alts.map(altText).filter(Boolean))];
       if (!alts.length) return '';
-      return alts.length > 1 ? `以下任一（${alts.map(condHtml).join('　／　')}）` : condHtml(alts[0]);
+      // 多條路線（任一即可）分行列出
+      return alts.length > 1 ? `以下任一：<ol class="routes">${alts.map(x => `<li>${condHtml(x)}</li>`).join('')}</ol>` : condHtml(alts[0]);
     }).filter(Boolean).join(' → ');
   }
   // 只有一個來源的前置旗標直接攤平成步驟；多個來源（任一即可）的收進該步驟的可展開清單
@@ -1355,7 +1356,7 @@ body.show-time .stime { display: inline; }
       return html;
     }
     const shown = routes.slice(0, 3).map(r => r.join(' → '));
-    const more = (u.routes || []).length > 3 ? `<span class="need">　還有其他路線</span>` : '';
+    const more = u.moreRoutes ? `<span class="need">　還有其他路線</span>` : '';
     if (shown.length === 1) return html + `<div class="need">進入條件：${shown[0]}${more}</div>`;
     return html + `<div class="need">進入條件（任一條路線）：</div><ol class="need routes">${shown.map(r => `<li>${r}</li>`).join('')}</ol>${more}`;
   }
