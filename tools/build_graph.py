@@ -223,7 +223,8 @@ def switch_conditions(name):
     if not o:
         return None
     if o.get("_useCount"):
-        return [f"第 {i + 1} 種次數條件" for i in range(len(o.get("_countItems", [])))] + ["其他次數"]
+        what = (o.get("_devNote") or "").strip() or "經過這裡的次數"
+        return [f"{what} {OPS[c['_compareOp']]} {c['_value']}" for c in o.get("_countItems", [])] + [f"{what}是其他次數"]
     items = [cond_item_text(ci) for ci in o.get("_items", [])]
     # 「以上皆非」補上它排除了哪些條件，讀的人才知道實際要滿足什麼
     others = "；".join(items)
@@ -301,7 +302,7 @@ RE = {
 
 def option_label(raw):
     raw = raw.strip()
-    m = re.match(r'^(\w+) and "(.*)" or "~x"$', raw)
+    m = re.match(r'^(\w+) and "(.*)" or "~[^"]*"$', raw)
     cond_var = None
     if m:
         cond_var, raw = m.group(1), m.group(2)
@@ -315,7 +316,7 @@ def option_label(raw):
     if "+" in raw:
         parts = raw.split("+")
         key = parts[1] if len(parts) > 1 else raw
-        return key, story_text(key) or loc.get(f"Position/Talk/{key}") or "+".join(parts[:2]), cond_var
+        return key, story_text(key) or loc.get(f"Position/Talk/{key}") or loc.get(f"Position/title/{parts[0]}") or "+".join(parts[:2]), cond_var
     return raw, story_text(raw) or raw, cond_var
 
 
@@ -807,6 +808,9 @@ for mission_name in [main_name] + sub_names:
             "nextState": c["_nextStateName"],
             "dialogs": [loc.get("Mission/" + d["_dialog"]) or d["_dialog"] for d in c.get("_startDialogs", [])],
             "scripts": chain,
+            # 開發者給的短名稱：檢查點的優先，沒有就用任務的（「主線任務」這種通用說明不用）
+            "desc": re.sub(r"^\d+-\d+\s*", "", (c.get("_desc") or "").strip())
+                    or ((m.get("_desc") or "").strip() if (m.get("_desc") or "").strip() not in ("主線任務", "支線任務") else ""),
         })
 
 def satisfies(v, op, n):
@@ -1051,6 +1055,7 @@ event_by_id_lower = {e["id"].lower(): e for e in events}
 
 FREE_HUB = re.compile(r"^section_0*(\d+)_free_start_\d+$")
 HUB_NAME = {"1": "崆峒留學期間", "2": "青城留學期間"}
+FREE_SCRIPT = re.compile(r"^section_0*\d+_free_")
 
 
 def entry_routes(script, ev):
@@ -1085,7 +1090,69 @@ def entry_routes(script, ev):
     # 有一條不用任何條件就走得到：其他路線都不必列
     if any(not r for r in out):
         return [[]]
-    return sorted(out, key=len)[:6]
+    for r in out:
+        for x in r:
+            if (branch_read(x["from"], x["path"]) or 0) > 0:
+                x["done"] = True
+    return simplify_routes(out)[:6]
+
+
+def branch_read(script, labels):
+    """沿著分支標籤往下找，回傳最深那個分支的已讀比例（找不到或沒有台詞就是 None）。"""
+    items, read = script_info.get(script, {}).get("items", []), None
+    for label in labels:
+        found = next((br for it in items if it["t"] == "branch" for br in it["branches"] if br["label"] == label), None)
+        if not found:
+            return read
+        read, items = found.get("read"), found["items"]
+    return read
+
+
+def route_steps(r):
+    return [(x["from"], tuple(x["path"])) for x in r]
+
+
+def simplify_routes(routes):
+    """條件完全包含另一條的路線不列（較寬鬆的就夠了）；只差在「X」與「不是 X」的兩條合併成一條。"""
+    routes = sorted(routes, key=len)
+    changed = True
+    while changed:
+        changed = False
+        for i in range(len(routes)):
+            for j in range(len(routes)):
+                if i == j:
+                    continue
+                a, b = route_steps(routes[i]), route_steps(routes[j])
+                if len(a) == len(b):
+                    diff = [k for k in range(len(a)) if a[k] != b[k]]
+                    if len(diff) == 1:
+                        k = diff[0]
+                        la, lb = a[k][1], b[k][1]
+                        if a[k][0] == b[k][0] and len(la) == len(lb) == 1 and (lb[0] == f"以上皆非（不是：{la[0]}）" or la[0] == f"以上皆非（不是：{lb[0]}）"):
+                            routes[i] = routes[i][:k] + routes[i][k + 1:]
+                            del routes[j]
+                            changed = True
+                            break
+                if all(step in b for step in a) and len(a) < len(b):
+                    del routes[j]
+                    changed = True
+                    break
+            if changed:
+                break
+    return routes
+
+
+def event_via(e):
+    """事件開頭的腳本被其他事件／養成選單接過來時，列出那些入口的路線。"""
+    # 事件結束常回到留學的養成選單，選單也會被算進事件自己的腳本鏈：選單的腳本一律當成外部入口
+    own = {sc for sc in e["scripts"] if not FREE_SCRIPT.match(sc)}
+    out = []
+    for x in [x for x in entry_paths.get(e["start"], []) if x["from"] not in own][:4]:
+        owner_ev, _ = find_owner(x["from"])
+        last = [{"from": x["from"], "path": x["path"]}] if x["path"] else []
+        for r in entry_routes(x["from"], owner_ev)[:2]:
+            out.append([{k: v for k, v in y.items() if k != "into"} for y in r] + last)
+    return simplify_routes([r for r in out if r])[:3]
 
 
 def entry_conditions(script):
@@ -1653,11 +1720,20 @@ if read_keys:
             # 網頁只列 3 條，其餘只記有沒有
             item["routes"] = [[{k: v for k, v in x.items() if k != "into"} for x in r] for r in routes[:3]]
             item["moreRoutes"] = len(routes) > 3
+            hubs = {(r[0].get("hub"), r[0]["path"][0]) for r in routes if r and r[0].get("hub")}
+            if hubs and all(r and r[0].get("hub") for r in routes) and len(hubs) == 1:
+                hub, place = next(iter(hubs))
+                item["hubGroup"] = f"{hub}・{place}"
         else:
             reasons = []
             unread_reasons(block, vars_, [], reasons)
             item["reasons"] = reasons[:12]
         unread.append(item)
+
+for e in events:
+    via = event_via(e)
+    if via:
+        e["via"] = via
 
 # 每支腳本最短的進入路線（只留最後幾個標籤）：網頁把「一進這段就設的暫存旗標」翻成是哪個選項接過來的
 script_via = {}
