@@ -1383,7 +1383,7 @@ body.show-time .stime { display: inline; }
     const allWho = new Set();
     G.positions.forEach(p => p.layers.forEach(L => L.candidates.forEach(c => {
       presence(c.cond).inn.filter(shownName).forEach(n => allWho.add(n));
-      (c.chars || []).map(fullName).filter(shownName).forEach(n => allWho.add(n));
+      [...(c.chars || []).map(fullName), ...(p.who || [])].filter(shownName).forEach(n => allWho.add(n));
     })));
     let html = `<div class="rintro">在各養成地點行動時（唐門、留學、錦香宮…，旅途中的隨機事件也列在最後），遊戲會從「候選事件」裡依權重抽一個（實際機率 ＝ 權重 ÷ 當下所有符合條件事件的權重總和）。
       後山、鍛冶場、大門、外堡會先抽一次「有沒有人插進來」，再抽行動結果，兩層都列在下面。
@@ -1409,7 +1409,7 @@ body.show-time .stime { display: inline; }
             const pr = presence(c.cond);
             const needInn = presence(p.need || '').inn;
             needInn.forEach(n => { if (!pr.inn.includes(n)) pr.inn.unshift(n); });
-            const who = [...pr.inn, ...(c.chars || []).map(fullName)].filter(shownName);
+            const who = [...new Set([...pr.inn, ...(c.chars || []).map(fullName), ...(p.who || [])])].filter(shownName);
             const special = /^[59]/.test(c.code);
             const related = who.some(n => !RESIDENTS.has(n));
             // 預設：角色事件與特殊事件；勾選後連平常／成功／失敗等一般結果都列

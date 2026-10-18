@@ -489,6 +489,8 @@ script_first_say = {}
 script_cond_names = {}
 script_chars = {}
 CHAR_GET = re.compile(r'characters\.Get\("([^"]+)"\)')
+# 只有旁白、插圖的結果（例如跑步）沒有立繪：有增減誰的好感，也算那個人有出場
+CHAR_FAVOR = re.compile(r'statmodifymanager\.Character\("([^"]+)", -?\d+')
 VIEW_NAME = re.compile(r'LoadView\("([^"]*)"\)')
 COND_NAME = re.compile(r'checkpointmanager\.(?:Switch|Condition)\("([^"]+)"\)')
 for name in os.listdir(lua_dir):
@@ -500,7 +502,7 @@ for name in os.listdir(lua_dir):
         say = RE["text"].search(text)
         script_first_say[key] = say.group(1) if say else None
         script_cond_names[key] = set(COND_NAME.findall(text))
-        script_chars[key] = {c for c in CHAR_GET.findall(text) if c != "player"}
+        script_chars[key] = {c for c in CHAR_GET.findall(text) + CHAR_FAVOR.findall(text) if c != "player"}
 
 read_keys = set()
 if universe_path != "-" and os.path.exists(universe_path):
@@ -1773,6 +1775,11 @@ def heroine_of(name):
         if nick in name:
             name = name.replace(nick, full)
     return [h for h in HEROINE_NAMES if h in name]
+
+
+# 地點本身就寫明是誰的（「小梅找你跑步」）：底下每個事件都算她
+for p in positions:
+    p["who"] = heroine_of(p["place"] + p["action"])
 
 
 def block_heroines(block, out):
