@@ -213,7 +213,7 @@ def switch_conditions(name):
         return [f"第 {i + 1} 種次數條件" for i in range(len(o.get("_countItems", [])))] + ["其他次數"]
     items = [cond_item_text(ci) for ci in o.get("_items", [])]
     # 「以上皆非」補上它排除了哪些條件，讀的人才知道實際要滿足什麼
-    others = "；".join(x if len(x) <= 80 else x[:80] + "…" for x in items)
+    others = "；".join(items)
     return items + [f"以上皆非（不是：{others}）" if items else "以上皆非"]
 
 
