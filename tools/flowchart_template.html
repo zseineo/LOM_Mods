@@ -1004,8 +1004,6 @@ body.show-time .stime { display: inline; }
       const where = owner ? `　→ 事件「${esc((owner.title || owner.key).slice(0, 14))}」${x.via ? '（經 ' + esc(x.via) + '）' : ''}` : '　→ 不屬於任何任務事件（日常／閒聊等），點此看腳本';
       html += `<div class="row" ${target}>${x.op === 'AddFlag' ? (x.v > 0 ? '+' : '') + x.v + '（累加）' : '= ' + x.v}　${esc(x.s)}${x.path.length ? '　〔' + esc(x.path.join(' › ').slice(0, 60)) + '〕' : ''}${where}</div>`;
     }
-    const readers = (G.readers[f] || []).map(r => byId.get(r.toLowerCase())).filter(x => x && !x.quiet);
-    if (readers.length) html += `<div style="margin-top:6px">之後會看這個的事件：</div>` + readers.map(x => `<div class="row" data-ev="${esc(x.id.toLowerCase())}">${esc(whenText(x))}　「${esc(evShort(x))}」</div>`).join('');
     pop.innerHTML = html;
     pop.style.display = 'block';
     const r = ev.target.getBoundingClientRect();
@@ -1089,13 +1087,29 @@ body.show-time .stime { display: inline; }
     return groups.map(g => g.join('、')).join(' 或 ');
   }
   // 「以上皆非（不是：A；B）」：每一項取反；旗標也保留（下方不會另外列出）
+  // 「以上皆非（不是：A；B）」改成正面說法：非(A 且 B) = 非A 或 非B；非(A 或 B) = 非A 且 非B
+  // 展開成「且」連接的子句，每個子句是「或」連接的選項；再用只有一個選項的子句刪掉其他子句裡和它矛盾的選項
   function negatedCond(text) {
-    return text.split('；').map(item => {
-      const atoms = item.split(' 或 ');
-      if (atoms.length > 1) return atoms.map(a => a.split(' 且 ').length > 1 ? `不是（${a}）` : negateAtom(a)).join('、');
-      const ands = item.split(' 且 ');
-      return ands.length > 1 ? `不是（${item.trim()}）` : negateAtom(item);
-    }).join('、');
+    const clauses = [];
+    for (const item of text.split('；')) {
+      for (const a of item.split(' 或 ').map(x => x.trim().replace(/^（(.*)）$/, '$1'))) {
+        const ands = a.split(' 且 ');
+        clauses.push(ands.map(negateAtom));
+      }
+    }
+    const facts = clauses.filter(c => c.length === 1).map(c => atomRange(c[0])).filter(Boolean);
+    const out = [];
+    for (const c of clauses) {
+      if (c.length > 1) {
+        const rs = c.map(atomRange);
+        // 某個選項已被單一條件保證成立：整個子句不用寫
+        if (rs.some(r => r && facts.some(f => implies(f, r)))) continue;
+        const left = c.filter((x, i) => !(rs[i] && facts.some(f => disjoint(f, rs[i]))));
+        out.push(left.length ? left : c);
+      } else out.push(c);
+    }
+    const uniq = [...new Map(out.map(c => [c.join('|'), c])).values()];
+    return uniq.map(c => c.length > 1 && uniq.length > 1 ? `（${c.join(' 或 ')}）` : c.join(' 或 ')).join(' 且 ');
   }
   function stepPart(label) {
     let need = '';
@@ -1650,12 +1664,23 @@ body.show-time .stime { display: inline; }
   // 分支標籤 → 白話；只有旗標的條件也轉成「在哪裡選了什麼」
   // 「前提不是：A；B」裡，和主條件矛盾的整項刪掉（本來就不可能成立），被主條件涵蓋的那幾個小條件省略
   const ATOM = /^(.+?) (=|≠|<|≤|>|≥) (-?\d+)$/;
+  // 劇本裡只會被設成 0 或 1 的旗標：當成是非題（≠ 1 就是 = 0）
+  function isBoolFlag(f) {
+    const all = G.flags[f] || [];
+    return all.length > 0 && all.every(x => x.op !== 'AddFlag' && (x.v === 0 || x.v === 1));
+  }
   function atomRange(a) {
     const m = a.trim().replace(/^（(.*)）$/, '$1').match(ATOM);
     if (!m) return null;
     const n = Number(m[3]);
     const r = {'=': [n, n], '<': [-Infinity, n - 1], '≤': [-Infinity, n], '>': [n + 1, Infinity], '≥': [n, Infinity]}[m[2]];
-    return {lhs: m[1], ne: m[2] === '≠' ? n : null, lo: r ? r[0] : -Infinity, hi: r ? r[1] : Infinity};
+    const out = {lhs: m[1], ne: m[2] === '≠' ? n : null, lo: r ? r[0] : -Infinity, hi: r ? r[1] : Infinity};
+    const fm = m[1].match(/^旗標 ([A-Za-z0-9_]+)/);
+    if (fm && isBoolFlag(fm[1])) {
+      if (out.ne !== null) { out.lo = out.hi = out.ne === 0 ? 1 : 0; out.ne = null; }
+      out.lo = Math.max(out.lo, 0); out.hi = Math.min(out.hi, 1);
+    }
+    return out;
   }
   const disjoint = (a, b) => a.lhs === b.lhs && (a.ne === null && b.ne === null ? a.hi < b.lo || b.hi < a.lo
     : a.ne === null ? a.lo === a.hi && a.lo === b.ne : b.ne === null ? b.lo === b.hi && b.lo === a.ne : false);
