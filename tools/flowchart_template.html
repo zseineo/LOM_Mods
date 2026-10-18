@@ -1289,6 +1289,10 @@ body.show-time .stime { display: inline; }
     for (const t of G.targets) {
       html += `<div class="hcard"><h2>${checkMark('flag:' + t.flag + '>=' + t.val)}${esc(t.name)}<span class="tag">目標 <span class="flag" data-flag="${esc(t.flag)}" data-op="=" data-val="${t.val}">旗標 ${esc(t.flag)}</span> = ${t.val}</span></h2>`;
       if (t.note && !findGuide('targets', t.name)) html += `<div class="rintro">${esc(t.note)}</div>`;
+      // 精簡版：只列條件、步驟，不附詳細追溯
+      if (t.conds) html += `<h4>條件</h4><ul class="guide">${t.conds.map(c => `<li>${esc(c)}</li>`).join('')}</ul>`;
+      if (t.steps) html += `<h4>步驟</h4><ol class="guide">${t.steps.map(c => `<li>${esc(c)}</li>`).join('')}</ol>`;
+      if (t.brief) { html += '</div>'; continue; }
       if (t.ending) html += legendHtml(t.ending, ' unreadtxt');
       const guide = findGuide('targets', t.name);
       if (guide) html += '<h4>達成條件</h4>' + guideHtml(guide);
