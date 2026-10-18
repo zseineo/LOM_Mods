@@ -144,6 +144,7 @@ body.view-romance .chartonly { display: none; }
 .plev .bad, .plev .bad .flag { color: #d9534f; font-weight: 700; }
 .plev .live { color: var(--read); font-weight: 700; }
 .routes { margin: 2px 0 0 0; padding-left: 22px; }
+.rtag { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 9px; font-size: 12px; font-weight: 400; background: #6b3fa0; color: #fff; }
 .curev { margin: 0 0 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: 13px; }
 .steps { margin: 2px 0 0 0; padding-left: 22px; }
 .steps li { margin: 1px 0; }
@@ -951,7 +952,7 @@ body.show-time .stime { display: inline; }
     const full = e.desc || e.title || e.start || e.key;
     const head = full.length > 40 ? full.slice(0, 40) + '…' : full;
     let html = `<h2>${esc(head)}</h2>
-      <div class="meta">${esc(e.main ? '主線' : '支線')}${e.active ? '' : '（停用）'}　·　${read}</div>
+      <div class="meta">${esc(e.main ? '主線' : '支線')}${e.active ? '' : '（停用）'}　·　${read}${routeTag(e)}</div>
       <div><span class="chip">🕒 ${esc(when)}</span>${e.place ? `<span class="chip">🏯 ${esc(e.place)}</span>` : ''}${e.pos ? `<span class="chip">📍 到「${esc(e.pos)}」觸發</span>` : '<span class="chip">時間到自動觸發</span>'}</div>`;
     html += '<h3>觸發條件</h3>' + (e.conds.length ? e.conds.map(c => `<div class="cond">${plainCondHtml(c, e)}</div>`).join('') : '<div class="empty">時間到就觸發</div>');
     if (e.via) html += `<h3>從這裡觸發</h3><div class="cond">${routesBlock(e.via, e, '觸發方式')}</div>`;
@@ -1591,6 +1592,7 @@ body.show-time .stime { display: inline; }
     return html + routesBlock(routes.slice(0, 3), ctx, isBranch(u) ? '沒走過的分支' : '進入條件', more);
   }
   // 目前的事件：Mod 回報最近執行的劇情腳本，從新的往回找第一個屬於任務事件的
+  const routeTag = e => (e && e.routeOnly || []).map(r => `<span class="rtag" title="只有走這條路線才會發生">限定：${esc(r)}</span>`).join('');
   function currentEventHtml() {
     if (!LIVE || !LIVE.inGame) return '';
     const recent = (LIVE.recent || []).slice().reverse();
@@ -1642,9 +1644,9 @@ body.show-time .stime { display: inline; }
       const hubGroup = key.split('|')[1];
       const ev = hubGroup ? null : byId.get(key);
       const none = rows.filter(fresh).length, branches = rows.filter(isBranch).length;
-      const head = hubGroup ? `${esc(hubGroup)}　<span class="need">（留學期間的養成地點）</span>`
+      const head = hubGroup ? `${esc(hubGroup)}　<span class="need">（留學期間的養成地點）</span>${hubGroup.startsWith('崆峒') ? '<span class="rtag">限定：留學：崆峒</span>' : hubGroup.startsWith('青城') ? '<span class="rtag">限定：留學：青城</span>' : ''}`
         : ev ? `${esc(whenText(ev))}　${ev.place ? esc(ev.place) + '　' : ''}<span class="chip link" data-goto="${esc(key)}">${esc(evShort(ev))}${ev.desc ? '' : '…'}</span>`
-          + (ev.desc && ev.title ? `<span class="need${ev._read ? '' : ' unreadtxt'}" style="font-weight:400">　${esc(ev.title.replace(/^「|」$/g, '').slice(0, 26))}…</span>` : '')
+          + (ev.desc && ev.title ? `<span class="need${ev._read ? '' : ' unreadtxt'}" style="font-weight:400">　${esc(ev.title.replace(/^「|」$/g, '').slice(0, 26))}…</span>` : '') + routeTag(ev)
         : '日常、地點行動、閒聊（不屬於任務事件）';
       html += `<details class="plcard"${rows.length <= 6 || who ? ' open' : ''}><summary style="cursor:pointer"><b>${head}</b>　<span class="need">${rows.length} 段（${[none ? `未讀 ${none}` : '', branches ? `沒走過的分支 ${branches}` : ''].filter(Boolean).join('、') || '都讀過一部分'}）</span></summary>`;
       // 事件是從別處接進來的（例如養成選單的行動）：先寫怎麼觸發

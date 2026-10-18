@@ -1940,6 +1940,82 @@ for e in events:
                 tt = lambda t: {"y": t[0], "m": t[1], "s": t[2]}
                 e["time"] = {"type": "at", "from": tt(lo)} if hi == lo else                     {"type": "range", "from": tt(lo), "to": tt(hi)} if hi else {"type": "range", "from": tt(lo), "to": {"y": 4, "m": 3, "s": 3}, "open": True}
 
+# ---------- 限定路線 ----------
+# 劇情分岔的旗標（開發備註逐行寫了各數值的意思）：事件要求其中一個值，就是限定那條路線。
+# 會往上繼承：啟動／觸發它的劇情、它需要的旗標在哪個事件裡設，那些事件限定的路線它也一樣。
+ROUTE_FLAG_NAMES = ["M20008", "M20011", "M20028", "M40036", "M60016", "M70015"]
+ROUTE_PREFIX = {"M20008": "留學：", "M20011": "崆峒門派：", "M20028": "離家出走：", "M40036": "臥雲崗：",
+                "M60016": "武林大會：", "M70015": "決策："}
+ROUTE_VALUES = {}
+for _f in ROUTE_FLAG_NAMES:
+    _vals = {}
+    for _line in (FLAG_NOTE.get(_f) or "").replace("\r", "").split("\n")[1:]:
+        _m = re.match(r"^\s*(\d+)\s*[.:：、]?\s*(.+)$", _line)
+        if _m:
+            _vals[int(_m.group(1))] = ROUTE_PREFIX[_f] + _m.group(2).strip()
+    ROUTE_VALUES[_f] = _vals
+ROUTE_VALUES["M70015"][2] = "決策：戰他娘親（頑抗路線）"
+ROUTE_VALUES["M70052"] = {1: "決策：戰他娘親（頑抗路線）"}
+HUB_ROUTE = {"崆峒留學期間": "留學：崆峒", "青城留學期間": "留學：青城"}
+ROUTE_ATOM = re.compile(r"旗標 (" + "|".join(ROUTE_VALUES) + r")(?:（[^）]*）)? = (\d+)")
+
+
+def route_atoms(text):
+    """文字裡「旗標 路線旗標 = 值」的路線名稱（被排除的「以上皆非（不是：…）」「前提不是」不算）"""
+    text = re.sub(r"以上皆非（不是：.*?）|　〔前提不是：.*〕", "", text)
+    return {ROUTE_VALUES[f][int(v)] for f, v in ROUTE_ATOM.findall(text) if int(v) in ROUTE_VALUES[f]}
+
+
+_route_memo = {}
+
+
+def event_routes(e, depth=0):
+    """事件限定的路線（集合）。多個入口時取共同的部分。"""
+    key = e["id"]
+    if key in _route_memo:
+        return _route_memo[key]
+    _route_memo[key] = set()          # 先占位，避免互相引用時無限遞迴
+    tags = set()
+    for c in e["conds"]:
+        tags |= route_atoms(c)
+    if depth < 4:
+        def route_tags(r):
+            out = set()
+            for x in r:
+                if x.get("hub") in HUB_ROUTE:
+                    out.add(HUB_ROUTE[x["hub"]])
+                if x.get("ev") and event_by_id_lower.get(x["ev"].lower()):
+                    out |= event_routes(event_by_id_lower[x["ev"].lower()], depth + 1)
+                for label in x.get("path", []):
+                    out |= route_atoms(label)
+            return out
+        for routes in (e.get("activate"), e.get("via")):
+            if routes:
+                tags |= set.intersection(*[route_tags(r) for r in routes])
+        # 條件要的旗標（不是路線旗標本身）：所有符合的設定點都在某條路線上，就繼承
+        for f, op, v in re.findall(r"旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≥|>) (\d+)", " ".join(e["conds"])):
+            if f in ROUTE_VALUES or (op == "=" and v == "0"):
+                continue
+            sets = []
+            for x in flag_setters.get(f, []):
+                if x.get("op") != "SetFlag" or not satisfies(x["v"], op, int(v)):
+                    continue
+                owner = event_by_id_lower.get((x.get("ev") or "").lower())
+                t = set().union(*[route_atoms(label) for label in x["path"]]) if x["path"] else set()
+                if owner and owner["id"] != e["id"]:
+                    t |= event_routes(owner, depth + 1)
+                sets.append(t)
+            if sets:
+                tags |= set.intersection(*sets)
+    _route_memo[key] = tags
+    return tags
+
+
+for e in events:
+    r = event_routes(e)
+    if r:
+        e["routeOnly"] = sorted(r)
+
 # 每支腳本最短的進入路線（只留最後幾個標籤）：網頁把「一進這段就設的暫存旗標」翻成是哪個選項接過來的
 script_via = {}
 for name in script_info:
