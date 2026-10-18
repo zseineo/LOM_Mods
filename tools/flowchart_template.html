@@ -1523,6 +1523,11 @@ body.show-time .stime { display: inline; }
     if (!parts.length) return skipped ? '<span class="need">（路線上的選擇都走過了，要看當下的條件或擲骰）</span>' : '';
     return (skipped ? `<span class="need" title="已經走過的 ${skipped} 個步驟">（已走過 ${skipped} 步）</span> → ` : '') + parts.join(' → ');
   }
+  const isBranch = u => {
+    if (u.read !== 0 || u.hubGroup || !u.ev) return false;
+    const ev = byId.get(u.ev.toLowerCase());
+    return !!(ev && ev.start !== u.s && (G.scripts[ev.start] || {}).read > 0);
+  };
   function routesHtml(u, ctx) {
     let html = '';
     const startRead = ctx ? (G.scripts[ctx.start] || {}).read : null;
@@ -1540,8 +1545,9 @@ body.show-time .stime { display: inline; }
     }
     const shown = routes.slice(0, 3);
     const more = u.moreRoutes ? `<span class="need">　還有其他路線</span>` : '';
-    if (shown.length === 1) return html + `<div class="need">進入條件：${shown[0]}${more}</div>`;
-    return html + `<div class="need">進入條件（任一條路線）：</div><ol class="need routes">${shown.map(r => `<li>${r}</li>`).join('')}</ol>${more}`;
+    const label = isBranch(u) ? '沒走過的分支' : '進入條件';
+    if (shown.length === 1) return html + `<div class="need">${label}：${shown[0]}${more}</div>`;
+    return html + `<div class="need">${label}（任一條路線）：</div><ol class="need routes">${shown.map(r => `<li>${r}</li>`).join('')}</ol>${more}`;
   }
   function renderUnread(keepScroll) {
     const top = romance.scrollTop;
@@ -1554,11 +1560,12 @@ body.show-time .stime { display: inline; }
     const NONE = '__none';
     const hits = hs => who === NONE ? !hs.some(shownName) : hs.includes(who);
     const relevant = u => !who || (u.read === 0 ? hits(u.heroines) : (u.reasons || []).some(r => hits(r.heroines || [])));
-    const list = G.unread.filter(u => u.read < 1 && (!st || (st === 'none' ? u.read === 0 : u.read > 0)) && relevant(u));
+    const fresh = u => u.read === 0 && !isBranch(u);
+    const list = G.unread.filter(u => u.read < 1 && (!st || (st === 'none' ? fresh(u) : !fresh(u))) && relevant(u));
     const unreadLines = list.reduce((a, u) => a + Math.round(u.lines * (1 - u.read)), 0);
     let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落（以重建頁面時的「已讀」紀錄計算）。
       只因性情、道德、處世、修養或技能／天賦而換台詞、走向相同的地方算「差分」，看過其中一種就算讀過；
-      其他沒讀到的地方會列出原因（沒選過的選項、沒達成的條件、擲骰、戰鬥勝負）。選了女主角時，只列「沒讀到的部分」有她出場或和她有關的段落；「其他」是沒有女主角的。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
+      其他沒讀到的地方會列出原因（沒選過的選項、沒達成的條件、擲骰、戰鬥勝負）。玩過的事件裡整段沒走到的標「◇ 分支」。選了女主角時，只列「沒讀到的部分」有她出場或和她有關的段落；「其他」是沒有女主角的。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
     const fchip = (attr, v, cur, label) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${label}</button>`;
     html += `<div class="libtools"><div class="fchips"><span>狀態</span>${[['', '全部'], ['none', '未讀'], ['part', '部分已讀']].map(([v, l]) => fchip('ur-st', v, st, l)).join('')}</div>`
       + `<span class="tag" style="color:var(--muted)">${list.length} 段，約 ${unreadLines} 句沒讀過</span></div>`
@@ -1581,17 +1588,17 @@ body.show-time .stime { display: inline; }
       const rows = groups.get(key);
       const hubGroup = key.split('|')[1];
       const ev = hubGroup ? null : byId.get(key);
-      const none = rows.filter(u => u.read === 0).length;
+      const none = rows.filter(fresh).length, branches = rows.filter(isBranch).length;
       const head = hubGroup ? `${esc(hubGroup)}　<span class="need">（留學期間的養成地點）</span>`
         : ev ? `${esc(whenText(ev))}　${ev.place ? esc(ev.place) + '　' : ''}<span class="chip link" data-goto="${esc(key)}">${esc(evShort(ev))}${ev.desc ? '' : '…'}</span>`
         : '日常、地點行動、閒聊（不屬於任務事件）';
-      html += `<details class="plcard"${rows.length <= 6 || who ? ' open' : ''}><summary style="cursor:pointer"><b>${head}</b>　<span class="need">${rows.length} 段（未讀 ${none}）</span></summary>`;
+      html += `<details class="plcard"${rows.length <= 6 || who ? ' open' : ''}><summary style="cursor:pointer"><b>${head}</b>　<span class="need">${rows.length} 段（${[none ? `未讀 ${none}` : '', branches ? `沒走過的分支 ${branches}` : ''].filter(Boolean).join('、') || '都讀過一部分'}）</span></summary>`;
       // 事件是從別處接進來的（例如養成選單的行動）：先寫怎麼觸發
       if (ev && ev.via) html += `<div class="need" style="margin:2px 0 6px">觸發：${ev.via.map(r => routeText(r, ev)).filter(Boolean).join('　／　')}</div>`;
       for (const u of rows) {
         const ctx = u.ev ? byId.get(u.ev.toLowerCase()) : null;
         const hide = u.read === 0 ? ' unreadtxt' : '';
-        const chip = u.read === 0 ? '<span class="ck no">○</span>未讀' : `<span class="ck ok">◐</span>${Math.round(u.read * 100)}%`;
+        const chip = isBranch(u) ? '<span class="ck no">◇</span>分支' : u.read === 0 ? '<span class="ck no">○</span>未讀' : `<span class="ck ok">◐</span>${Math.round(u.read * 100)}%`;
         html += `<div class="plev" data-script="${esc(u.s)}"><span class="need">${chip}</span>　<span class="ttl${hide}">${esc((u.title || u.s).slice(0, 40))}</span>`
           + `${u.heroines.some(shownName) ? `<span class="who">${esc(u.heroines.filter(shownName).join('、'))}</span>` : ''}${u.place ? `<span class="need">　${esc(u.place)}</span>` : ''}`;
         if (u.read === 0) {
