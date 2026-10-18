@@ -337,6 +337,10 @@ def parse_script(text):
         m = RE["if"].match(s)
         if m:
             node = {"t": "if", "branches": [{"cond": m.group(1), "block": []}]}
+            # 同名變數可能在後面的區塊重新 choose（選單內容不同）：記下當下的選單
+            var = re.sub(r"^not ", "", re.match(r"^(not )?(\w+)", m.group(1)).group(0))
+            if var in vars_:
+                node["var"] = vars_[var]
             cur().append(node)
             stack.append(("if", node))
             stack.append(("block", node["branches"][-1]["block"]))
@@ -437,7 +441,7 @@ def resolve_if(node, vars_):
     first = node["branches"][0]["cond"]
     m = re.match(r"^(\w+) == (\d+)$", first)
     var = m.group(1) if m else re.sub(r"^not ", "", first)
-    info = vars_.get(var, {})
+    info = node.get("var") or vars_.get(var, {})
     kind = info.get("kind", "other")
     labels = []
     sw = switch_conditions(info["name"]) if kind == "switch" else None
@@ -548,6 +552,14 @@ def legend(keys):
     return out
 
 
+NEED_NAME = re.compile(r"　〔需：([A-Za-z0-9_]+)〕$")
+
+
+def never_shown(label):
+    m = NEED_NAME.search(label)
+    return bool(m) and m.group(1) not in by_name["ConditionResultData"]
+
+
 def summarize(block, vars_, depth=0):
     """把區塊壓成 UI 用的樹：選項一定保留；條件/擲骰分支只在走向不同時保留。"""
     items = []
@@ -564,10 +576,12 @@ def summarize(block, vars_, depth=0):
             significant = kind in ("choice", "battle") or (len(sigs) > 1 and kind != "position")
             if kind == "dice" and len(sigs) == 1:
                 significant = False
+            # 選項條件在遊戲資料裡不存在（「XXX」「Meeting_Option_703_02_XXX」）：遊戲判定不成立，選項不會出現
+            pairs = [(br, lk) for br, lk in zip(it["branches"], labels) if not never_shown(lk[0])]
             if significant and depth < 12:
                 branches = []
                 # 選項文字不算已讀：遊戲的已讀紀錄（ReadStoryData）從來不記選項
-                for br, (label, key) in zip(it["branches"], labels):
+                for br, (label, key) in pairs:
                     sub = summarize(br["block"], vars_, depth + 1)
                     sub_texts = sub.pop("_texts")
                     branches.append({"label": label, "read": read_ratio(sub_texts), **sub})
@@ -577,7 +591,7 @@ def summarize(block, vars_, depth=0):
                     node["battles"] = battles
                 items.append(node)
             else:
-                for br, (label, key) in zip(it["branches"], labels):
+                for br, (label, key) in pairs:
                     sub = summarize(br["block"], vars_, depth + 1)
                     texts.extend(sub.pop("_texts"))
                     stories.extend(sub.get("legend_keys", []))
@@ -603,13 +617,15 @@ if combat_path and os.path.exists(combat_path):
             combat_objs[f"{_t}:{_o['m_Name']}@{_o.get('__file')}:{_o.get('__pid')}"] = (_t, _o)
 CMP = {0: "=", 1: "≠", 2: "<", 3: "≤", 4: ">", 5: "≥"}
 SIDE = {1: "我方", 2: "敵方"}
-NAME_OPS = [("_EQ_", " = "), ("_NE_", " ≠ "), ("_GE_", " ≥ "), ("_LE_", " ≤ "), ("_GT_", " > "), ("_LT_", " < ")]
+NAME_OPS = [("_EQ_", " = "), ("_NE_", " ≠ "), ("NEQ", " ≠ "), ("_GE_", " ≥ "), ("_LE_", " ≤ "), ("_GT_", " > "), ("_LT_", " < ")]
 
 
 def ref_tail(ref):
     """「CombatStateEffectScriptable:C506_某某@…」→「某某」"""
     name = (ref or "").split("@")[0].split(":", 1)[-1]
-    return name.split("_", 1)[1] if "_" in name else name
+    name = name.split("_", 1)[1] if "_" in name else name
+    # 「峨嵋弟子_01」「2_小師妹」「上官螢_苦惱拳」→「峨嵋弟子」「小師妹」「上官螢·苦惱拳」
+    return re.sub(r"_\d+$|^\d+_", "", name).replace("_", "·")
 
 
 def name_text(name):
@@ -638,6 +654,14 @@ def combat_cond(ref):
     if t == "CombatEventConditionBlockCounterAttack":
         return "擋下對方的反擊"
     return name_text(o["m_Name"])
+
+
+def action_text(text):
+    """「動作_嘴攻_發動」→「使出嘴攻」（沒抽出來的出招條件只剩名稱）"""
+    m = re.search(r"動作[_·](.+?)[_·](發動|命中|未命中)$", text)
+    if not m:
+        return text
+    return {"發動": f"使出{m.group(1)}", "命中": f"{m.group(1)}命中", "未命中": f"{m.group(1)}沒命中"}[m.group(2)]
 
 
 def combat_actions(refs):
@@ -694,7 +718,7 @@ def combat_events(level):
             _, ca = combat_objs.get(ca_ref, (None, None))
             if not ca:
                 continue
-            when = (" 且 " if ca.get("_logic", 0) == 0 else " 或 ").join(combat_cond(c) for c in ca.get("_conditions") or []) or "戰鬥中"
+            when = (" 且 " if ca.get("_logic", 0) == 0 else " 或 ").join(action_text(combat_cond(c)) for c in ca.get("_conditions") or []) or "戰鬥中"
             texts, flags, who = combat_actions((ca.get("_actions") or []) + (ca.get("_afterActions") or []) + (ca.get("_afterResult") or []))
             if texts or flags:
                 out.append({"when": when, "what": "；".join(texts), "flags": flags, "who": who})
@@ -856,14 +880,29 @@ def time_after(script):
     return last
 
 
-def trace_chain(start, start_time, stop=()):
-    """從開頭一路追到底（不設上限），順便推算每支腳本開始時的遊戲時間。stop：追到就停的腳本。"""
-    chain, queue = [], [(start, start_time)] if start else []
+FREE_HUB = re.compile(r"^section_0*(\d+)_free_start_\d+$")
+
+
+def sub_chapter(script):
+    """劇本的段落編號：ch5_6_3_1 → ch5_6"""
+    m = re.match(r"^(ch\d+_\d+)(?:_|$)", script or "")
+    return m.group(1) if m else None
+
+
+def part_key(script):
+    hub = FREE_HUB.match(script or "")
+    return f"hub{hub.group(1)}" if hub else sub_chapter(script)
+
+
+def trace_chain(start, start_time, stop=(), cuts=None):
+    """從開頭一路追到底（不設上限），順便推算每支腳本開始時的遊戲時間。stop：追到就停的腳本。
+    cuts：有給就在劇情換段的地方停（見 should_cut），記下 {斷點腳本: 到那裡的時間}。"""
+    chain, queue = [], [(start, start_time, part_key(start))] if start else []
     # 多條路徑到同一支腳本時取較晚的時間；時間變晚才重新往下傳
     in_chain, t_of = set(), {}
     tkey = lambda t: (t["y"], t["m"], t["s"]) if t else (0, 0, 0)
     while queue:
-        s, t = queue.pop(0)
+        s, t, cur = queue.pop(0)
         if s not in script_info:
             continue
         if s in in_chain and tkey(t) <= tkey(t_of.get(s)):
@@ -873,9 +912,15 @@ def trace_chain(start, start_time, stop=()):
             in_chain.add(s)
         t_of[s] = t
         after = time_after(s) or t
+        cur = part_key(s) or cur
         for n in next_scripts(s):
-            if n not in entry_scripts and n not in stop:
-                queue.append((n, after))
+            if n in entry_scripts or n in stop:
+                continue
+            if cuts is not None and should_cut(cur, n):
+                if n not in cuts or tkey(after) < tkey(cuts[n]):
+                    cuts[n] = after
+                continue
+            queue.append((n, after, cur))
     for s, t in t_of.items():
         if t and tkey(t) > tkey(script_time.get(s)):
             script_time[s] = t
@@ -994,6 +1039,128 @@ for it in script_info[MEETING_MENU]["items"]:
             "meetingOption": name,
         })
 
+# ---------- 長事件切段 ----------
+# 一個檢查點接下去的劇情常會一路演好幾段（求親 → 金烏上人鬧場 → 崆峒神威…）。
+# 劇本編號 chX_Y 的 Y 換了就是換一段劇情；留學的自由行動選單（section_0N_free_start）也自成一段。
+# 換段的地方斷開，後面另成一個「接續」事件（同一段有好幾個入口時併成一個）。
+PART_MIN = 3   # 太短（不到 3 支腳本）的段落不另外切
+
+
+def part_size(script):
+    key, seen, queue = part_key(script), {script}, [script]
+    while queue and len(seen) < PART_MIN:
+        for n in next_scripts(queue.pop(0)):
+            if n not in seen and part_key(n) == key and n not in entry_scripts:
+                seen.add(n)
+                queue.append(n)
+    return len(seen)
+
+
+def should_cut(cur, n):
+    key = part_key(n)
+    return bool(key) and key != cur and (key.startswith("hub") or part_size(n) >= PART_MIN)
+
+
+# 段落名稱：那段裡決鬥的開發者說明開頭（「崆峒神威 刺客」→「崆峒神威」）最常見的那個
+def part_desc(scripts):
+    names = collections.Counter()
+
+    def walk(items):
+        for it in items:
+            if it["t"] == "battle" and level_info.get(level_name(it["mode"], it["key"]), {}).get("desc"):
+                names[level_info[level_name(it["mode"], it["key"])]["desc"].split(" ")[0]] += 1
+            elif it["t"] == "if":
+                for br in it["branches"]:
+                    walk(br["block"])
+    for sc in scripts:
+        if sc in scripts_lower:
+            walk(scripts_lower[sc][0])
+    return names.most_common(1)[0][0] if names else ""
+
+
+scripts_lower = {k.lower(): v for k, v in scripts.items()}
+HUB_DESC = {"1": "崆峒留學：每旬自由行動", "2": "青城留學：每旬自由行動"}
+parts = {}          # 段落 → {入口腳本: 到達時間}
+part_from = collections.defaultdict(set)
+hub_span = {}
+# 已經是同一段事件裡的腳本（例如客棧選單同時被好幾個事件用到）：斷開後連到那個事件就好，不另成一段
+own_part = {sc for e in events for sc in e["scripts"] if sub_chapter(sc) and sub_chapter(sc) == sub_chapter(e["start"])}
+# 開發者說明裡沒有段落名稱的，照內容取名
+PART_NAMES = {"ch2_5": "抵達崆峒", "ch5_3": "比武招親", "ch4_6": "臥雲崗約戰", "ch8_5": "六大派攻山", "ch3_10": "江陵決戰泥教",
+              "ch8_4": "南溪大戰南宮深", "ch3_15": "襄陽城外遇小竹", "ch6_9": "武林大會後歇宿", "ch6_10": "聽說武林大會後續"}
+
+
+def cut_event(e, start, start_time):
+    cuts = {}
+    e["scripts"] = trace_chain(start, start_time, stop=hub_scripts if e.get("meetingOption") else (), cuts=cuts)
+    for n, t in cuts.items():
+        key = part_key(n)
+        if key == e.get("part") or n in own_part:
+            continue
+        ent = parts.setdefault(key, {})
+        # 多條路徑到同一個入口時取較晚的時間（和 trace_chain 一樣；較早的常是沒在用的檢查點的假時間）
+        tk = lambda x: (x["y"], x["m"], x["s"]) if x else (0, 0, 0)
+        if n not in ent or tk(t) > tk(ent[n]):
+            ent[n] = t
+        part_from[key].add(e["id"])
+        # 自由行動選單：主線帶進來的時間範圍（支線事件的時間常不準）
+        if t and e["main"]:
+            span = hub_span.setdefault(key, [t, t])
+            span[0], span[1] = min(span[0], t, key=tk), max(span[1], t, key=tk)
+
+
+for e in list(events):
+    if e.get("meeting"):
+        continue
+    t = (e["time"] or {}).get("from")
+    cut_event(e, e["start"], t if t and t.get("y", 0) >= 1 else None)
+# 段落本身也可能再接到下一段：一直做到沒有新入口為止
+done = {}
+while True:
+    todo = [k for k, ent in parts.items() if done.get(k) != sorted(ent)]
+    if not todo:
+        break
+    for key in todo:
+        ent = parts[key]
+        done[key] = sorted(ent)
+        tk = lambda x: (x["y"], x["m"], x["s"]) if x else (99, 0, 0)
+        # 入口：段落編號的第一支（chX_Y_1）優先，其次最早到的
+        starts = sorted(ent, key=lambda n: (not re.fullmatch(r"ch\d+_\d+_1|section_\d+_free_start_01", n), tk(ent[n]), n))
+        e = next((x for x in events if x.get("part") == key), None)
+        if not e:
+            e = {"id": f"Part/{key}", "mission": "Part", "main": True, "key": key, "active": True, "pos": "",
+                 "conds": [], "nextState": "", "dialogs": [], "part": key}
+            events.append(e)
+        times = sorted((ent[n] for n in ent if ent[n]), key=tk)
+        e["start"] = starts[0]
+        # 劇情段落接在前一段後面，取最晚的時間；自由行動選單整段留學期間都會回來，列出範圍
+        if key.startswith("hub"):
+            times = hub_span.get(key, times)
+        elif times:
+            times = times[-1:]
+        e["time"] = None if not times else {"type": "at", "from": times[0]} if times[0] == times[-1] else {"type": "range", "from": times[0], "to": times[-1]}
+        if key.startswith("hub") and times:
+            e["time"] = {"type": "range", "from": times[0], "to": {"y": 4, "m": 3, "s": 3}, "open": True}
+        chain = []
+        for n in starts:
+            cut_event(e, n, ent[n])
+            chain += [x for x in e["scripts"] if x not in chain]
+        e["scripts"] = chain
+for e in events:
+    if e.get("part"):
+        e["partFrom"] = sorted(part_from[e["part"]])
+        hub = re.fullmatch(r"hub(\d+)", e["part"])
+        # 決鬥說明的名稱有時是整章的名字（ch5_3 的「小師妹出嫁」和前一段同名），有手動取名的優先
+        e["desc"] = HUB_DESC.get(hub.group(1), "留學：自由行動") if hub else PART_NAMES.get(e["part"]) or part_desc(e["scripts"])
+
+# 同名的段落（武林大會分好幾段）加上序號
+desc_count = collections.Counter(e["desc"] for e in events if e.get("part") and e["desc"])
+desc_seen = collections.Counter()
+for e in events:
+    if e.get("part") and desc_count[e["desc"]] > 1:
+        desc_seen[e["desc"]] += 1
+        e["desc"] += f"（{'一二三四五六七八九十'[desc_seen[e['desc']] - 1]}）"
+
 # 旗標反查：哪個腳本、哪個分支把旗標設成多少
 flag_setters = collections.defaultdict(list)
 
@@ -1031,6 +1198,87 @@ def add_battle_flags(items):
 
 for name, info in script_info.items():
     info["items"] = add_battle_flags(info["items"])
+
+# 戰鬥事件裡的暫存旗標（TC0001、A00001…）是戰前劇情設的：換成戰前的選項／條件，找不到就合併成「依戰前情況」
+TEMP_ATOM = re.compile(r"旗標 ((?:TC|[ABC])\d+) (=|≠|<|≤|>|≥) (-?\d+)")
+CMP_FN = {"=": lambda a, b: a == b, "≠": lambda a, b: a != b, "<": lambda a, b: a < b, "≤": lambda a, b: a <= b, ">": lambda a, b: a > b, "≥": lambda a, b: a >= b}
+
+
+def temp_setters(items, path, out, nexts):
+    for it in items:
+        if it["t"] == "flag" and TEMP_ATOM.match(f"旗標 {it['f']} = 0") and not any(w.startswith("戰鬥中") for w in it.get("when", [])):
+            out.append((it["f"], it["v"], it["op"], path + it.get("when", [])))
+        elif it["t"] == "next":
+            nexts.add(it["s"].lower())
+        elif it["t"] == "branch":
+            for br in it["branches"]:
+                temp_setters(br["items"], path + [br["label"]], out, nexts)
+
+
+script_temp, script_callers = {}, collections.defaultdict(set)
+for name, info in script_info.items():
+    out, nexts = [], set()
+    temp_setters(info["items"], [], out, nexts)
+    script_temp[name] = out
+    for n in nexts:
+        script_callers[n].add(name)
+
+
+def temp_label(script, f, op, v):
+    """None：找不到；""：其他情況；否則是戰前的選項或條件"""
+    cand = [x for x in script_temp.get(script, []) if x[0] == f]
+    if not cand:
+        cand = [x for c in script_callers.get(script.lower(), ()) for x in script_temp.get(c, []) if x[0] == f]
+    if not cand or any(x[2] != "SetFlag" for x in cand):
+        return None
+    hit = [x for x in cand if CMP_FN[op](x[1], v)]
+    if not hit:
+        return None
+    labels = []
+    for x in hit:
+        if not x[3]:
+            return ""
+        label = re.sub(r"　〔(?:需|前提不是)：.*〕$", "", x[3][-1])
+        if TEMP_ATOM.search(label):
+            return None
+        labels.append(re.sub(r"（(?:>=|<=|<|>)\d+）$", "", label))
+    labels = list(dict.fromkeys(labels))
+    return labels[0] if len(labels) == 1 else None
+
+
+def plain_battle_events(script, items):
+    for it in items:
+        if it["t"] == "battle" and it.get("events"):
+            out = []
+            for ev in it["events"]:
+                when, _, what = ev.partition("：")
+                atoms = when.split(" 且 ")
+                base = [a for a in atoms if not TEMP_ATOM.fullmatch(a)]
+                labels = [temp_label(script, *m.groups()[:2], int(m.group(3))) for m in map(TEMP_ATOM.fullmatch, atoms) if m]
+                head = " 且 ".join(base) or "戰鬥中"
+                if not labels:
+                    out.append([head, what, None, None])
+                elif None in labels:
+                    # 只有同一組旗標的才合併（記在第 4 欄）
+                    out.append([head, what, "依戰前情況", tuple(m.group(1) for m in map(TEMP_ATOM.fullmatch, atoms) if m)])
+                else:
+                    known = [l for l in labels if l]
+                    out.append([head, what, "戰前「" + "」且「".join(known) + "」" if known else "其他情況", None])
+            # 同一個時間點、只差戰前情況的接成一行：「第 1 回合（依戰前情況）：我方血量減5%／10%」
+            merged = []
+            for head, what, cond, fl in out:
+                if fl and merged and merged[-1][0] == head and merged[-1][3] == fl:
+                    merged[-1][1] += "／" + what
+                else:
+                    merged.append([head, what, cond, fl])
+            it["events"] = [f"{h}{f'（{c}）' if c else ''}：{w}" for h, w, c, _ in merged]
+        elif it["t"] == "branch":
+            for br in it["branches"]:
+                plain_battle_events(script, br["items"])
+
+
+for name, info in script_info.items():
+    plain_battle_events(name, info["items"])
 
 for name, info in script_info.items():
     index_flags(name, info["items"], [])
@@ -1191,7 +1439,6 @@ for name, info in script_info.items():
 event_by_id_lower = {e["id"].lower(): e for e in events}
 
 
-FREE_HUB = re.compile(r"^section_0*(\d+)_free_start_\d+$")
 HUB_NAME = {"1": "崆峒留學期間", "2": "青城留學期間"}
 FREE_SCRIPT = re.compile(r"^section_0*\d+_free_")
 
@@ -1746,10 +1993,18 @@ for area, place, action, groups, *option in POSITION_GROUPS:
     positions.append({"area": area, "place": place, "action": action_title(action), "need": need, "layers": layers})
 
 # 不屬於任務事件、在地點事件裡設的旗標：標上是哪個地點的哪個事件，網頁才寫得出「在哪裡」
+# 地點選單之外接進來的（例如藥鋪坐診的病人 pharmacy_work_402）：用同名前綴的地點動作
+pos_prefix = {}
+for pos in positions:
+    for ly in pos["layers"]:
+        for c in ly["candidates"]:
+            pos_prefix.setdefault(re.sub(r"(_\d+)+$", "", c["script"]), (pos["place"], pos["action"]))
 for setters in flag_setters.values():
     for x in setters:
         if "ev" not in x and x["s"] in pos_chain_label:
             x["pos"] = "・".join(pos_chain_label[x["s"]])
+        elif "ev" not in x and re.sub(r"(_\d+)+$", "", x["s"]) in pos_prefix:
+            x["pos"] = "・".join(pos_prefix[re.sub(r"(_\d+)+$", "", x["s"])])
 
 # ---------- 五塊錢：有台詞但還沒讀完的場景，以及沒讀到的原因 ----------
 # 只因性格／技能而換台詞的分歧（走向相同）算「差分」：看過其中一個版本就算讀過
