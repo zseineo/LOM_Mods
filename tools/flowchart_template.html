@@ -97,6 +97,7 @@ body.view-romance .chartonly { display: none; }
 .hcard { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 12px 16px; margin-bottom: 14px; max-width: 980px; }
 .hcard h2 { margin: 0 0 6px; font-size: 18px; }
 .hcard h2 .tag { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 8px; }
+.flag.tag { font-size: 11px; color: var(--muted); margin-left: 2px; }
 .hcard h4 { margin: 12px 0 4px; font-size: 13px; color: var(--year); letter-spacing: .08em; }
 .pt { border-left: 3px solid var(--line); padding: 4px 10px; margin: 6px 0; font-size: 13px; }
 .pt.bond { border-left-color: var(--read); }
@@ -530,11 +531,12 @@ body.show-time .stime { display: inline; }
   }
   function entryHtml(x) {
     let html = '';
+    const ctx = x.ev ? byId.get(x.ev.toLowerCase()) : null;
     for (const step of (x.entry || []).slice().reverse()) {
       html += `<div class="entry"><span class="lbl">進入 <span class="chip link" data-script="${esc(step.into)}">${esc(step.into)}</span>${stime(step.into)} 需要：</span>`;
-      html += step.options.map(o => `<div>　在 <span class="chip link" data-script="${esc(o.from)}">${esc(o.from)}</span>：${o.path.map(condHtml).join(' › ')}</div>`).join('') + '</div>';
+      html += step.options.map(o => `<div>　在 <span class="chip link" data-script="${esc(o.from)}">${esc(o.from)}</span>：${pathHtml(o.path, ctx, o.from) || '直接接到'}</div>`).join('') + '</div>';
     }
-    if (x.path && x.path.length) html += `<div class="entry"><span class="lbl">腳本 ${esc(x.s)} 內需要：</span></div><ol class="path">${x.path.map(p => `<li>${condHtml(p)}</li>`).join('')}</ol>`;
+    if (x.path && x.path.length) html += `<div class="entry"><span class="lbl">腳本 ${esc(x.s)} 內需要：</span></div><ol class="path">${x.path.map(p => pathHtml([p], ctx, x.s)).filter(Boolean).map(t => `<li>${t}</li>`).join('')}</ol>`;
     return html;
   }
   function legendBlock(list, hide) {
@@ -564,21 +566,49 @@ body.show-time .stime { display: inline; }
     const own = lastChoice(x.path || []);
     if (own) return own;
     const nearest = (x.entry || [])[0];
-    if (!nearest) return null;
-    const via = new Set((nearest.options || []).map(o => lastChoice(o.path)));
-    return via.size === 1 ? [...via][0] : null;
+    if (nearest) {
+      const via = new Set((nearest.options || []).map(o => lastChoice(o.path)));
+      if (via.size === 1 && [...via][0]) return [...via][0];
+    }
+    // 再往回：這段劇情最短的進入路線上最後一個選項
+    return lastChoice((G.scriptVia || {})[x.s] || []);
   }
   // 暫存旗標：在同一個事件的腳本裡找設定位置
+  // 這段腳本是從哪裡接過來的（同一個事件裡的哪個分支）：給 choiceOf 用
+  function enteredBy(s, list) {
+    const options = [];
+    for (const sc of list) walkItems(G.scripts[sc]?.items, (it, path) => { if (it.t === 'next' && it.s.toLowerCase() === s) options.push({from: sc, path}); });
+    return options.length ? [{into: s, options}] : [];
+  }
   function localSetters(f, ctx, near) {
-    const list = ctx.scripts;
+    const list = ctx ? ctx.scripts : near ? [near] : [];
     const at = near ? list.indexOf(near) : -1;
     const order = at >= 0 ? [...list.slice(0, at + 1).reverse(), ...list.slice(at + 1)] : list;
+    // 整個事件的設定點都收集，近的在前（開頭歸 0 的那支不會擋住後面真正設值的地方）
+    const out = [];
     for (const sc of order) {
-      const out = [];
-      walkItems(G.scripts[sc]?.items, (it, path) => { if (it.t === 'flag' && it.f === f && it.op !== 'AddFlag') out.push({v: it.v, path, s: sc}); });
-      if (out.length) return out;
+      const here = [];
+      // 收合起來的擲骰／條件分支，條件記在 when
+      walkItems(G.scripts[sc]?.items, (it, path) => { if (it.t === 'flag' && it.f === f) here.push({v: it.v, op: it.op, path: path.concat(it.when || []), s: sc}); });
+      // 腳本裡沒有選項的（一進這段就設）：看這段是從哪個選項接過來的
+      here.forEach(x => { if (!lastChoice(x.path)) x.entry = enteredBy(sc, list); });
+      out.push(...here);
     }
-    return [];
+    return out;
+  }
+  // 設定點的白話：選項優先，其次是進到這段的選項，再沒有就寫條件（「處世 ≤ 40 時」）
+  const VAGUE = /先前劇情裡的某個結果|劇情記錄 |記錄 [A-Za-z]/;
+  function setterHow(x, self, ctx) {
+    const c = choiceOf(x);
+    if (c) return c;
+    // 旗標依自己目前的值再改自己（B00002 = 0 時設成 1、A00003 = 2 時 +1）：條件裡略過它自己，不然會一直往回繞
+    const own = self ? new RegExp(`旗標 ${self}(?![A-Za-z0-9_])`) : null;
+    const conds = (x.path || []).filter(label => !own || !own.test(label)).map(label => {
+      const p = stepPart(label);
+      if (p) return p.kind === 'cond' ? p.text.replace(/^需要 /, '') : null;
+      return /^(以上皆非|其他)/.test(label) || !/[≥≤≠<>=]/.test(label) ? null : label.replace(/　〔.*〕$/, '');
+    }).filter(Boolean).map(c => plainCondText(c, ctx, x.s)).filter(c => !VAGUE.test(c));
+    return conds.length ? `${conds.join('、')}時` : null;
   }
   function originOf(x) {
     const ev = x.ev ? byId.get(x.ev.toLowerCase()) : null;
@@ -610,22 +640,61 @@ body.show-time .stime { display: inline; }
     }
     return null;
   }
+  function flagNoun(f) {
+    if (G.flagNames[f]) return G.flagNames[f];
+    if (/^Score_/.test(f)) return '小遊戲得分';
+    const note = ((G.flagNotes || {})[f] || '').split(/\r?\n/)[0].trim();
+    const vote = note.match(/^票數：(.+)$/);
+    return vote ? `「${vote[1]}」的票數` : note ? `「${note}」` : `記錄 ${f}`;
+  }
+  // 開發備註逐行列出各數值的意思（「1. 退隱江湖」）時，直接說是哪一個
+  function noteChoice(f, op, val) {
+    const lines = ((G.flagNotes || {})[f] || '').split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+    const opts = new Map(lines.map(x => x.match(/^(\d+)[.．、]\s*(.+)$/)).filter(Boolean).map(m => [m[1], m[2]]));
+    if (!opts.size || !opts.has(String(val))) return null;
+    if (op === '=') return `${lines[0]}：${opts.get(String(val))}`;
+    if (op === '≠') return `${lines[0]}不是${opts.get(String(val))}`;
+    return null;
+  }
+  let phraseDepth = 0;
   function flagPhrase(f, op, val, ctx, near) {
     if (G.flagNames[f]) return `${G.flagNames[f]} ${op} ${val}`;
+    if (/^Score_/.test(f)) return `小遊戲得分 ${op} ${val}`;
+    const listed = noteChoice(f, op, val);
+    if (listed) return listed;
     const note = (G.flagNotes || {})[f];
     if (note && /^[EG]\d/.test(f)) {
       const p = notePhrase(note, op, val);
       if (p) return p;
     }
     const n = Number(val);
-    if (TEMP_FLAG.test(f)) {
-      const local = ctx ? localSetters(f, ctx, near) : [];
-      const hows = list => [...new Set(list.map(choiceOf).filter(Boolean))];
+    const tempLocal = TEMP_FLAG.test(f) ? localSetters(f, ctx, near) : [];
+    if (tempLocal.length) {
+      const local = tempLocal.filter(x => x.op !== 'AddFlag'), adds = tempLocal.filter(x => x.op === 'AddFlag');
+      const hows = list => [...new Set(list.map(x => setterHow(x, f, ctx)).filter(Boolean))];
       const hit = hows(local.filter(x => x.v !== 0 && sat(x.v, op, n)));
       if (hit.length) return `先前${hit.slice(0, 2).join(' 或 ')}${hit.length > 2 ? ' 等' : ''}`;
+      // 次數累加的：寫出在哪裡加
+      if (adds.length) {
+        const where = hows(adds);
+        return `${where.length ? where.slice(0, 2).join('、') + (where.length > 2 ? ' 等' : '') : '本段選擇'}的累計次數 ${op} ${val}`;
+      }
       const miss = hows(local.filter(x => x.v !== 0 && !sat(x.v, op, n)));
       if (sat(0, op, n) && miss.length) return `先前沒有${miss.slice(0, 2).join('、')}${miss.length > 2 ? ' 等' : ''}`;
-      return '本段先前的某個選擇';
+      // 這段劇情裡只會歸 0：條件一定成立
+      if (sat(0, op, n) && !local.some(x => x.v !== 0)) return '（這段劇情裡一定成立）';
+    }
+    if (TEMP_FLAG.test(f)) {
+      // 劇本裡沒設：決鬥關卡打贏／打輸時寫的
+      const bf = (G.battleFlags || {})[f];
+      if (bf) {
+        const w = bf.win.some(v => sat(v, op, n)), l = bf.lose.some(v => sat(v, op, n));
+        if (w && !l) return '戰鬥勝利';
+        if (l && !w) return '戰鬥落敗';
+        if (!w && !l) return bf.lose.length ? '戰鬥沒有分出勝負' : '戰鬥沒有獲勝';
+      }
+      // 這個事件裡沒有設定點：往下用全部劇本的設定位置
+      if (tempLocal.length) return /決鬥/.test((G.flagNotes || {})[f] || '') ? `決鬥中的結果（${op} ${val}）` : '先前劇情裡的某個結果（劇本中找不到設成這個值的地方）';
     }
     const all = G.flags[f] || [];
     const sets = all.filter(x => x.op !== 'AddFlag');
@@ -639,15 +708,27 @@ body.show-time .stime { display: inline; }
     const misses = sets.filter(x => !sat(x.v, op, n) && x.v !== 0);
     if (sat(0, op, n) && misses.length) return `沒有${originList(misses)}`;
     if (note) return notePhrase(note, op, val) || `${note} ${op} ${val}`;
+    if (!all.length) return sat(0, op, n) ? '（劇本中沒有地方會改它，一定成立）' : '（劇本中沒有地方會設定它，實際上不會成立）';
     return `劇情記錄 ${op} ${val}`;
   }
   const FLAG_ATOM = /旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) (-?\d+)/g;
+  // 純文字版（給 flagPhrase 這類回傳文字的地方用）
+  function plainCondText(text, ctx, near) {
+    if (phraseDepth >= 2) return text;
+    phraseDepth++;
+    try { return String(text).replace(/旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) (-?\d+)/g, (m, f, op, v) => flagPhrase(f, op, v, ctx, near)); }
+    finally { phraseDepth--; }
+  }
   function plainCondHtml(text, ctx, near) {
     text = String(text).trim().replace(/^（(.*)）$/, '$1');
     if (text.startsWith('以上皆非')) return '其他情況';
     // 多個旗標加總：結緣旗標加總就是「已結緣人數」，設施旗標加總是「已建設施數」
     text = text.replace(/旗標 G1100\d(?:（[^）]*）)?(?: \+ 旗標 G1100\d(?:（[^）]*）)?)+/g, '已結緣人數')
       .replace(/旗標 Facility_\d+(?: \+ 旗標 Facility_\d+)*(?: \+ 旗標 Facil…)?/g, '已建設施數');
+    // 遊戲內建的條件數值：= 1 就是成立、= 0 就是不成立
+    text = text.replace(/條件·(\S+?) = 1(?![0-9])/g, '$1').replace(/條件·(\S+?) = 0(?![0-9])/g, '不是「$1」');
+    // 兩個旗標互相比較（例如票數）
+    text = text.replace(/旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) 旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)?/g, (m, a, op, b) => `${flagNoun(a)} ${op} ${flagNoun(b)}`);
     text = text.replace(/目前時間 = 任務時間〔[^〕]*〕/g, '到了預定的時間')
       .replace(/行動次數 ≤ 旗標 ActionCheck\d+/g, '用掉部分行動後')
       .replace(/ 且 /g, '、');
@@ -951,16 +1032,15 @@ body.show-time .stime { display: inline; }
     return alt.map(stepPart).filter(Boolean).map(p => p.text).join(' → ');
   }
   // 舊介面仍會呼叫：單一標籤 → 白話
-  function stepLabel(label) {
-    const p = stepPart(label);
-    return p ? condHtml(p.text) : '';
+  function stepLabel(label, ctx, near) {
+    return pathHtml([label], ctx, near);
   }
-  function stepsHtml(steps) {
+  function stepsHtml(steps, ctx) {
     return steps.map(st => {
-      const alts = [...new Set(st.alts.map(altText).filter(Boolean))];
+      const alts = [...new Set(st.alts.map((alt, i) => pathHtml(alt, ctx, (st.froms || [])[i])).filter(Boolean))];
       if (!alts.length) return '';
       // 多條路線（任一即可）分行列出
-      return alts.length > 1 ? `以下任一：<ol class="routes">${alts.map(x => `<li>${condHtml(x)}</li>`).join('')}</ol>` : condHtml(alts[0]);
+      return alts.length > 1 ? `以下任一：<ol class="routes">${alts.map(x => `<li>${x}</li>`).join('')}</ol>` : alts[0];
     }).filter(Boolean).join(' → ');
   }
   // 只有一個來源的前置旗標直接攤平成步驟；多個來源（任一即可）的收進該步驟的可展開清單
@@ -973,6 +1053,8 @@ body.show-time .stime { display: inline; }
     return out;
   }
   const tkey = t => t ? (t.y * 100 + t.m) * 10 + t.s : 1e9;
+  const flagTag = (f, op, val) => `<span class="flag tag" data-flag="${esc(f)}"${op ? ` data-op="${esc(op)}" data-val="${esc(val)}"` : ''}>${esc(f)}</span>`;
+  const flagName = f => G.flagNames[f] || (G.flagNotes || {})[f] || '';
   function routeHtml(route, bondFlag) {
     const items = flattenRoute(route, {flag: bondFlag, op: '=', val: 1, final: true}, [], new Set());
     // 時間不明的步驟沿用「後面第一個有時間的步驟」排序，保持在依賴它的步驟之前
@@ -989,11 +1071,11 @@ body.show-time .stime { display: inline; }
       const when = unit.time ? tstr(unit.time) : '時間不定';
       const evText = ev ? `${ev.main ? '主線' : '支線'} ${evLink(ev.id.toLowerCase())}${ev.pos ? `（到「${esc(ev.pos)}」觸發）` : ''}` : `腳本 <span class="chip link" data-script="${esc(unit.script)}">${esc(unit.script)}</span>`;
       html += `<li class="${provides.final ? 'final' : ''}"><div><b>${esc(when)}</b>　${evText}</div>`;
-      if (unit.eventConds.length) html += `<div class="when">事件觸發條件：${unit.eventConds.map(condHtml).join('；')}</div>`;
-      const steps = stepsHtml(unit.steps);
+      if (unit.eventConds.length) html += `<div class="when">事件觸發條件：${unit.eventConds.map(c => plainCondHtml(c, ev)).join('；')}</div>`;
+      const steps = stepsHtml(unit.steps, ev);
       html += `<div>${steps ? '經過：' + steps : '事件中直接取得'}</div>`;
       for (const n of unit.needs.filter(n => n.by.length > 1)) {
-        html += `<details class="when"><summary style="cursor:pointer">※ 需要 旗標 ${esc(n.flag)} ${esc(n.op)} ${n.val}：有 ${n.by.length} 個來源，任一即可（點開看）</summary>`;
+        html += `<details class="when"><summary style="cursor:pointer">※ 需要 ${plainCondHtml(`旗標 ${n.flag} ${n.op} ${n.val}`, ev, unit.script)} ${flagTag(n.flag, n.op, n.val)}：有 ${n.by.length} 個來源，任一即可（點開看）</summary>`;
         n.by.forEach((b, i) => html += `<div class="pt"><b>來源 ${i + 1}</b>${routeHtml(b, n.flag).replace('★ 結緣成立', `取得 ${esc(n.flag)} ${esc(n.op)} ${n.val}`)}</div>`);
         html += '</details>';
       }
@@ -1002,11 +1084,12 @@ body.show-time .stime { display: inline; }
       for (const n of unit.needs.filter(n => n.default)) {
         const list = (n.changers || []).map(c => {
           const ev = c.ev ? byId.get(c.ev.toLowerCase()) : null;
-          return `${c.time ? tstr(c.time) + ' ' : ''}${ev ? evLink(ev.id.toLowerCase()) : ''}<span class="chip link" data-script="${esc(c.s)}">${esc(c.s)}</span>${c.path.length ? '（' + c.path.map(stepLabel).join(' → ') + '）' : ''} 設為 ${c.v}`;
+          const how = pathHtml(c.path, ev, c.s);
+          return `${c.time ? tstr(c.time) + ' ' : ''}${ev ? evLink(ev.id.toLowerCase()) : ''}<span class="chip link" data-script="${esc(c.s)}">${esc(c.s)}</span>${how ? '（' + how + '）' : ''} 設為 ${c.v}`;
         });
         html += list.length
-          ? `<details class="when"><summary style="cursor:pointer">※ 旗標 ${esc(n.flag)} 要維持 0（預設值）：不要走到下列 ${list.length} 處會改掉它的劇情（點開看）</summary><div>${list.join('<br>')}</div></details>`
-          : `<div class="when">※ 旗標 ${esc(n.flag)} 要維持 0（預設值，劇本中沒有會改掉它的地方）</div>`;
+          ? `<details class="when"><summary style="cursor:pointer">※ 需要 ${plainCondHtml(`旗標 ${n.flag} = 0`, ev, unit.script)} ${flagTag(n.flag, '=', 0)}：不要走到下列 ${list.length} 處會改掉它的劇情（點開看）</summary><div>${list.join('<br>')}</div></details>`
+          : `<div class="when">※ ${flagName(n.flag) ? `「${esc(flagName(n.flag))}」` : '這個記錄'}要維持預設 ${flagTag(n.flag, '=', 0)}（劇本中沒有會改掉它的地方）</div>`;
       }
       unit.needs.filter(n => !n.by.length && !n.default).forEach(n => {
         const cur = unmet.get(n.flag) || {conds: [], adds: n.adds || []};
@@ -1024,15 +1107,16 @@ body.show-time .stime { display: inline; }
           text = '在下列地方累加：' + [...byScript.entries()].map(([s, list]) => {
             const a0 = list[0];
             const ev = a0.ev ? byId.get(a0.ev.toLowerCase()) : null;
-            const entry = a0.steps && a0.steps.length ? stepsHtml(a0.steps) : '';
-            const cases = list.map(a => `${a.path.length ? a.path.map(stepLabel).filter(Boolean).join(' → ') || '其他情況' : '一律'}：${a.v > 0 ? '+' : ''}${a.v}`).join('；');
+            const entry = a0.steps && a0.steps.length ? stepsHtml(a0.steps, ev) : '';
+            const cases = list.map(a => `${a.path.length ? pathHtml(a.path, ev, a.s) || '其他情況' : '一律'}：${a.v > 0 ? '+' : ''}${a.v}`).join('；');
             return `<div style="margin-left:12px">${ev ? evLink(ev.id.toLowerCase()) : ''}<span class="chip link" data-script="${esc(s)}">${esc(s)}</span>${entry ? '　進入需要：' + entry : ''}<br>　${cases}</div>`;
           }).join('');
         }
         else text = '劇本中沒有直接設定（戰鬥或系統中變動）';
-        html += `<div class="when">※ 旗標 ${esc(flag)}（需要 ${esc(info.conds.join('、'))}）：${text}</div>`;
+        html += `<div class="when">※ ${flagName(flag) ? `「${esc(flagName(flag))}」` : '累計次數'} ${flagTag(flag)}（需要 ${esc(info.conds.join('、'))}）：${text}</div>`;
       }
-      html += `<div class="gain">${provides.final ? '★ 結緣成立' : `→ 取得 <span class="flag" data-flag="${esc(provides.flag)}" data-op="${esc(provides.op)}" data-val="${provides.val}">旗標 ${esc(provides.flag)}</span> ${esc(provides.op)} ${provides.val}${provides.alt ? '（多個來源，任一即可）' : ''}`}</div></li>`;
+      const gain = flagName(provides.flag) ? `達成「${esc(notePhrase(flagName(provides.flag), provides.op, provides.val) || flagName(provides.flag))}」` : '完成這一步';
+      html += `<div class="gain">${provides.final ? '★ 結緣成立' : `→ ${gain} ${flagTag(provides.flag, provides.op, provides.val)}${provides.alt ? '（多個來源，任一即可）' : ''}`}</div></li>`;
     }
     return html + '</ol>';
   }

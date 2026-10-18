@@ -37,6 +37,16 @@ if battle_path and os.path.exists(battle_path):
         level_info[level["m_Name"]] = {"enemy": level.get("_enemyNote") or "", "desc": "", "dead": False}
 
 
+battle_flag_values = {}
+for flags in level_flags.values():
+    for f, sides in flags.items():
+        agg = battle_flag_values.setdefault(f, {"win": set(), "lose": set()})
+        agg["win"] |= sides["win"]
+        agg["lose"] |= sides["lose"]
+battle_flag_values = {f: {"win": sorted(v["win"]), "lose": sorted(v["lose"])} for f, v in battle_flag_values.items()
+                      if not v["win"] & v["lose"]}
+
+
 def level_name(mode, key):
     return ("CL_" if mode == "Combat" else "BL_") + key
 
@@ -1626,6 +1636,17 @@ if read_keys:
             item["reasons"] = reasons[:12]
         unread.append(item)
 
+# 每支腳本最短的進入路線（只留最後幾個標籤）：網頁把「一進這段就設的暫存旗標」翻成是哪個選項接過來的
+script_via = {}
+for name in script_info:
+    ev, _ = find_owner(name)
+    if not ev:
+        continue
+    r = next(iter(entry_routes(name, ev)), [])
+    labels = [label for x in r for label in x["path"]]
+    if labels:
+        script_via[name] = labels[-4:]
+
 # 其他目標條件（不是結緣的結局分歧）
 TARGETS = [
     {"name": "葉雲裳（不結緣・存活）", "flag": "M40055", "val": 1,
@@ -1667,6 +1688,9 @@ out = {
     "flagNotes": {o["m_Name"]: o["_devNote"].strip() for o in by_name["FlagData"].values()
                   if (o.get("_devNote") or "").strip() and not re.match(r"^旗標暫存\d*$", o["_devNote"].strip())},
     "stats": {"scripts": len(scripts), "events": len(events), "readKeys": len(read_keys)},
+    # 決鬥關卡打贏／打輸時寫入的旗標值（網頁把劇本裡找不到設定位置的暫存旗標翻成「戰鬥勝利／落敗」）
+    "battleFlags": battle_flag_values,
+    "scriptVia": script_via,
 }
 json.dump(out, open(out_path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print("events", len(events), "scripts in graph", len(out["scripts"]), "size", os.path.getsize(out_path))
