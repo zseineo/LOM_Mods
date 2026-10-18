@@ -4,6 +4,7 @@ using Mortal.Core;
 using Mortal.Free;
 using Mortal.Story;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace LOM.TimeMachine;
 
@@ -92,6 +93,21 @@ internal static class CapturePatches
     {
         KeyNodes.OnScript(__instance.ScriptName);
         DrawLog.MarkPlayed(__instance.ScriptName);
+        ForcedDraws.OnScript(__instance.ScriptName);
+    }
+
+    // 網頁指定「強制觸發」的地點事件：條件成立（權重 > 0）時直接選它，不擲骰
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(PositionResultData), nameof(PositionResultData.GetResult))]
+    private static bool PositionForce(PositionResultData __instance, ref string __result)
+    {
+        string forced = ForcedDraws.Pick(__instance);
+        if (forced == null)
+        {
+            return true;
+        }
+        __result = forced;
+        return false;
     }
 
     // 劇情自動存檔（遊戲已先 SetStartScript）
@@ -275,6 +291,96 @@ internal static class DrawLog
                   .Append(",\"played\":").Append(e.Played ? "true" : "false").Append('}');
             }
             return sb.Append(']').ToString();
+        }
+    }
+}
+
+// 強制觸發的地點事件（只放記憶體，重開遊戲就清掉）
+// 有兩層的地點（先抽行動結果，再抽「有沒有人插進來」）：鎖第二層的事件時，
+// 網頁會一起帶第一層「沒人插進來」的候選，只在剛強制過之後的下一次抽籤用。
+internal static class ForcedDraws
+{
+    private static readonly FieldInfo PrefixField = AccessTools.Field(typeof(PositionResultData), "_scriptPrefix");
+    // 目標事件 id → 一起鎖的第一層候選 id（沒有就是空字串）
+    private static readonly Dictionary<string, string> Targets = new Dictionary<string, string>();
+    // 已強制選出、等著播出的結果腳本 → 目標事件 id
+    private static readonly Dictionary<string, string> Awaiting = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    private static string _pendingPass;
+
+    internal static void Set(string id, string pass, bool on)
+    {
+        lock (Targets)
+        {
+            if (on)
+            {
+                Targets[id] = pass ?? "";
+            }
+            else
+            {
+                Targets.Remove(id);
+            }
+        }
+    }
+
+    internal static string Json()
+    {
+        lock (Targets)
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder("[");
+            foreach (string id in Targets.Keys)
+            {
+                sb.Append(sb.Length > 1 ? "," : "").Append(LOM.TimeMachine.Json.Str(id));
+            }
+            return sb.Append(']').ToString();
+        }
+    }
+
+    internal static string Pick(PositionResultData group)
+    {
+        lock (Targets)
+        {
+            if (Targets.Count == 0 && _pendingPass == null)
+            {
+                return null;
+            }
+            string prefix = (string)PrefixField.GetValue(group);
+            string pass = _pendingPass;
+            _pendingPass = null;
+            PositionEventData passItem = null;
+            foreach (PositionEventData item in group.List)
+            {
+                if (item == null || item.GetRate() <= 0)
+                {
+                    continue;
+                }
+                if (Targets.TryGetValue(item.name, out string targetPass))
+                {
+                    string script = prefix + "_" + item.ResultType;
+                    Awaiting[script] = item.name;
+                    _pendingPass = targetPass.Length > 0 ? targetPass : null;
+                    Plugin.Log.LogInfo($"[TimeMachine] 強制觸發 {group.name} → {script}");
+                    return script;
+                }
+                if (item.name == pass)
+                {
+                    passItem = item;
+                }
+            }
+            return passItem == null ? null : prefix + "_" + passItem.ResultType;
+        }
+    }
+
+    // 強制選出的事件真的播出後解除
+    internal static void OnScript(string script)
+    {
+        lock (Targets)
+        {
+            if (script != null && Awaiting.TryGetValue(script, out string id))
+            {
+                Awaiting.Remove(script);
+                Targets.Remove(id);
+                Plugin.Log.LogInfo($"[TimeMachine] 強制觸發的事件已播出，解除：{id}");
+            }
         }
     }
 }

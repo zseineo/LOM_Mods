@@ -139,6 +139,8 @@ body.view-romance .chartonly { display: none; }
 .rd.r-unread { background: var(--chip); color: var(--muted); }
 .plev .bad, .plev .bad .flag { color: #d9534f; font-weight: 700; }
 .plev .live { color: var(--read); font-weight: 700; }
+.forcebtn { float: right; background: var(--chip); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 1px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+.forcebtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .plev .multi { display: inline-block; background: var(--accent); color: #fff; border-radius: 4px; padding: 0 5px; font-size: 11px; margin-left: 6px; }
 .live { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--chip); color: var(--muted); }
 .live.on { background: #2e5c3e; color: #d9f2df; }
@@ -211,7 +213,10 @@ body.show-time .stime { display: inline; }
     return r === null ? '' : `<span class="ck ${r ? 'ok' : 'no'}" title="${r ? '目前已符合' : '目前尚未符合'}">${r ? '✓' : '✗'}</span>`;
   }
   let currentView = 'chart';
-  let LIVE_POS = null;
+  let LIVE_POS = null, LIVE_FORCED = new Set();
+  // 篩選器狀態記在瀏覽器（Mod 網頁每次都是同一個網址，關掉再開也會留著）；讀寫失敗就當沒記
+  const PREFS = (() => { try { return JSON.parse(localStorage.getItem('wukuai.prefs') || '{}') || {}; } catch (e) { return {}; } })();
+  function savePref(k, v) { PREFS[k] = v; try { localStorage.setItem('wukuai.prefs', JSON.stringify(PREFS)); } catch (e) { } }
   let lastSig = null;
   async function poll() {
     if (!ONLINE) return;
@@ -237,7 +242,7 @@ body.show-time .stime { display: inline; }
     if (sig === lastSig) return;
     lastSig = sig;
     if (ONLINE && currentView === 'places') {
-      try { LIVE_POS = (await (await fetch('/api/positions', {cache: 'no-store'})).json()).groups; } catch (e) { LIVE_POS = null; }
+      try { const pj = await (await fetch('/api/positions', {cache: 'no-store'})).json(); LIVE_POS = pj.groups; LIVE_FORCED = new Set(pj.forced || []); } catch (e) { LIVE_POS = null; }
     }
     if (currentView === 'romance') renderRomance(true);
     else if (currentView === 'targets') renderTargets(true);
@@ -821,6 +826,13 @@ body.show-time .stime { display: inline; }
   document.getElementById('showTime').addEventListener('change', ev => document.body.classList.toggle('show-time', ev.target.checked));
   document.getElementById('onlyChoice').addEventListener('change', layout);
   document.getElementById('groupBy').addEventListener('change', layout);
+  for (const id of ['spoil', 'showTime', 'onlyChoice', 'groupBy', 'showHidden']) {
+    const el = document.getElementById(id), box = el.type === 'checkbox';
+    if (id in PREFS && (box || [...el.options].some(o => o.value === PREFS[id]))) el[box ? 'checked' : 'value'] = PREFS[id];
+    el.addEventListener('change', () => savePref(id, box ? el.checked : el.value));
+  }
+  document.body.classList.toggle('spoil', document.getElementById('spoil').checked);
+  document.body.classList.toggle('show-time', document.getElementById('showTime').checked);
   canvas.addEventListener('click', ev => {
     const mc = ev.target.closest('.monthcell');
     if (mc) showMonth(mc);
@@ -1139,7 +1151,13 @@ body.show-time .stime { display: inline; }
     });
     return html.replace(/^、|、$/g, '').replace(/、、/g, '、');
   }
-  function placeEventHtml(c, kindLabel, lv, need) {
+  // 兩層地點的第一層裡「沒人插進來、直接接行動結果」的候選（腳本只有接 var1）
+  function passThrough(layer) {
+    const ok = c => { const it = (G.scripts[c.script] || {}).items || []; return it.length > 0 && it.every(x => x.t === 'next_var' && x.v === 'var1'); };
+    const list = layer.candidates.filter(ok);
+    return (list.find(c => c.code === '001') || list[0] || {}).id || '';
+  }
+  function placeEventHtml(c, kindLabel, lv, need, pass) {
     const pr = presence(c.cond);
     // 選項本身的出現條件（例如雜匠要小竹在唐門）也算進要在場的人
     if (need) presence(need).inn.forEach(n => { if (!pr.inn.includes(n)) pr.inn.unshift(n); });
@@ -1158,16 +1176,19 @@ body.show-time .stime { display: inline; }
     }).join('；');
     const live = lv ? (lv.rate > 0 ? `　<span class="live">目前權重 ${lv.rate}・機率 ${(lv.prob * 100).toFixed(1)}%</span>` : '　<span class="bad">目前不會出現</span>') : '';
     const condHtml = lv && c.cond ? condAtomsHtml(c.cond, lv.atoms, once && once[0]) : null;
-    return `<div class="plev" data-script="${esc(c.script)}">${readBadge(c.script, c.read)}${mark}<span class="ttl${hide}">${esc(title)}</span>`
+    const forced = LIVE_FORCED.has(c.id);
+    const force = LIVE && LIVE.inGame && LIVE_POS ? `<button class="forcebtn${forced ? ' on' : ''}" data-force="${esc(c.id)}" data-pass="${esc(pass || '')}"`
+      + ` title="${forced ? '已鎖定：條件成立時一定抽到，播出後自動解除。點一下取消' : '條件成立時不擲骰、直接觸發這個事件（播出後自動解除）'}">${forced ? '🔒 已鎖定' : '強制'}</button>` : '';
+    return `<div class="plev" data-script="${esc(c.script)}">${force}${readBadge(c.script, c.read)}${mark}<span class="ttl${hide}">${esc(title)}</span>`
       + `${who.length ? `<span class="who">${esc(who.join('、'))}</span>` : ''}${inn.length > 1 ? `<span class="multi">需同時在唐門：${esc(inn.join('＋'))}</span>` : ''}`
       + `<div class="need">${kindLabel ? kindLabel + '　' : ''}${condHtml !== null ? (condHtml ? '條件：' + condHtml : '無條件') : (cond ? '條件：' + plainCondHtml(cond) : '無條件')}${once ? '（只會發生一次）' : ''}`
       + `　權重 ${c.rate}${bonus ? `（${bonus}）` : ''}${live}${c.title && c.note ? `<br><span class="${hide.trim()}">${esc(c.title.slice(0, 60))}</span>` : ''}</div></div>`;
   }
-  let plWho = '';
+  let plWho = PREFS.plWho || '', plAll = !!PREFS.plAll;
   function renderPlaces(keepScroll) {
     const top = romance.scrollTop;
     const pick = plWho;
-    const showAll = document.getElementById('plAll')?.checked;
+    const showAll = plAll;
     loadIcons();
     const allWho = new Set();
     G.positions.forEach(p => p.layers.forEach(L => L.candidates.forEach(c => {
@@ -1204,7 +1225,7 @@ body.show-time .stime { display: inline; }
             // 預設：角色事件與特殊事件；勾選後連平常／成功／失敗等一般結果都列
             if (!showAll && !related && !special) continue;
             if (pick && !who.includes(pick)) continue;
-            rows += placeEventHtml(c, p.layers.length > 1 && li === 0 ? '（先抽：有人插進來）' : '', live && live.get(c.id), p.need);
+            rows += placeEventHtml(c, p.layers.length > 1 && li === 0 ? '（先抽：有人插進來）' : '', live && live.get(c.id), p.need, li > 0 ? passThrough(p.layers[0]) : '');
           }
         });
         if (rows) body += `<h4>${esc(p.action)}${p.need ? `<span class="need" style="letter-spacing:0;font-weight:400">　選項出現條件：${plainCondHtml(p.need)}</span>` : ''}</h4>${rows}`;
@@ -1214,8 +1235,18 @@ body.show-time .stime { display: inline; }
       html += `<div class="plcard"><h2>${esc(place)}</h2>${body}</div>`;
     }
     romance.innerHTML = html;
-    romance.querySelectorAll('[data-pl-who]').forEach(b => b.onclick = () => { plWho = b.dataset.plWho; renderPlaces(true); });
-    document.getElementById('plAll').onchange = () => renderPlaces();
+    romance.querySelectorAll('[data-pl-who]').forEach(b => b.onclick = () => { plWho = b.dataset.plWho; savePref('plWho', plWho); renderPlaces(true); });
+    document.getElementById('plAll').onchange = ev => { plAll = ev.target.checked; savePref('plAll', plAll); renderPlaces(); };
+    // 強制觸發：交給 Mod，抽籤時條件成立就直接選它，播出後自動解除
+    romance.querySelectorAll('[data-force]').forEach(b => b.onclick = async ev => {
+      ev.stopPropagation();
+      const id = b.dataset.force, on = !LIVE_FORCED.has(id);
+      try {
+        const j = await (await fetch(`/api/force?id=${encodeURIComponent(id)}&pass=${encodeURIComponent(b.dataset.pass)}&on=${on ? 1 : 0}`, {method: 'POST'})).json();
+        LIVE_FORCED = new Set(j.forced || []);
+      } catch (e) { alert('Mod 沒有回應（需要時光機 Mod 0.7.3 以上）'); }
+      renderPlaces(true);
+    });
     if (keepScroll) romance.scrollTop = top;
   }
 
@@ -1257,7 +1288,7 @@ body.show-time .stime { display: inline; }
     if (!ICONS) setTimeout(loadIcons, ok ? 1000 : 3000);
   }
   const iconImg = n => ICONS && ICONS.has(n) ? `<img src="/api/icon?name=${encodeURIComponent(n)}" alt="">` : '';
-  let urState = '', urWho = '';
+  let urState = PREFS.urState || '', urWho = PREFS.urWho || '';
   function renderUnread(keepScroll) {
     const top = romance.scrollTop;
     const open = keepScroll ? [...romance.querySelectorAll('details')].map(d => d.open) : [];
@@ -1318,8 +1349,8 @@ body.show-time .stime { display: inline; }
       html += '</details>';
     }
     romance.innerHTML = html;
-    romance.querySelectorAll('[data-ur-st]').forEach(b => b.onclick = () => { urState = b.dataset.urSt; renderUnread(); });
-    romance.querySelectorAll('[data-ur-who]').forEach(b => b.onclick = () => { urWho = b.dataset.urWho; renderUnread(); });
+    romance.querySelectorAll('[data-ur-st]').forEach(b => b.onclick = () => { urState = b.dataset.urSt; savePref('urState', urState); renderUnread(); });
+    romance.querySelectorAll('[data-ur-who]').forEach(b => b.onclick = () => { urWho = b.dataset.urWho; savePref('urWho', urWho); renderUnread(); });
     if (keepScroll) {
       romance.querySelectorAll('details').forEach((d, i) => { if (open[i]) d.open = true; });
       romance.scrollTop = top;
@@ -1357,7 +1388,7 @@ body.show-time .stime { display: inline; }
   function renderLibrary(keepScroll) {
     const top = romance.scrollTop;
     const open = keepScroll ? [...romance.querySelectorAll('details')].map(d => d.open) : [];
-    const onlyMissing = document.getElementById('libMissing')?.checked;
+    const onlyMissing = !!PREFS.libMissing;
     const libKind = {libend: 'end', libdead: 'dead'}[currentView] || 'end';
     let html = `<div class="rintro">遊戲講經堂的圖鑑。✓ 是已取得（${LIVE && LIVE.lib ? '遊戲目前的紀錄' : '重建頁面當時的紀錄'}）。
       ${'達成條件取自 smilin.net 活俠傳 wiki（汗青書、生死簿）；wiki 沒有的新內容只列遊戲資料推出的取得位置。沒取得的連條件都防雷，點一下顯示。'}點事件會跳到流程圖。</div>`;
@@ -1382,7 +1413,7 @@ body.show-time .stime { display: inline; }
       html += '</div>';
     }
     romance.innerHTML = html;
-    document.getElementById('libMissing').onchange = () => renderLibrary();
+    document.getElementById('libMissing').onchange = ev => { savePref('libMissing', ev.target.checked); renderLibrary(); };
     if (keepScroll) {
       romance.querySelectorAll('details').forEach((d, i) => { if (open[i]) d.open = true; });
       romance.scrollTop = top;

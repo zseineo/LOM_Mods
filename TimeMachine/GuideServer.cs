@@ -157,7 +157,18 @@ internal sealed class GuideServer
             case "/api/positions":
                 Interlocked.Exchange(ref _lastPositionsRequestTicks, DateTime.UtcNow.Ticks);
                 string positions = _positionsJson;
-                Write(context, positions.Substring(0, positions.Length - 1) + ",\"draws\":" + DrawLog.Json() + "}", "application/json; charset=utf-8");
+                Write(context, positions.Substring(0, positions.Length - 1) + ",\"draws\":" + DrawLog.Json() + ",\"forced\":" + ForcedDraws.Json() + "}", "application/json; charset=utf-8");
+                return;
+            case "/api/force":
+                string forceId = context.Request.QueryString["id"] ?? "";
+                if (context.Request.HttpMethod != "POST" || forceId.Length == 0)
+                {
+                    context.Response.StatusCode = 400;
+                    context.Response.Close();
+                    return;
+                }
+                ForcedDraws.Set(forceId, context.Request.QueryString["pass"], context.Request.QueryString["on"] == "1");
+                Write(context, "{\"forced\":" + ForcedDraws.Json() + "}", "application/json; charset=utf-8");
                 return;
             case "/api/load":
                 string key = context.Request.QueryString["key"] ?? "";
