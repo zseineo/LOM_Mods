@@ -89,6 +89,19 @@ def parse_enum(enum_name):
     return {}
 
 
+def parse_enum_strings(enum_name):
+    """列舉名稱 → [StringValue(...)]（存檔裡用的鍵名）。"""
+    for root, _, files in os.walk(decomp_dir):
+        for f in files:
+            if not f.endswith(".cs"):
+                continue
+            text = open(os.path.join(root, f), encoding="utf-8", errors="replace").read()
+            m = re.search(r"enum\s+" + enum_name + r"\s*\{(.*?)\}", text, re.S)
+            if m:
+                return dict((name, key) for key, name in re.findall(r'\[StringValue\("([^"]*)"\)\]\s*([^\s=,\[]+)', m.group(1)))
+    return {}
+
+
 STAT = parse_enum("GameStatType")
 REL = parse_enum("RelationshipStatType")
 POS = parse_enum("PositionType")
@@ -1036,6 +1049,10 @@ for name, info in script_info.items():
 event_by_id_lower = {e["id"].lower(): e for e in events}
 
 
+FREE_HUB = re.compile(r"^section_0*(\d+)_free_start_\d+$")
+HUB_NAME = {"1": "崆峒留學期間", "2": "青城留學期間"}
+
+
 def entry_routes(script, ev):
     e = event_by_id_lower.get((ev or "").lower())
     chain = set(e["scripts"]) if e else None
@@ -1050,6 +1067,12 @@ def entry_routes(script, ev):
             routes.append(acc[::-1])
             return
         for x in parents:
+            hub = FREE_HUB.match(x["from"])
+            if hub:
+                # 養成選單的地點：只寫「某某期間去哪裡」，地點本身的開啟條件放在「其他條件」
+                place = re.sub(r"　〔需：.*〕$", "", x["path"][-1]) if x["path"] else ""
+                routes.append(([{"from": x["from"], "into": cur, "path": [place], "hub": HUB_NAME.get(hub.group(1), "留學期間")}] + acc[::-1]) if place else acc[::-1])
+                continue
             walk(x["from"], acc + ([{"from": x["from"], "into": cur, "path": x["path"]}] if x["path"] else []), seen | {x["from"]})
 
     walk(script, [], {script})
@@ -1628,7 +1651,7 @@ if read_keys:
         if r == 0:
             routes = entry_routes(name, ev)
             # 網頁只列 3 條，其餘只記有沒有
-            item["routes"] = [[{"from": x["from"], "path": x["path"]} for x in r] for r in routes[:3]]
+            item["routes"] = [[{k: v for k, v in x.items() if k != "into"} for x in r] for r in routes[:3]]
             item["moreRoutes"] = len(routes) > 3
         else:
             reasons = []
@@ -1664,6 +1687,12 @@ TARGETS = [
              "此時要葉雲裳已結緣（G11002 = 1）且 E12100 = 1（而且 M60083 不是 1），才會進到遇見南溪的劇情（M60075 = 1）。"
              "若當下處世 ≤ 40 且修養 ≥ 60 會設為 2，結局段落有些內容要 M60075 ≥ 2。",
      "ending": None},
+    {"name": "開啟養成地點：鶴崖（崆峒）", "flag": "M00030", "val": 1,
+     "note": "崆峒留學期間養成選單的「鶴崖」：M00030 = 1 後一直開著；沒開之前，身上有睡丹且還有 2 次以上行動時也會出現。",
+     "ending": None},
+    {"name": "開啟養成地點：奪魄森林（崆峒）", "flag": "S0014_02", "val": 1,
+     "note": "崆峒留學期間養成選單的「奪魄森林」：拜夏侯蘭為師（S0014_02 = 1）後才會出現。",
+     "ending": None},
 ]
 for t in TARGETS:
     t["routes"] = [requirement(x["s"], x["path"], 0, {t["flag"]}) for x in flag_setters.get(t["flag"], [])
@@ -1691,6 +1720,8 @@ out = {
     # 決鬥關卡打贏／打輸時寫入的旗標值（網頁把劇本裡找不到設定位置的暫存旗標翻成「戰鬥勝利／落敗」）
     "battleFlags": battle_flag_values,
     "scriptVia": script_via,
+    # 網頁連上遊戲時判斷條件用：條件文字裡的名稱 → 存檔鍵名
+    "liveKeys": {"stat": parse_enum_strings("GameStatType"), "rel": parse_enum_strings("RelationshipStatType")},
 }
 json.dump(out, open(out_path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print("events", len(events), "scripts in graph", len(out["scripts"]), "size", os.path.getsize(out_path))
