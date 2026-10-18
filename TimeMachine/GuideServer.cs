@@ -192,6 +192,18 @@ internal sealed class GuideServer
             case "/api/lastload":
                 Write(context, "{\"result\":" + Json.Str(_lastLoadResult) + "}", "application/json; charset=utf-8");
                 return;
+            case "/api/cheats":
+                Write(context, Cheats.Json(), "application/json; charset=utf-8");
+                return;
+            case "/api/cheat":
+                if (context.Request.HttpMethod != "POST" || !Cheats.Set(context.Request.QueryString["id"] ?? "", context.Request.QueryString["on"] == "1"))
+                {
+                    context.Response.StatusCode = 400;
+                    context.Response.Close();
+                    return;
+                }
+                Write(context, Cheats.Json(), "application/json; charset=utf-8");
+                return;
             case "/api/readkeys":
                 // 從第 from 個開始的已讀台詞鍵；數量比 from 少（重新讀了已讀紀錄）就從頭給、標 reset
                 string[] keys = _readKeys;

@@ -144,6 +144,8 @@ body.view-romance .chartonly { display: none; }
 .plev .bad, .plev .bad .flag { color: #d9534f; font-weight: 700; }
 .plev .live { color: var(--read); font-weight: 700; }
 .routes { margin: 2px 0 0 0; padding-left: 22px; }
+.tabs .extra { display: none; }
+body.moretabs .tabs .extra { display: inline-block; }
 .rtag { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 9px; font-size: 12px; font-weight: 400; background: #6b3fa0; color: #fff; }
 .curev { margin: 0 0 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: 13px; }
 .steps { margin: 2px 0 0 0; padding-left: 22px; }
@@ -186,7 +188,7 @@ body.show-time .stime { display: inline; }
 <body class="spoil">
 <header>
   <h1>五塊錢</h1>
-  <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabLibend">汗青書</button><button id="tabLibdead">死法</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabChart" title="流程圖（點一下展開）">▸</button></span>
+  <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabLibend">汗青書</button><button id="tabLibdead">死法</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabMore" title="展開更多分頁">▸</button><button id="tabChart" class="extra">流程圖</button><button id="tabCheat" class="extra">作弊</button></span>
   <span class="stats" id="stats"></span>
   <span class="live" id="live">離線預覽</span>
   <input type="search" id="q" placeholder="搜尋事件、選項、腳本、旗標…">
@@ -1800,12 +1802,17 @@ body.show-time .stime { display: inline; }
     else if (el.dataset.flag) showFlag(el.dataset.flag, ev);
     else el.classList.add('reveal');
   });
-  const TAB_IDS = {unread: 'tabUnread', places: 'tabPlaces', libend: 'tabLibend', libdead: 'tabLibdead', romance: 'tabRomance', targets: 'tabTargets', chart: 'tabChart'};
+  const TAB_IDS = {unread: 'tabUnread', places: 'tabPlaces', libend: 'tabLibend', libdead: 'tabLibdead', romance: 'tabRomance', targets: 'tabTargets', chart: 'tabChart', cheat: 'tabCheat'};
+  // 流程圖、作弊平常摺疊在「▸」裡，點開才顯示；正在看的話一直顯示
+  function setMoreTabs(open) {
+    document.body.classList.toggle('moretabs', open);
+    document.getElementById('tabMore').textContent = open ? '◂' : '▸';
+  }
+  document.getElementById('tabMore').onclick = () => setMoreTabs(!document.body.classList.contains('moretabs'));
   function setView(v) {
     document.body.classList.toggle('view-romance', v !== 'chart');
     for (const [view, id] of Object.entries(TAB_IDS)) document.getElementById(id).classList.toggle('on', view === v);
-    // 流程圖分頁平常摺疊成「▸」，切過去時才向右展開
-    document.getElementById('tabChart').textContent = v === 'chart' ? '流程圖 ◂' : '▸';
+    if (v === 'chart' || v === 'cheat') setMoreTabs(true);
     document.getElementById('hiddenToggle').style.display = 'none';
     currentView = v;
     if (v === 'romance') renderRomance();
@@ -1813,6 +1820,27 @@ body.show-time .stime { display: inline; }
     if (v.startsWith('lib')) renderLibrary();
     if (v === 'places') renderPlaces();
     if (v === 'unread') renderUnread();
+    if (v === 'cheat') renderCheat();
+  }
+  // ---------- 作弊：開關存在 Mod 的設定檔 ----------
+  const CHEATS = [
+    {id: 'showAllDecisions', name: '決策時顯示全部選項',
+     desc: '第3年12月三師兄召集的決策：滿足西武林盟條件（可成立西武林盟）時，遊戲會藏起「決策：戰他娘親」（頑抗路線）和「決策：退隱江湖」（解散唐門）。打開後這兩個也會出現，可以自己選。'},
+  ];
+  async function renderCheat() {
+    let state = null;
+    if (ONLINE) { try { state = await (await fetch('/api/cheats', {cache: 'no-store'})).json(); } catch (e) { state = null; } }
+    let html = `<div class="rintro">遊戲本來不允許的選擇。開關存在 Mod 的設定檔（BepInEx\\config 的 Cheat 區），重開遊戲也會保留；${state ? '' : '<b>要從遊戲裡按 F7 開這個網頁、而且 Mod 是 0.7.7 以上才能切換。</b>'}</div>`;
+    for (const c of CHEATS) {
+      const on = !!(state && state[c.id]);
+      html += `<div class="hcard"><h2>${esc(c.name)}<button class="forcebtn${on ? ' on' : ''}" data-cheat="${c.id}" ${state ? '' : 'disabled'}>${on ? '已開啟' : '關閉中'}</button></h2><div class="rintro">${esc(c.desc)}</div></div>`;
+    }
+    romance.innerHTML = html;
+    romance.querySelectorAll('[data-cheat]').forEach(b => b.onclick = async () => {
+      const on = !(state && state[b.dataset.cheat]);
+      try { await fetch(`/api/cheat?id=${b.dataset.cheat}&on=${on ? 1 : 0}`, {method: 'POST'}); } catch (e) { }
+      renderCheat();
+    });
   }
   for (const [view, id] of Object.entries(TAB_IDS)) document.getElementById(id).onclick = () => setView(view);
   document.getElementById('showHidden').addEventListener('change', renderRomance);
@@ -1854,6 +1882,7 @@ body.show-time .stime { display: inline; }
   if (/view=libcg/.test(location.hash)) setView('romance');
   if (/view=libdead/.test(location.hash)) setView('libdead');
   if (/view=chart/.test(location.hash)) setView('chart');
+  if (/view=cheat/.test(location.hash)) setView('cheat');
   // 預設打開五塊錢
   if (!/view=|ev=/.test(location.hash)) setView('unread');
   if (/view=places/.test(location.hash)) setView('places');

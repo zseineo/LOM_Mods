@@ -14,7 +14,7 @@ public class Plugin : BaseUnityPlugin
 {
     public const string GUID = "zseineo.mortal.timemachine";
     public const string NAME = "LOM TimeMachine";
-    public const string VERSION = "0.7.6";
+    public const string VERSION = "0.7.7";
 
     internal static ManualLogSource Log;
     internal static ConfigEntry<bool> AutoCapture;
@@ -42,6 +42,8 @@ public class Plugin : BaseUnityPlugin
         _window = new TimeMachineWindow();
         Harmony.CreateAndPatchAll(typeof(CapturePatches), GUID);
         Harmony.CreateAndPatchAll(typeof(EventLogPatches), GUID + ".eventlog");
+        Cheats.Bind(Config);
+        Harmony.CreateAndPatchAll(typeof(Cheats), GUID + ".cheats");
         if (GuideEnabled.Value)
         {
             string pageDir = Path.Combine(Path.GetDirectoryName(Info.Location), "guide");
