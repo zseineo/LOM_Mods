@@ -591,6 +591,116 @@ def summarize(block, vars_, depth=0):
     return {"items": items, "_texts": texts, "legend_keys": stories, "legend": legend(stories)}
 
 
+# ---------- 決鬥中的事件（第幾回合有人出場、狀態變化、改旗標…） ----------
+# 每場決鬥（CombatLevel.Events）整理成「條件：發生什麼」；改的旗標記下來，當成那場戰鬥的設定點。
+combat_objs = {}
+combat_path = os.path.join(os.path.dirname(battle_path), "combat_events.json") if battle_path else ""
+if combat_path and os.path.exists(combat_path):
+    for _t, _lst in json.load(open(combat_path, encoding="utf-8")).items():
+        for _o in _lst:
+            combat_objs[f"{_t}:{_o['m_Name']}@{_o.get('__file')}:{_o.get('__pid')}"] = (_t, _o)
+CMP = {0: "=", 1: "≠", 2: "<", 3: "≤", 4: ">", 5: "≥"}
+SIDE = {1: "我方", 2: "敵方"}
+NAME_OPS = [("_EQ_", " = "), ("_NE_", " ≠ "), ("_GE_", " ≥ "), ("_LE_", " ≤ "), ("_GT_", " > "), ("_LT_", " < ")]
+
+
+def ref_tail(ref):
+    """「CombatStateEffectScriptable:C506_某某@…」→「某某」"""
+    name = (ref or "").split("@")[0].split(":", 1)[-1]
+    return name.split("_", 1)[1] if "_" in name else name
+
+
+def name_text(name):
+    """物件名稱本身就是描述（「我方_血量_GE_01」「數值_修養_GE_40」）：換成符號、去掉底線。"""
+    for x, y in NAME_OPS:
+        name = name.replace(x, y)
+    name = re.sub(r"^數值_", "", name)
+    return re.sub(r"\b0+(\d)", r"\1", name).replace("_", "")
+
+
+def combat_cond(ref):
+    t, o = combat_objs.get(ref, (None, None))
+    if not o:
+        return ref_tail(ref)
+    if t == "CombatEventConditionRound":
+        r, op = o["_round"], o["_op"]
+        return f"撐到第 {r} 回合" if op == 0 else f"第 {r} 回合起" if op == 5 else f"回合數 {CMP.get(op, op)} {r}"
+    if t == "CombatEventConditionEffectState":
+        return f"{SIDE.get(o.get('_character'), '')}身上有「{ref_tail(o.get('_effectState'))}」"
+    if t == "CombatEventConditionRoundFlag":
+        return "到了記下的回合"
+    if t == "CombatEventConditionBlockCounterAttack":
+        return "擋下對方的反擊"
+    return name_text(o["m_Name"])
+
+
+def combat_actions(refs):
+    """回傳（文字、改的旗標、出場說話的人）"""
+    texts, flags, who = [], [], []
+    for ref in refs or []:
+        t, o = combat_objs.get(ref, (None, None))
+        if not o:
+            continue
+        if t == "CombatEventActionDialog":
+            for d in o.get("_dialogs", [])[:1]:
+                sm = deref(d.get("_characterKey")) if d.get("_characterKey") else None
+                speaker = (sm.get("Key") or "").split("_")[0] if sm else ""
+                text = (loc.get("CombatTalking/" + d.get("_key", "")) or d.get("_text") or "").replace("\n", "")
+                if speaker:
+                    who.append(speaker)
+                texts.append(f"{speaker + '：' if speaker else ''}「{text[:24]}{'…' if len(text) > 24 else ''}」")
+        elif t == "CombatEventActionStateEffect":
+            texts.append(f"{SIDE.get(o.get('_character'), '')}{'獲得' if o.get('_type') == 1 else '失去'}「{ref_tail(o.get('_effect'))}」")
+        elif t == "CombatEventActionModifyFlag":
+            flags.append((ref_name(o["_flag"]), o["_state"]))
+        elif t == "CombatEventActionPunchSupport":
+            texts.append(f"{SIDE.get(o.get('_character'), '')}得到「{ref_tail(o.get('_support'))}」助攻")
+        elif t == "CombatEventActionLoadScene":
+            texts.append("戰鬥直接結束")
+        elif t == "CombatEventActionSetStoryScript":
+            texts.append(f"戰後改接劇情 {o.get('_name')}")
+        elif t == "CombatEventActionCount":
+            items = o.get("_items")
+            items = json.loads(items) if isinstance(items, str) else items or []
+            for it in items:
+                sub, sub_flags, sub_who = combat_actions(it.get("Actions"))
+                flags += sub_flags
+                who += sub_who
+                if sub:
+                    texts.append(f"第 {it.get('Count')} 次：" + "、".join(sub))
+        elif t in ("CombatEventActionModifyStat", "CombatEventActionModifyWeaponValue", "CombatEventActionRemoveAllStateEffect",
+                   "CombatEventActionRemoveAllSupport", "CombatEventActionCrazyMode", "CombatEventActionReduceEffectCount",
+                   "CombatEventActionRelationshipAttack"):
+            texts.append(name_text(o["m_Name"]))
+    return texts, flags, who
+
+
+def combat_events(level):
+    out = []
+    for ce_ref in level.get("Events") or []:
+        _, ce = combat_objs.get(ce_ref, (None, None))
+        if not ce:
+            continue
+        texts, flags, who = combat_actions(ce.get("_initAction"))
+        if texts or flags:
+            out.append({"when": "戰鬥開始時", "what": "；".join(texts), "flags": flags, "who": who})
+        for ca_ref in ce.get("_conditionAction") or []:
+            _, ca = combat_objs.get(ca_ref, (None, None))
+            if not ca:
+                continue
+            when = (" 且 " if ca.get("_logic", 0) == 0 else " 或 ").join(combat_cond(c) for c in ca.get("_conditions") or []) or "戰鬥中"
+            texts, flags, who = combat_actions((ca.get("_actions") or []) + (ca.get("_afterActions") or []) + (ca.get("_afterResult") or []))
+            if texts or flags:
+                out.append({"when": when, "what": "；".join(texts), "flags": flags, "who": who})
+    return out
+
+
+if battle_path and os.path.exists(battle_path):
+    for level in battle_dump.get("CombatLevel", []):
+        evs = combat_events(level)
+        if evs:
+            level_info.setdefault(level["m_Name"], {})["events"] = evs
+
 battles_into = collections.defaultdict(list)
 
 
@@ -603,6 +713,8 @@ def pair_battles(script, block):
             info = level_info.get(level_name(it["mode"], it["key"]), {})
             it["enemy"] = info.get("enemy", "")
             it["desc"] = info.get("desc", "")
+            if info.get("events"):
+                it["events"] = [f"{e['when']}：{e['what']}" for e in info["events"] if e["what"]]
             if info.get("deadLib"):
                 it["dead"] = info["deadLib"]
             if pending:
@@ -893,6 +1005,24 @@ def index_flags(script, items, path):
             for br in it["branches"]:
                 index_flags(script, br["items"], path + [br["label"]])
 
+
+def add_battle_flags(items):
+    out = []
+    for it in items:
+        out.append(it)
+        if it["t"] == "battle":
+            for e in level_info.get(level_name(it["mode"], it["key"]), {}).get("events", []):
+                label = "戰鬥中：" + (e["when"] if e["when"].startswith(("撐到", "戰鬥開始")) else e["when"] + "時") \
+                        + (f"（{'、'.join(dict.fromkeys(e['who']))}出場）" if e["who"] else "")
+                out += [{"t": "flag", "op": "SetFlag", "f": f, "v": v, "when": [label]} for f, v in e["flags"]]
+        elif it["t"] == "branch":
+            for br in it["branches"]:
+                br["items"] = add_battle_flags(br["items"])
+    return out
+
+
+for name, info in script_info.items():
+    info["items"] = add_battle_flags(info["items"])
 
 for name, info in script_info.items():
     index_flags(name, info["items"], [])

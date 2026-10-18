@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>5塊錢</title>
+<title>五塊錢</title>
 <style>
 :root {
   --bg: #f6f3ec; --panel: #fffdf8; --ink: #2b2620; --muted: #7a7064; --line: #ddd4c4;
@@ -180,7 +180,7 @@ body.show-time .stime { display: inline; }
 </head>
 <body class="spoil">
 <header>
-  <h1>5塊錢</h1>
+  <h1>五塊錢</h1>
   <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabLibend">汗青書</button><button id="tabLibdead">死法</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabChart" title="流程圖（點一下展開）">▸</button></span>
   <span class="stats" id="stats"></span>
   <span class="live" id="live">離線預覽</span>
@@ -675,7 +675,14 @@ body.show-time .stime { display: inline; }
     const n = Number(val);
     const tempLocal = TEMP_FLAG.test(f) ? localSetters(f, ctx, near) : [];
     if (tempLocal.length) {
-      const local = tempLocal.filter(x => x.op !== 'AddFlag'), adds = tempLocal.filter(x => x.op === 'AddFlag');
+      let local = tempLocal.filter(x => x.op !== 'AddFlag');
+      const adds = tempLocal.filter(x => x.op === 'AddFlag');
+      // 暫存旗標很多段劇情共用：這一段本身或緊接在前面的那段（例如剛打完的戰鬥）有設成符合的值，就只看那裡
+      if (near) {
+        const prev = new Set([near, ...enteredBy(near, ctx ? ctx.scripts : [near]).flatMap(st => st.options.map(o => o.from))]);
+        const close = local.filter(x => prev.has(x.s) && x.v !== 0 && sat(x.v, op, n));
+        if (close.length) local = close;
+      }
       const hows = list => [...new Set(list.map(x => setterHow(x, f, ctx)).filter(Boolean))];
       const hit = hows(local.filter(x => x.v !== 0 && sat(x.v, op, n)));
       if (hit.length) return `先前${hit.slice(0, 2).join(' 或 ')}${hit.length > 2 ? ' 等' : ''}`;
@@ -810,7 +817,9 @@ body.show-time .stime { display: inline; }
     for (const it of items) {
       if (it.t === 'battle') {
         const after = it.after ? G.scripts[it.after] : null;
-        out.push(`<b>⚔ ${it.mode === 'Battle' ? '戰役' : '戰鬥'}</b>${enemyHtml(it.enemy, after ? after.read > 0 : false)}${it.dead ? `（打輸即死：${libLink(it.dead)}）` : ''}`);
+        out.push(`<b>⚔ ${it.mode === 'Battle' ? '戰役' : '戰鬥'}</b>${enemyHtml(it.enemy, after ? after.read > 0 : false)}${it.dead ? `（打輸即死：${libLink(it.dead)}）` : ''}`
+          // 決鬥中的事件（第幾回合有人出場…）：沒打過的防雷
+          + (it.events ? `<div class="when ${after && after.read > 0 ? '' : 'unreadtxt'}">戰鬥中：${it.events.map(esc).join('；')}</div>` : ''));
       }
       else if (it.t === 'next') {
         const owner = scriptOwner.get(it.s.toLowerCase());
@@ -1063,6 +1072,7 @@ body.show-time .stime { display: inline; }
   function stepPartInner(label, need) {
     label = label.replace(/　〔需：(.*)〕$/, (m, c) => { const p = plainCond(c.replace(/^（(.*)）$/, '$1')); need = p ? `（需要 ${p}）` : ''; return ''; });
     if (/^勝利：/.test(label)) return {kind: 'battle', text: '戰鬥勝利'};
+    if (/^戰鬥中：/.test(label)) return {kind: 'battle', text: '戰鬥中' + label.slice(4)};
     if (/^落敗：/.test(label)) return {kind: 'battle', text: '戰鬥落敗'};
     if (label === '以上皆非' || label === '其他') return null;
     if (/^choice_option\w* == \d+$/.test(label)) return {kind: 'choice', text: '選了另一個選項'};

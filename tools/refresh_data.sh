@@ -27,6 +27,9 @@ echo "== 遊戲設定物件"
 python -I "$ROOT/tools/dump_so.py" "$GAME" "$NEW/so2.json" \
   "GameStat,FlagData,GameTimeData,RelationshipStat,PlayerTalentData,Book,Misc,SpecialItem,LibraryItemData,MissionData,MissionCheckData,MissionManagerData,SubMissionsData,StatGroupVariable,ConditionResultData,UpgradeItemData,ConditionResultConfig,DiceResultData,DiceResultConfig,PositionResultData,PositionResultConfig,SwitchResultData,SwitchResultConfig,PositionEventData,StoryMappingItem" | grep -v "^top classes"
 python -I "$ROOT/tools/dump_so.py" "$GAME" "$NEW/battle_dump.json" "BattleLevel,CombatLevel" | grep -v "^top classes"
+# 決鬥中的事件（第幾回合有人出場、狀態變化、改旗標…）
+python -I "$ROOT/tools/dump_so.py" "$GAME" "$NEW/combat_events.json" \
+  "CombatEventData,CombatEventConditionAction,CombatEventActionCount,CombatEventActionCrazyMode,CombatEventActionDialog,CombatEventActionFlagRound,CombatEventActionHideImage,CombatEventActionLoadScene,CombatEventActionModifyFlag,CombatEventActionModifyStat,CombatEventActionModifyWeaponValue,CombatEventActionPunchSupport,CombatEventActionReduceEffectCount,CombatEventActionRelationshipAttack,CombatEventActionRemoveAllStateEffect,CombatEventActionRemoveAllSupport,CombatEventActionSetStoryScript,CombatEventActionShowImage,CombatEventActionStateEffect,CombatEventActionVFX,CombatEventConditionBlockCounterAttack,CombatEventConditionEffectState,CombatEventConditionFlag,CombatEventConditionPlayerStat,CombatEventConditionRound,CombatEventConditionRoundFlag,CombatEventConditionStat" | grep -v "^top classes"
 
 echo "== 反編譯（列舉型別等）"
 for dll in Mortal.Battle Mortal.Combat Mortal.Core Mortal.Free Mortal.Story; do
