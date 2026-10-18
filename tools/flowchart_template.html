@@ -144,6 +144,9 @@ body.view-romance .chartonly { display: none; }
 .plev .bad, .plev .bad .flag { color: #d9534f; font-weight: 700; }
 .plev .live { color: var(--read); font-weight: 700; }
 .routes { margin: 2px 0 0 0; padding-left: 22px; }
+.steps { margin: 2px 0 0 0; padding-left: 22px; }
+.steps li { margin: 1px 0; }
+.steps .or { color: var(--accent); font-weight: 700; }
 /* 事件劇情樹：分支底下接著的段落縮排、左邊一條線 */
 .tkids { margin: 6px 0 2px 2px; padding-left: 10px; border-left: 2px solid var(--accent); }
 .tkids > .script { margin-top: 6px; }
@@ -950,7 +953,7 @@ body.show-time .stime { display: inline; }
       <div class="meta">${esc(e.main ? '主線' : '支線')}${e.active ? '' : '（停用）'}　·　${read}</div>
       <div><span class="chip">🕒 ${esc(when)}</span>${e.place ? `<span class="chip">🏯 ${esc(e.place)}</span>` : ''}${e.pos ? `<span class="chip">📍 到「${esc(e.pos)}」觸發</span>` : '<span class="chip">時間到自動觸發</span>'}</div>`;
     html += '<h3>觸發條件</h3>' + (e.conds.length ? e.conds.map(c => `<div class="cond">${plainCondHtml(c, e)}</div>`).join('') : '<div class="empty">時間到就觸發</div>');
-    if (e.via) html += `<h3>從這裡觸發</h3>${e.via.map(r => `<div class="cond">${routeText(r, e)}</div>`).join('')}`;
+    if (e.via) html += `<h3>從這裡觸發</h3><div class="cond">${routesBlock(e.via, e, '觸發方式')}</div>`;
     const from = e._from.filter(id => !byId.get(id).quiet), next = e._triggers.filter(id => !byId.get(id).quiet);
     if (from.length) html += '<h3>由這些事件啟動</h3>' + from.map(evLink).join('');
     if (next.length) html += '<h3>之後會啟動</h3>' + next.map(evLink).join('');
@@ -1515,13 +1518,38 @@ body.show-time .stime { display: inline; }
   // 整段未讀：每條走得到的路線（沿途要選的選項、要符合的條件），最多列 3 條；
   // 事件本身還沒觸發時先列事件的觸發時間與條件
   // 一條路線：養成選單的地點寫成「某某期間去「地點」」，其餘每步翻成白話
+  // 路線的一步：養成選單的地點寫「某某期間去「地點」」，別的事件寫「在「事件」中」，其餘翻成白話
+  function stepHtml(x, ctx) {
+    if (x.ev) { const ev = byId.get(x.ev.toLowerCase()); return ev ? `在「${esc(evShort(ev))}」（${esc(whenText(ev))}）中` : ''; }
+    if (x.hub) return `${esc(x.hub)}去「${esc(x.path[0])}」`;
+    return pathHtml(x.path, ctx, x.from);
+  }
   function routeText(r, ctx) {
-    // 已經走過的分支（那段台詞讀過）是已滿足的步驟，省略；養成選單的地點一律保留
-    const keep = r.filter(x => x.hub || !x.done);
-    const parts = keep.map(x => x.hub ? `${esc(x.hub)}去「${esc(x.path[0])}」` : pathHtml(x.path, ctx, x.from)).filter(Boolean);
+    // 已經走過的分支（那段台詞讀過）是已滿足的步驟，省略；養成選單的地點、所在事件一律保留
+    const keep = r.filter(x => x.hub || x.ev || !x.done);
+    const parts = keep.map(x => stepHtml(x, ctx)).filter(Boolean);
     const skipped = r.length - keep.length;
-    if (!parts.length) return skipped ? '<span class="need">（路線上的選擇都走過了，要看當下的條件或擲骰）</span>' : '';
+    if (!parts.length || parts.every((p, i) => keep[i].ev)) return skipped ? '<span class="need">（路線上的選擇都走過了，要看當下的條件或擲骰）</span>' : '';
     return (skipped ? `<span class="need" title="已經走過的 ${skipped} 個步驟">（已走過 ${skipped} 步）</span> → ` : '') + parts.join(' → ');
+  }
+  // 多條路線：每一步都來自同一段劇情時，合併成逐步列出（同一步不同選法寫「或」）；步驟多的單一路線也逐步列
+  function routesBlock(routes, ctx, label, more = '') {
+    // 用完整路線比對結構；同一步只要有一條路線已經走過，就當作已滿足
+    const shape = r => r.map(x => x.ev || x.hub || x.from).join('|');
+    if (routes.length && routes[0].length && (routes.length > 1 ? routes.every(r => shape(r) === shape(routes[0])) : routes[0].length > 3)) {
+      let skipped = 0;
+      const steps = routes[0].map((_, i) => {
+        const col = routes.map(r => r[i]);
+        if (col.some(x => x.done && !x.hub && !x.ev)) { skipped++; return []; }
+        return [...new Set(col.map(x => stepHtml(x, ctx)).filter(Boolean))];
+      }).filter(x => x.length);
+      if (steps.length) return `<div class="need">${label}${skipped ? `（已走過 ${skipped} 步）` : ''}：</div>`
+        + `<ol class="need steps">${steps.map(x => `<li>${x.join('<br><span class="or">或</span> ')}</li>`).join('')}</ol>${more}`;
+    }
+    const texts = routes.map(r => routeText(r, ctx)).filter(Boolean);
+    if (!texts.length) return '';
+    if (texts.length === 1) return `<div class="need">${label}：${texts[0]}${more}</div>`;
+    return `<div class="need">${label}（任一條路線）：</div><ol class="need routes">${texts.map(r => `<li>${r}</li>`).join('')}</ol>${more}`;
   }
   const isBranch = u => {
     if (u.read !== 0 || u.hubGroup || !u.ev) return false;
@@ -1532,22 +1560,18 @@ body.show-time .stime { display: inline; }
     let html = '';
     const startRead = ctx ? (G.scripts[ctx.start] || {}).read : null;
     if (ctx && !startRead && ctx.via) {
-      const vias = ctx.via.map(r => routeText(r, ctx)).filter(Boolean);
-      html += `<div class="need">事件還沒觸發：${vias.length > 1 ? '以下任一：' + vias.join('　／　') : vias[0]}</div>`;
+      html += `<div class="need">事件還沒觸發（觸發方式見上方）</div>`;
     } else if (ctx && !startRead) {
       const conds = ctx.conds.filter(c => c !== '（無條件）');
       html += `<div class="need">事件還沒觸發：${esc(whenText(ctx))}${ctx.pos ? `到「${esc(ctx.pos)}」` : ''}${conds.length ? '，' + conds.map(c => plainCondHtml(c, ctx)).join('；') : '（沒有其他條件）'}</div>`;
     }
-    const routes = (u.routes || []).map(r => routeText(r, ctx)).filter(Boolean);
+    const routes = (u.routes || []).filter(r => routeText(r, ctx));
     if (!routes.length) {
       if (!(ctx && !startRead)) html += `<div class="need">${ctx ? '事件開始後沒有要經過的分歧（可能經由旅途、地點選單接過來）' : '沒有找到要經過的分歧（日常、地點選單或閒聊接過來）'}</div>`;
       return html;
     }
-    const shown = routes.slice(0, 3);
     const more = u.moreRoutes ? `<span class="need">　還有其他路線</span>` : '';
-    const label = isBranch(u) ? '沒走過的分支' : '進入條件';
-    if (shown.length === 1) return html + `<div class="need">${label}：${shown[0]}${more}</div>`;
-    return html + `<div class="need">${label}（任一條路線）：</div><ol class="need routes">${shown.map(r => `<li>${r}</li>`).join('')}</ol>${more}`;
+    return html + routesBlock(routes.slice(0, 3), ctx, isBranch(u) ? '沒走過的分支' : '進入條件', more);
   }
   function renderUnread(keepScroll) {
     const top = romance.scrollTop;
@@ -1591,10 +1615,11 @@ body.show-time .stime { display: inline; }
       const none = rows.filter(fresh).length, branches = rows.filter(isBranch).length;
       const head = hubGroup ? `${esc(hubGroup)}　<span class="need">（留學期間的養成地點）</span>`
         : ev ? `${esc(whenText(ev))}　${ev.place ? esc(ev.place) + '　' : ''}<span class="chip link" data-goto="${esc(key)}">${esc(evShort(ev))}${ev.desc ? '' : '…'}</span>`
+          + (ev.desc && ev.title ? `<span class="need${ev._read ? '' : ' unreadtxt'}" style="font-weight:400">　${esc(ev.title.replace(/^「|」$/g, '').slice(0, 26))}…</span>` : '')
         : '日常、地點行動、閒聊（不屬於任務事件）';
       html += `<details class="plcard"${rows.length <= 6 || who ? ' open' : ''}><summary style="cursor:pointer"><b>${head}</b>　<span class="need">${rows.length} 段（${[none ? `未讀 ${none}` : '', branches ? `沒走過的分支 ${branches}` : ''].filter(Boolean).join('、') || '都讀過一部分'}）</span></summary>`;
       // 事件是從別處接進來的（例如養成選單的行動）：先寫怎麼觸發
-      if (ev && ev.via) html += `<div class="need" style="margin:2px 0 6px">觸發：${ev.via.map(r => routeText(r, ev)).filter(Boolean).join('　／　')}</div>`;
+      if (ev && ev.via) html += `<div style="margin:2px 0 6px">${routesBlock(ev.via, ev, '觸發')}</div>`;
       for (const u of rows) {
         const ctx = u.ev ? byId.get(u.ev.toLowerCase()) : null;
         const hide = u.read === 0 ? ' unreadtxt' : '';

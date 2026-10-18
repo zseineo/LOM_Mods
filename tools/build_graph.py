@@ -1018,7 +1018,9 @@ def add_battle_flags(items):
         out.append(it)
         if it["t"] == "battle":
             for e in level_info.get(level_name(it["mode"], it["key"]), {}).get("events", []):
-                label = "戰鬥中：" + (e["when"] if e["when"].startswith(("撐到", "戰鬥開始")) else e["when"] + "時") \
+                # 戰鬥內部用的暫存旗標（確保只觸發一次的計數）對玩家沒意義，從說明拿掉
+                when = re.sub(r"^旗標 (?:TC|[ABC])\d+ \S+ -?\d+ 且 | 且 旗標 (?:TC|[ABC])\d+ \S+ -?\d+", "", e["when"])
+                label = "戰鬥中：" + (when if when.startswith(("撐到", "戰鬥開始")) else when + "時") \
                         + (f"（{'、'.join(dict.fromkeys(e['who']))}出場）" if e["who"] else "")
                 out += [{"t": "flag", "op": "SetFlag", "f": f, "v": v, "when": [label]} for f, v in e["flags"]]
         elif it["t"] == "branch":
@@ -1287,7 +1289,10 @@ def event_via(e):
         owner_ev, _ = find_owner(x["from"])
         last = [{"from": x["from"], "path": x["path"]}] if x["path"] else []
         for r in entry_routes(x["from"], owner_ev)[:2]:
-            out.append([{k: v for k, v in y.items() if k != "into"} for y in r] + last)
+            steps = [{k: v for k, v in y.items() if k != "into"} for y in r] + last
+            if owner_ev and not (steps and steps[0].get("hub")):
+                steps = [{"from": x["from"], "path": [], "ev": owner_ev}] + steps
+            out.append(steps)
     return simplify_routes([r for r in out if r])[:3]
 
 
