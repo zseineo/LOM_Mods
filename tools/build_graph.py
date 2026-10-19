@@ -1891,19 +1891,61 @@ for o in by_name.get("StatGroupVariable", {}).values():
             lid = ref_name(v["_libraryAchieve"])
             ACHIEVE_VAR[o["m_Name"]] = loc.get("Library/Title/" + lid) or lid
 achieve_cond = {}
+achieve_group = {}
 for o in list(by_name["ConditionResultData"].values()) + list(by_name["SwitchResultData"].values()):
     used = {ACHIEVE_VAR[ref_name(it.get("_value1"))] for g in o.get("_items") or [] for it in g.get("_items") or []
             if ref_name(it.get("_value1")) in ACHIEVE_VAR}
     if used:
         achieve_cond[o["m_Name"]] = used
+        achieve_group[o["m_Name"]] = {i + 1 for i, g in enumerate(o.get("_items") or [])
+                                      if any(ref_name(it.get("_value1")) in ACHIEVE_VAR for it in g.get("_items") or [])}
+
+
+# 成就條件包住的台詞佔整段的比例：幾乎整段（≥ 80%）都在成就分支裡就是「整段要成就」，否則只是追加的台詞
+lua_file = {n[:-4].lower(): n for n in os.listdir(lua_dir) if n.endswith(".txt")}
+
+
+def achieve_share(name):
+    path = os.path.join(lua_dir, lua_file.get(name, name + ".txt"))
+    lines = open(path, encoding="utf-8", errors="replace").read().split("\n")
+    total = sum(l.count("GetStoryText(") for l in lines)
+    gated = set()
+    for i, l in enumerate(lines):
+        m = COND_NAME.search(l)
+        if not m or m.group(1) not in achieve_cond:
+            continue
+        sw = re.match(r"\s*local (\w+) = checkpointmanager\.Switch", l)
+        starts = []
+        if sw:
+            want = achieve_group.get(m.group(1), {1})
+            for j in range(i + 1, min(len(lines), i + 400)):
+                c = re.match(r"(\s*)(?:if|elseif) %s == (\d+) then" % sw.group(1), lines[j])
+                if c and int(c.group(2)) in want:
+                    starts.append((j, c.group(1)))
+        elif re.match(r"\s*if .*Condition", l):
+            starts.append((i, re.match(r"(\s*)", l).group(1)))
+        for j, ind in starts:
+            for k in range(j + 1, len(lines)):
+                if re.match(r"%s(end|else|elseif)\b" % re.escape(ind), lines[k]):
+                    break
+                gated.add(k)
+    part = sum(lines[k].count("GetStoryText(") for k in gated)
+    return part, total
+
+
 for name, info in script_info.items():
     got = sorted(set().union(*(achieve_cond[c] for c in script_cond_names.get(name, ()) if c in achieve_cond)))
     if got:
         info["achieve"] = got
+        part, total = achieve_share(name)
+        if total and part / total >= 0.8:
+            info["achieveLock"] = True
 for e in events:
     got = sorted({a for sc in e["scripts"] for a in script_info.get(sc, {}).get("achieve", [])})
     if got:
         e["achieve"] = got
+        if script_info.get(e["start"], {}).get("achieveLock"):
+            e["achieveLock"] = True
 EVENT_NOTES = {
     "S2902/S2902_01": "遊戲資料要求「剛好第3年5月下旬」，同時又要「目前時間 = 小竹回家結束那一旬」（小竹回家在崆峒留學期間）。"
                       "兩者不可能同時成立，第3年5月下旬也沒有行動，照目前版本應該觸發不了。",
@@ -1913,6 +1955,9 @@ EVENT_NOTES = {
 for e in events:
     if e["id"] in EVENT_NOTES:
         e["note"] = EVENT_NOTES[e["id"]]
+    # 序章旗標只在試玩版（Demo = 1）設成 1：要它 = 1 的事件正式版不會出現
+    if any(re.search(r"旗標 Prologue = 1(?!\d)", c) for c in e["conds"]):
+        e["demo"] = True
 
 # ---------- 圖鑑：汗青書／結局 CG／死法 ----------
 # 單一腳本的地點：看它自己的背景圖，分不出來就用所屬事件的地點
@@ -2708,7 +2753,7 @@ out = {
     "scriptVia": script_via,
     # 網頁連上遊戲時判斷條件用：條件文字裡的名稱 → 存檔鍵名
     # 任務時間是在哪個事件裡記下的、記成多久之後
-    "missionTimes": {k: [{"ev": find_owner(sc)[0], "off": off} for sc, off in v] for k, v in mission_time_set.items()},
+    "missionTimes": {k: [{"ev": find_owner(sc)[0], "s": sc, "off": off} for sc, off in v] for k, v in mission_time_set.items()},
     "liveKeys": {"stat": parse_enum_strings("GameStatType"), "rel": parse_enum_strings("RelationshipStatType")},
 }
 json.dump(out, open(out_path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
