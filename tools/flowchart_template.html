@@ -756,15 +756,28 @@ body.show-time .stime { display: inline; }
         const close = local.filter(x => prev.has(x.s) && x.v !== 0 && sat(x.v, op, n));
         if (close.length) local = close;
       }
-      const hows = list => [...new Set(list.map(x => setterHow(x, f, ctx)).filter(Boolean))];
+      const hows = list => [...new Set(list.map(x => setterHow(x, f, ctx)).filter(Boolean).map(tidy))];
       const hit = hows(local.filter(x => x.v !== 0 && sat(x.v, op, n)));
       if (hit.length) return `先前${hit.slice(0, 2).join(' 或 ')}${hit.length > 2 ? ' 等' : ''}`;
       // 次數累加的：寫出在哪裡加
       if (adds.length) {
         const where = hows(adds);
-        return `${where.length ? where.slice(0, 2).join('、') + (where.length > 2 ? ' 等' : '') : '本段選擇'}的累計次數 ${op} ${val}`;
+        // 每個加的地方各自一項（裡面的「先前」省略），多項時用括號包起來，免得和項目裡的「、」混在一起
+        const items = where.map(w => w.replace(/先前/g, ''));
+        const list = items.length > 1 ? `（${items.slice(0, 2).join('；')}${items.length > 2 ? ' 等' : ''}）` : items[0] || '本段選擇';
+        return `${list}的累計次數 ${op} ${val}`;
       }
-      const miss = hows(local.filter(x => x.v !== 0 && !sat(x.v, op, n)));
+      const missX = local.filter(x => x.v !== 0 && !sat(x.v, op, n));
+      // 設定點全是「某條件成立時」設的（沒有選項）：反過來寫成那些條件不成立（「先前沒有 X、Y 時、X 時」讀不懂）
+      if (sat(0, op, n) && missX.length && missX.every(x => !choiceOf(x))) {
+        const own = new RegExp(`旗標 ${f}(?![A-Za-z0-9_])`);
+        const sets = missX.map(x => (x.path || []).map(l => l.replace(/　〔.*〕$/, '')).filter(l => !own.test(l) && /[≥≤≠<>=]/.test(l) && !/^(以上皆非|其他|勝利|落敗)/.test(l)));
+        if (sets.every(a => a.length)) {
+          const uniq = [...new Set(sets.map(a => a.join(' 且 ')))];
+          return plainCondText(negatedCond(uniq.join('；')), ctx, near);
+        }
+      }
+      const miss = hows(missX);
       if (sat(0, op, n) && miss.length) return `先前沒有${miss.slice(0, 2).join('、')}${miss.length > 2 ? ' 等' : ''}`;
       // 這段劇情裡只會歸 0：條件一定成立
       if (sat(0, op, n) && !local.some(x => x.v !== 0)) return '（這段劇情裡一定成立）';
@@ -1524,8 +1537,8 @@ body.show-time .stime { display: inline; }
     loadIcons();
     const allWho = new Set();
     G.positions.forEach(p => p.layers.forEach(L => L.candidates.forEach(c => {
-      // 篩選只看真的有出場的（說話、立繪、傳說裡提到）；條件裡要求「在唐門」的不算
-      (c.chars || []).map(fullName).filter(shownName).forEach(n => allWho.add(n));
+      // 篩選只看真的有出場的（說話、立繪、傳說或台詞裡提到、地點寫明是誰的）；條件裡要求「在唐門」的不算
+      [...(c.chars || []).map(fullName), ...(p.who || [])].filter(shownName).forEach(n => allWho.add(n));
     })));
     let html = `<div class="rintro">在各養成地點行動時（唐門、留學、錦香宮…，旅途中的隨機事件也列在最後），遊戲會從「候選事件」裡依權重抽一個（實際機率 ＝ 權重 ÷ 當下所有符合條件事件的權重總和）。
       後山、鍛冶場、大門、外堡會先抽一次「有沒有人插進來」，再抽行動結果，兩層都列在下面。
@@ -1552,7 +1565,7 @@ body.show-time .stime { display: inline; }
             const pr = presence(c.cond);
             const needInn = presence(p.need || '').inn;
             needInn.forEach(n => { if (!pr.inn.includes(n)) pr.inn.unshift(n); });
-            const present = (c.chars || []).map(fullName);
+            const present = [...(c.chars || []).map(fullName), ...(p.who || [])];
             const who = [...new Set([...pr.inn, ...present])].filter(shownName);
             const special = /^[59]/.test(c.code);
             const related = who.some(n => !RESIDENTS.has(n));

@@ -1454,24 +1454,29 @@ def entry_routes(script, ev):
             return
         parents = [x for x in entry_paths.get(cur, []) if x["from"] not in seen and (chain is None or x["from"] in chain)]
         if cur == start or cur in entry_scripts or not parents or len(acc) >= 10:
-            routes.append(acc[::-1])
+            routes.append((acc[::-1], seen))
             return
         for x in parents:
             hub = FREE_HUB.match(x["from"])
             if hub:
                 # 養成選單的地點：只寫「某某期間去哪裡」，地點本身的開啟條件放在「其他條件」
                 place = re.sub(r"　〔需：.*〕$", "", x["path"][-1]) if x["path"] else ""
-                routes.append(([{"from": x["from"], "into": cur, "path": [place], "hub": HUB_NAME.get(hub.group(1), "留學期間")}] + acc[::-1]) if place else acc[::-1])
+                routes.append((([{"from": x["from"], "into": cur, "path": [place], "hub": HUB_NAME.get(hub.group(1), "留學期間")}] + acc[::-1]) if place else acc[::-1], seen))
                 continue
-            walk(x["from"], acc + ([{"from": x["from"], "into": cur, "path": x["path"]}] if x["path"] else []), seen | {x["from"]})
+            walk(x["from"], acc + ([{"from": x["from"], "into": cur, "path": x["path"]}] if x["path"] else []), seen + (x["from"],))
 
-    walk(script, [], {script})
+    # seen：路上經過的腳本，依序（從目標往回）
+    walk(script, [], (script,))
+    # 同一個旗標前後要求互相矛盾（先要「沒有 X」又要「X」），而且路上沒有地方會改它：這條路線走不通
+    possible = [(r, seen) for r, seen in routes if route_possible(r, seen)]
+    routes = possible or routes
     out, sigs = [], set()
-    for r in routes:
+    for r, seen in routes:
         sig = tuple((x["from"], tuple(x["path"])) for x in r)
         if sig not in sigs:
             sigs.add(sig)
-            out.append(r)
+            out.append(Route(r))
+            out[-1].seen = seen
     # 有一條不用任何條件就走得到：其他路線都不必列
     if any(not r for r in out):
         return [[]]
@@ -1480,6 +1485,62 @@ def entry_routes(script, ev):
             if (branch_read(x["from"], x["path"]) or 0) > 0:
                 x["done"] = True
     return simplify_routes(out)[:6]
+
+
+class Route(list):
+    """路線（步驟清單），seen 記下路上經過的所有腳本（判斷旗標會不會在半路被改）"""
+    seen = None
+
+
+NEED_ATOM = re.compile(r"^旗標 ([A-Za-z0-9_]+) (=|≠|<|≤|>|≥) (-?\d+)$")
+TEMP_FLAG_RE = re.compile(r"^(C\d|TC\d|A\d|B\d|Talk_Option|BattleResult|Prologue|ActionCheck)")
+
+
+def label_constraints(label):
+    """分支標籤裡對旗標的要求：（旗標, 要成立?, 比較, 數值）；「以上皆非（不是：…）」「〔前提不是：…〕」是不成立"""
+    out = []
+    lab = re.sub(r"^(勝利|落敗|符合|不符合)：", "", label)
+    pre = re.search(r"　〔前提不是：(.*)〕$", lab)
+    lab = re.sub(r"　〔.*〕$", "", lab)
+    clauses = []
+    if lab.startswith("以上皆非（不是："):
+        clauses += [(c, False) for c in lab[8:-1].split("；")]
+    elif " 或 " not in lab:
+        clauses += [(c, True) for c in lab.split(" 且 ")]
+    if pre:
+        clauses += [(c, False) for c in pre.group(1).split("；")]
+    for c, pos in clauses:
+        m = NEED_ATOM.match(c.strip().strip("（）"))
+        if m:
+            out.append((m.group(1), pos, m.group(2), int(m.group(3))))
+    return out
+
+
+def route_possible(route, scripts):
+    """scripts 是 tuple 時是路上依序經過的腳本（從目標往回）：只有夾在兩個要求之間的腳本改了旗標，前後不同才說得通；
+    是 set 時不知道順序，路上任何地方會改它就不判斷。"""
+    order = list(reversed(scripts)) if isinstance(scripts, tuple) else None
+    pos_of = {sc: i for i, sc in enumerate(order)} if order else {}
+    allowed, last = {}, {}
+    for x in route:
+        here = pos_of.get(x["from"])
+        for label in x["path"]:
+            for f, want, op, v in label_constraints(label):
+                # 暫存旗標每段劇情重設
+                if TEMP_FLAG_RE.match(f):
+                    continue
+                setters = {y["s"] for y in flag_setters.get(f, [])}
+                if order is None or here is None:
+                    if setters & set(scripts):
+                        continue
+                elif f in last and any(last[f] <= pos_of[sc] <= here for sc in setters if sc in pos_of):
+                    allowed.pop(f, None)
+                vals = {k for k in range(-1, 30) if satisfies(k, op, v) == want}
+                allowed[f] = allowed.get(f, vals) & vals
+                last[f] = here if here is not None else last.get(f, 0)
+                if not allowed[f]:
+                    return False
+    return True
 
 
 def branch_read(script, labels):
@@ -1516,7 +1577,9 @@ def simplify_routes(routes):
                         k = diff[0]
                         la, lb = a[k][1], b[k][1]
                         if a[k][0] == b[k][0] and len(la) == len(lb) == 1 and (lb[0] == f"以上皆非（不是：{la[0]}）" or la[0] == f"以上皆非（不是：{lb[0]}）"):
-                            routes[i] = routes[i][:k] + routes[i][k + 1:]
+                            merged = Route(routes[i][:k] + routes[i][k + 1:])
+                            merged.seen = getattr(routes[i], "seen", None)
+                            routes[i] = merged
                             del routes[j]
                             changed = True
                             break
@@ -1541,7 +1604,8 @@ def event_via(e):
             steps = [{k: v for k, v in y.items() if k != "into"} for y in r] + last
             if owner_ev and not (steps and steps[0].get("hub")):
                 steps = [{"from": x["from"], "path": [], "ev": owner_ev}] + steps
-            out.append(steps)
+            if route_possible(steps, r.seen if getattr(r, "seen", None) else (set(event_by_id_lower[owner_ev.lower()]["scripts"]) if owner_ev else set()) | {y["from"] for y in steps}):
+                out.append(steps)
     return simplify_routes([r for r in out if r])[:3]
 
 
@@ -1571,7 +1635,8 @@ def event_activate(e):
             steps = [{k: v for k, v in y.items() if k != "into"} for y in r] + last
             if owner_ev and owner_ev != e["id"] and not (steps and steps[0].get("hub")):
                 steps = [{"from": x["from"], "path": [], "ev": owner_ev}] + steps
-            out.append(steps)
+            if route_possible(steps, r.seen if getattr(r, "seen", None) else (set(event_by_id_lower[owner_ev.lower()]["scripts"]) if owner_ev else set()) | {y["from"] for y in steps}):
+                out.append(steps)
     return simplify_routes([r for r in out if any(y["path"] for y in r)])[:3]
 
 
@@ -1924,9 +1989,10 @@ POSITION_GROUPS = [
     ("旅途（移動途中）", "小竹回家", "回程", ["Travel_S2901_05"]),
 ]
 char_names = {o["Value"]: o["Key"] for o in by_name.get("StoryMappingItem", {}).values() if not o["m_Name"].startswith("P_")}
-# 出場的人：說話者、立繪（characters.Get），再加上傳說紀錄裡提到的名字（只有旁白、插圖的結果，例如跑步）
-LEGEND_NAMES = sorted({n for n in char_names.values() if len(n) >= 2 and not re.match(r"^(弟子|女弟子|武師|店小二|路人|村民|官兵|捕快|乞丐|特殊|鄉民|小販)\d*$", n)
-                       and not re.search(r"幼年|^小小梅手$|\d", n)}, key=len, reverse=True)
+# 出場的人：說話者、立繪（characters.Get），再加上傳說、台詞裡提到的名字（只有旁白、插圖的結果，例如跑步）。
+# 文字裡只認有好感度的角色名（和女主角的小名），一般字詞（「被抓」這類角色標籤）不算
+LEGEND_NAMES = sorted({re.sub(r"_.*$", "", n) for n in parse_enum_strings("RelationshipStatType") if n != "主角"}
+                      | {"小梅", "小竹", "小蘭", "小菊"}, key=len, reverse=True)
 
 
 def block_legend(block, out):
@@ -1957,11 +2023,24 @@ CHILD_FORM = re.compile(r"幼年|^小小梅手$")
 GENERIC_CHAR = re.compile(r"^(弟子|女弟子|武師|店小二|路人|村民|官兵|捕快|乞丐|特殊|鄉民|小販)\d*$")
 
 
+def block_text_keys(block, out):
+    for it in block:
+        if it["t"] == "text":
+            out.append(it["k"])
+        elif it["t"] == "if":
+            for br in it["branches"]:
+                block_text_keys(br["block"], out)
+    return out
+
+
 def result_chars(script):
+    """地點事件的出場角色：說話者、立繪、傳說，再加上台詞／旁白裡提到的名字（跑步這類只有旁白的結果）"""
     seen, todo, out = {script}, [script], set()
     while todo:
         sc = todo.pop()
         out |= script_chars.get(sc, set())
+        if sc in scripts:
+            out |= legend_names("".join(story_text(k) or "" for k in block_text_keys(scripts[sc][0], [])))
         for n in next_scripts(sc):
             if n.startswith(script) and n not in seen:
                 seen.add(n)
@@ -2143,6 +2222,11 @@ def heroine_of(name):
         if nick in name:
             name = name.replace(nick, full)
     return [h for h in HEROINE_NAMES if h in name]
+
+
+# 地點本身就寫明是誰的（「小梅找你跑步」）：底下每個結果都算她（有些結果的旁白沒提到名字）
+for p in positions:
+    p["who"] = heroine_of(p["place"] + p["action"])
 
 
 def block_heroines(block, out):
