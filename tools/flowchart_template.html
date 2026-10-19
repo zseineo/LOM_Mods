@@ -1534,13 +1534,30 @@ body.show-time .stime { display: inline; }
     let html = guide.intro ? `<div class="rintro">${esc(guide.intro)}</div>` : '';
     return html + `<ol class="guide">${guideItems(guide.items)}</ol>${LIVE && LIVE.inGame ? '<div class="when">✓／✗ 是你目前存檔的值；有些旗標在事件之後會被改掉，過了那個時間點的 ✗ 不一定代表當時沒達成。</div>' : ''}`;
   }
+  // 重畫時保留展開狀態：用「上層摺疊的標題＞自己的標題＃第幾個同名」對應，畫面多一張卡也不會錯位
+  function detKey(d, seen) {
+    const path = [];
+    for (let p = d; p; p = p.parentElement && p.parentElement.closest('details')) path.unshift((p.querySelector(':scope > summary') || {}).textContent || '');
+    const k = path.join('>'), n = (seen.get(k) || 0) + 1;
+    seen.set(k, n);
+    return k + '#' + n;
+  }
+  function detailsState() {
+    const m = new Map(), seen = new Map();
+    romance.querySelectorAll('details').forEach(d => m.set(detKey(d, seen), d.open));
+    return m;
+  }
+  function restoreDetails(m) {
+    const seen = new Map();
+    romance.querySelectorAll('details').forEach(d => { const k = detKey(d, seen); if (m.has(k)) d.open = m.get(k); });
+  }
   function findGuide(list, name) { return (GUIDES[list] || []).find(g => g.name === name); }
   function renderRomance(keepScroll) {
     const top = romance.scrollTop;
-    const open = keepScroll ? [...romance.querySelectorAll('details')].map(d => d.open) : [];
+    const open = keepScroll ? detailsState() : null;
     renderRomanceInner();
     if (keepScroll) {
-      romance.querySelectorAll('details').forEach((d, i) => { if (open[i]) d.open = true; });
+      restoreDetails(open);
       romance.scrollTop = top;
     }
   }
@@ -1568,10 +1585,10 @@ body.show-time .stime { display: inline; }
   }
   function renderTargets(keepScroll) {
     const top = romance.scrollTop;
-    const open = keepScroll ? [...romance.querySelectorAll('details')].map(d => d.open) : [];
+    const open = keepScroll ? detailsState() : null;
     renderTargetsInner();
     if (keepScroll) {
-      romance.querySelectorAll('details').forEach((d, i) => { if (open[i]) d.open = true; });
+      restoreDetails(open);
       romance.scrollTop = top;
     }
   }
@@ -1915,7 +1932,9 @@ body.show-time .stime { display: inline; }
     const lab = t => label || t ? `${label}${t}：` : '';
     // 用完整路線比對結構；同一步只要有一條路線已經走過，就當作已滿足
     const shape = r => r.map(x => x.ev || x.hub || x.from).join('|');
-    if (routes.length > 1 && routes[0].length && routes.every(r => shape(r) === shape(routes[0]))) {
+    // 每一步最多帶一個條件才合併；條件多的（一步裡夾著好幾個次數、旗標）改用下面的「最短一條＋條件收起來」
+    if (routes.length > 1 && routes[0].length && routes.every(r => shape(r) === shape(routes[0]))
+      && routes.every(r => r.every(x => compactRoute([x], ctx).conds.length <= 1))) {
       let skipped = 0;
       const steps = routes[0].map((_, i) => {
         const col = routes.map(r => r[i]);
@@ -1978,7 +1997,7 @@ body.show-time .stime { display: inline; }
       else if (!(ctx && !startRead)) html += `<div class="need">${ctx ? '事件開始後沒有要經過的分歧（可能經由旅途、地點選單接過來）' : '沒有找到要經過的分歧（日常、閒聊接過來）'}</div>`;
       return html;
     }
-    const more = u.moreRoutes ? `<span class="need">　還有其他路線</span>` : '';
+    const more = u.moreRoutes ? `<span class="need">　（還有更多路線沒列出）</span>` : '';
     return html + routesBlock(routes.slice(0, 3), ctx, isBranch(u) ? '沒走過的分支' : '進入條件', more);
   }
   // 目前的事件：Mod 回報最近執行的劇情腳本，從新的往回找第一個屬於任務事件的
@@ -1996,7 +2015,7 @@ body.show-time .stime { display: inline; }
   }
   function renderUnread(keepScroll) {
     const top = romance.scrollTop;
-    const open = keepScroll ? [...romance.querySelectorAll('details')].map(d => d.open) : [];
+    const open = keepScroll ? detailsState() : null;
     loadIcons();
     const st = urState, who = urWho;
     const heroines = [...new Set(G.unread.flatMap(u => u.heroines.concat(Object.keys(u.who || {}))))].filter(shownName).sort();
@@ -2080,7 +2099,7 @@ body.show-time .stime { display: inline; }
     }
     // 事件的觸發說明：還沒觸發就分欄寫時間、地點、前置；觸發過的事件從別處接進來的，還是寫怎麼觸發
     const evIntro = (ev, opt) => notStarted(ev) ? factsHtml(ev, {noTime: true, ...opt})
-      : ev.via && !/^hub/.test(ev.part || '') ? `<div style="margin:2px 0 6px">${routesBlock(ev.via, ev, '觸發')}</div>` : '';
+      : ev.via && !/^hub/.test(ev.part || '') ? `<div class="facts"><span class="k">觸發</span><div>${routesBlock(ev.via, ev, '')}</div></div>` : '';
     // 合併：同時間、同前置、只差地點的地點事件；同名同時間的事件（偷懶怪的幾個階段）
     const clusterKey = key => {
       const ev = key.includes('|') ? null : byId.get(key);
@@ -2136,7 +2155,7 @@ body.show-time .stime { display: inline; }
     romance.querySelectorAll('[data-ur-st]').forEach(b => b.onclick = () => { urState = b.dataset.urSt; savePref('urState', urState); renderUnread(); });
     romance.querySelectorAll('[data-ur-who]').forEach(b => b.onclick = () => { urWho = b.dataset.urWho; savePref('urWho', urWho); renderUnread(); });
     if (keepScroll) {
-      romance.querySelectorAll('details').forEach((d, i) => { if (open[i]) d.open = true; });
+      restoreDetails(open);
       romance.scrollTop = top;
     }
   }
