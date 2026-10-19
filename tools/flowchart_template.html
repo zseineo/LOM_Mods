@@ -1728,20 +1728,28 @@ body.show-time .stime { display: inline; }
     const open = keepScroll ? [...romance.querySelectorAll('details')].map(d => d.open) : [];
     loadIcons();
     const st = urState, who = urWho;
-    const heroines = [...new Set(G.unread.flatMap(u => u.heroines))].filter(shownName).sort();
+    const heroines = [...new Set(G.unread.flatMap(u => u.heroines.concat(Object.keys(u.who || {}))))].filter(shownName).sort();
     // 整段未讀：看場景裡有沒有她；部分已讀：看沒讀到的那幾段有沒有她
     // 「其他」：沒有（列出來的）女主角
     const NONE = '__none';
     const hits = hs => who === NONE ? !hs.some(shownName) : hs.includes(who);
     // 差分不列入時，差分的原因也不列
     const reasonsOf = u => (u.reasons || []).filter(r => diffOn() || !r.variant);
-    const relevant = u => !who || (u.read === 0 ? hits(u.heroines) : reasonsOf(u).some(r => hits(r.heroines || [])));
+    // 她還沒讀的句數：她說的台詞＋旁白提到她的句子；連上遊戲用即時已讀，否則用重建當下的數字
+    const herUnread = (u, h) => {
+      const ks = ((diffOn() && u.whoAll) || u.who || {})[h] || [];
+      if (LIVE_READ.size) return ks.filter(k => !LIVE_READ.has(u.kp + k)).length;
+      return ((diffOn() ? u.whoUAll : u.whoU) || {})[h] || 0;
+    };
+    const namesOf = u => Object.keys(u.who || {}).filter(h => herUnread(u, h) > 0).concat(u.read === 0 ? u.heroines : []);
+    // 整段未讀：她有出場（說話、立繪、傳說）或旁白提到她就算；讀了一部分：要有她的句子沒讀
+    const relevant = u => !who || (who === NONE ? !namesOf(u).some(shownName) : u.read === 0 ? u.heroines.includes(who) || herUnread(u, who) > 0 : herUnread(u, who) > 0);
     const fresh = u => u.read === 0 && !isBranch(u);
     const list = G.unread.filter(u => u.read < 1 && (!st || (st === 'none' ? fresh(u) : !fresh(u))) && relevant(u));
     const unreadLines = list.reduce((a, u) => a + Math.round((diffOn() ? u.linesAll || u.lines : u.lines) * (1 - u.read)), 0);
     let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落（以重建頁面時的「已讀」紀錄計算）。
       只因性情、道德、處世、修養、學問或技能／天賦而換台詞（不是選項造成、走向相同）的地方算「差分」，預設看過其中一種就算讀過，上方勾「列入差分」才每種都算；
-      其他沒讀到的地方會列出原因（沒選過的選項、沒達成的條件、擲骰、戰鬥勝負）。玩過的事件裡整段沒走到的標「◇ 分支」。選了女主角時，只列「沒讀到的部分」有她出場或和她有關的段落；「其他」是沒有女主角的。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
+      其他沒讀到的地方會列出原因（沒選過的選項、沒達成的條件、擲骰、戰鬥勝負）。玩過的事件裡整段沒走到的標「◇ 分支」。選了角色時：整段沒讀的，她有出場（說話、立繪、傳說）或旁白提到她就列；讀了一部分的，要有「她說的台詞」或「旁白提到她的句子」還沒讀才列；「其他」是沒有這些角色的。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
     const fchip = (attr, v, cur, label) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${label}</button>`;
     html += currentEventHtml();
     html += `<div class="libtools"><div class="fchips"><span>狀態</span>${[['', '全部'], ['none', '未讀'], ['part', '部分已讀']].map(([v, l]) => fchip('ur-st', v, st, l)).join('')}</div>`
@@ -1785,7 +1793,8 @@ body.show-time .stime { display: inline; }
         if (u.read === 0) {
           html += routesHtml(u, ctx);
         } else if (reasonsOf(u).length) {
-          const reasons = who ? reasonsOf(u).filter(r => hits(r.heroines || [])) : reasonsOf(u);
+          const mine = who ? reasonsOf(u).filter(r => hits(r.heroines || [])) : [];
+          const reasons = who && mine.length ? mine : reasonsOf(u);
           html += `<ul class="need" style="margin:2px 0 0 0;padding-left:18px">${reasons.map(r => reasonHtml(r, ctx, u.s)).join('')}</ul>`;
         }
         html += '</div>';

@@ -498,6 +498,9 @@ VIEW_NAME = re.compile(r'LoadView\("([^"]*)"\)')
 MISSION_TIME = re.compile(r'SetMissionTime\("([^"]+)", (\d+), (\d+), (\d+)\)')
 mission_time_set = collections.defaultdict(list)
 COND_NAME = re.compile(r'checkpointmanager\.(?:Switch|Condition)\("([^"]+)"\)')
+# 台詞鍵 → 說話者（角色鍵；"narrative" 是旁白）
+SAY_WHO = re.compile(r'setcharacter\((?:characters\.Get\("([^"]+)"\)|(\w+))|GetStoryText\("([^"]+)"\)')
+key_speaker = {}
 for name in os.listdir(lua_dir):
     if name.endswith(".txt"):
         text = open(os.path.join(lua_dir, name), encoding="utf-8", errors="replace").read()
@@ -510,6 +513,12 @@ for name in os.listdir(lua_dir):
         for m in MISSION_TIME.finditer(text):
             mission_time_set[m.group(1)].append((key, [int(m.group(2)), int(m.group(3)), int(m.group(4))]))
         script_chars[key] = {c for c in CHAR_GET.findall(text) if c != "player"}
+        cur = None
+        for m in SAY_WHO.finditer(text):
+            if m.group(3):
+                key_speaker.setdefault(m.group(3), cur)
+            else:
+                cur = m.group(1) or m.group(2)
 
 read_keys = set()
 if universe_path != "-" and os.path.exists(universe_path):
@@ -2308,7 +2317,7 @@ def unread_reasons(block, vars_, path, out, variant=False):
                     continue
                 r = read_ratio(tree_all(text_tree(br["block"], vars_)))
                 if r == 0:
-                    who = block_heroines(br["block"], set())
+                    who = {h for k in tree_all(text_tree(br["block"], vars_)) for h in key_names(k)}
                     out.append({"kind": "variant", "label": label, "path": path[-3:], "lines": len(set(t)), "heroines": sorted(who), "variant": True})
                 elif r is not None and r < 1:
                     unread_reasons(br["block"], vars_, path + [label], out, True)
@@ -2324,10 +2333,29 @@ def unread_reasons(block, vars_, path, out, variant=False):
                 m = re.match(r"^([a-z0-9]+)\+(work|free)", label)
                 if m:
                     label = loc.get("Position/title/" + m.group(1), label)
-                who = block_heroines(br["block"], set())
+                who = {h for k in t for h in key_names(k)}
                 out.append({"kind": kind, "label": label, "path": path[-3:], "lines": len(set(t)), "heroines": sorted(who), **({"variant": True} if variant else {})})
             elif r < 1:
                 unread_reasons(br["block"], vars_, path + [label], out, variant)
+
+
+def key_names(key):
+    """這句台詞算誰的：說話者本人；旁白就看提到誰"""
+    sp = key_speaker.get(key)
+    if sp == "narrative":
+        return {h for n in legend_names(story_text(key) or "") for h in heroine_of(n)}
+    if sp and sp != "player":
+        n = char_names.get(sp, sp)
+        return set() if CHILD_FORM.search(n) else set(heroine_of(n))
+    return set()
+
+
+def who_keys(keys, kp):
+    out = collections.defaultdict(list)
+    for k in dict.fromkeys(keys):
+        for h in key_names(k):
+            out[h].append(k[len(kp):])
+    return dict(out)
 
 
 def heroines_in(script):
@@ -2366,6 +2394,10 @@ if read_keys:
         kp = os.path.commonprefix(uniq)
         item = {"s": name, "ev": ev, "read": r, "readAll": r_all, "lines": len(set(texts)), "linesAll": len(uniq), "heroines": heroines_in(name),
                 "kp": kp, "kt": tree_strip(tree, kp),
+                # 角色篩選用：她說的台詞、旁白提到她的句子（差分不列入／列入兩種）＋重建當下還沒讀的句數
+                "who": who_keys(texts, kp), **({"whoAll": who_keys(uniq, kp)} if len(uniq) != len(set(texts)) else {}),
+                "whoU": {h: n for h, n in collections.Counter(h for k in dict.fromkeys(texts) if k not in read_keys for h in key_names(k)).items()},
+                "whoUAll": {h: n for h, n in collections.Counter(h for k in uniq if k not in read_keys for h in key_names(k)).items()},
                 "place": script_place(name, ev), "title": first_line(name) or (
                     re.sub(r"<[^>]+>|\{[^}]*\}", "", loc.get("Story/" + script_first_say[name], "")).replace("\n", "") if script_first_say.get(name) else "")}
         if r == 0:
