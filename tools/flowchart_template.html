@@ -538,7 +538,7 @@ body.show-time .stime { display: inline; }
   // 搜尋
   function haystack(e) {
     if (e._hay) return e._hay;
-    const parts = [e.desc, e.title, e.mission, e.key, e.start, e.pos, ...e.conds, ...e.scripts];
+    const parts = [e.desc, e.devDesc, e.title, e.mission, e.key, e.start, e.pos, ...e.conds, ...e.scripts];
     e.scripts.forEach(s => walkItems(G.scripts[s]?.items, it => { if (it.t === 'branch') it.branches.forEach(b => parts.push(b.label)); }));
     return e._hay = parts.join('\n').toLowerCase();
   }
@@ -1037,7 +1037,7 @@ body.show-time .stime { display: inline; }
     const full = e.desc || e.title || e.start || e.key;
     const head = full.length > 40 ? full.slice(0, 40) + '…' : full;
     let html = `<h2>${esc(head)}</h2>
-      <div class="meta">${esc(e.main ? '主線' : '支線')}${e.active ? '' : '（停用）'}　·　${read}${routeTag(e)}</div>
+      <div class="meta">${esc(e.main ? '主線' : '支線')}${e.active ? '' : '（停用）'}　·　${read}${routeTag(e)}${e.wikiPath ? `　·　<a href="https://smilin.net/LoM-wiki/event/simple/${encodeURIComponent(e.wikiPath)}.html" target="_blank" rel="noopener">wiki</a>` : ''}${e.devDesc ? `　·　遊戲內名稱：${esc(e.devDesc)}` : ''}</div>
       <div><span class="chip">🕒 ${esc(when)}</span>${e.place ? `<span class="chip">🏯 ${esc(e.place)}</span>` : ''}${e.pos ? `<span class="chip">📍 到「${esc(e.pos)}」觸發</span>` : e.part ? '<span class="chip">接續前一段劇情</span>' : '<span class="chip">時間到自動觸發</span>'}</div>`;
     html += '<h3>觸發條件</h3>' + (e.part ? `<div class="cond">接續 ${partFromHtml(e)}</div>` : e.conds.length ? e.conds.map(c => `<div class="cond">${plainCondHtml(c, e)}</div>`).join('') : '<div class="empty">時間到就觸發</div>');
     // 自由行動選單：每個留學事件結束都會回來，不用列從哪裡進
@@ -1474,7 +1474,7 @@ body.show-time .stime { display: inline; }
     if (!parts.length) return '<span class="rd r-read" title="這段劇情都看過了">已讀</span>';
     if (r === 0 && parts.every(u => u.read === 0)) return '<span class="rd r-unread" title="還沒看過">未讀</span>';
     const left = parts.reduce((a, u) => a + Math.round(u.lines * (1 - u.read)), 0);
-    return `<span class="rd r-part" title="還有約 ${left} 句沒看過（原因看「五塊錢」分頁）">部分 ${Math.round(r * 100)}%</span>`;
+    return `<span class="rd r-part" title="還有約 ${left} 句沒看過（怎麼看到見「五塊錢」分頁）">部分 ${Math.round(r * 100)}%</span>`;
   }
   function liveGroup(group) {
     const list = LIVE_POS && LIVE_POS[group];
@@ -1749,7 +1749,7 @@ body.show-time .stime { display: inline; }
     const unreadLines = list.reduce((a, u) => a + Math.round((diffOn() ? u.linesAll || u.lines : u.lines) * (1 - u.read)), 0);
     let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落（以重建頁面時的「已讀」紀錄計算）。
       只因性情、道德、處世、修養、學問或技能／天賦而換台詞（不是選項造成、走向相同）的地方算「差分」，預設看過其中一種就算讀過，上方勾「列入差分」才每種都算；
-      其他沒讀到的地方會列出原因（沒選過的選項、沒達成的條件、擲骰、戰鬥勝負）。玩過的事件裡整段沒走到的標「◇ 分支」。選了角色時：整段沒讀的，她有出場（說話、立繪、傳說）或旁白提到她就列；讀了一部分的，要有「她說的台詞」或「旁白提到她的句子」還沒讀才列；「其他」是沒有這些角色的。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
+      讀了一部分的段落，會列出沒讀到的台詞在哪個分支、要怎麼走才看得到（選哪個選項、符合什麼條件、擲骰、戰鬥勝負）——這是從劇本推出來的，不是存檔記下的原因。玩過的事件裡整段沒走到的標「◇ 分支」。選了角色時：整段沒讀的，她有出場（說話、立繪、傳說）或旁白提到她就列；讀了一部分的，要有「她說的台詞」或「旁白提到她的句子」還沒讀才列；「其他」是沒有這些角色的。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
     const fchip = (attr, v, cur, label) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${label}</button>`;
     html += currentEventHtml();
     html += `<div class="libtools"><div class="fchips"><span>狀態</span>${[['', '全部'], ['none', '未讀'], ['part', '部分已讀']].map(([v, l]) => fchip('ur-st', v, st, l)).join('')}</div>`
@@ -1795,7 +1795,7 @@ body.show-time .stime { display: inline; }
         } else if (reasonsOf(u).length) {
           const mine = who ? reasonsOf(u).filter(r => hits(r.heroines || [])) : [];
           const reasons = who && mine.length ? mine : reasonsOf(u);
-          html += `<ul class="need" style="margin:2px 0 0 0;padding-left:18px">${reasons.map(r => reasonHtml(r, ctx, u.s)).join('')}</ul>`;
+          html += `<div class="need" style="margin-top:2px">怎麼看到沒讀的台詞：</div><ul class="need" style="margin:0;padding-left:18px">${reasons.map(r => reasonHtml(r, ctx, u.s)).join('')}</ul>`;
         }
         html += '</div>';
       }

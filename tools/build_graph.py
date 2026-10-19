@@ -2635,6 +2635,20 @@ for e in events:
     if ts:
         e["time"] = {"type": "range", "from": min(ts, key=TKEY), "to": {"y": 4, "m": 3, "s": 3}, "open": True, "after": True}
 
+# 事件名稱改用 smilin.net wiki 的事件名（tools/match_wiki.py 配對、tools/wiki_names.json 可手動修正）；
+# 原本的開發備註留在 devDesc。同一個 wiki 事件對到好幾個事件時，後面加上原本的名稱區分
+wiki_names_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wiki_names.json")
+WIKI_NAMES = json.load(open(wiki_names_path, encoding="utf-8")) if os.path.exists(wiki_names_path) else {}
+wiki_count = collections.Counter(v["name"] for k, v in WIKI_NAMES.items() if k in event_by_id)
+for e in events:
+    w = WIKI_NAMES.get(e["id"])
+    if not w:
+        continue
+    old = (e.get("desc") or "").strip(". ")
+    e["devDesc"] = e.get("desc") or ""
+    e["wikiPath"] = w["path"]
+    e["desc"] = w["name"] if wiki_count[w["name"]] == 1 or not old or old == w["name"] else f"{w['name']}（{old[:10]}）"
+
 out = {
     "heroines": heroines,
     "targets": TARGETS,
