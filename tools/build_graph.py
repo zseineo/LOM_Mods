@@ -2400,16 +2400,15 @@ if read_keys:
                 "whoUAll": {h: n for h, n in collections.Counter(h for k in uniq if k not in read_keys for h in key_names(k)).items()},
                 "place": script_place(name, ev), "title": first_line(name) or (
                     re.sub(r"<[^>]+>|\{[^}]*\}", "", loc.get("Story/" + script_first_say[name], "")).replace("\n", "") if script_first_say.get(name) else "")}
-        if r == 0:
-            routes = entry_routes(name, ev)
-            # 網頁只列 3 條，其餘只記有沒有
-            item["routes"] = [[{k: v for k, v in x.items() if k != "into"} for x in r] for r in routes[:3]]
-            item["moreRoutes"] = len(routes) > 3
-            hubs = {(r[0].get("hub"), r[0]["path"][0]) for r in routes if r and r[0].get("hub")}
-            if hubs and all(r and r[0].get("hub") for r in routes) and len(hubs) == 1:
-                hub, place = next(iter(hubs))
-                item["hubGroup"] = f"{hub}・{place}"
-        else:
+        routes = entry_routes(name, ev)
+        # 網頁只列 3 條，其餘只記有沒有
+        item["routes"] = [[{k: v for k, v in x.items() if k != "into"} for x in r] for r in routes[:3]]
+        item["moreRoutes"] = len(routes) > 3
+        hubs = {(r[0].get("hub"), r[0]["path"][0]) for r in routes if r and r[0].get("hub")}
+        if hubs and all(r and r[0].get("hub") for r in routes) and len(hubs) == 1:
+            hub, place = next(iter(hubs))
+            item["hubGroup"] = f"{hub}・{place}"
+        if r > 0:
             reasons = []
             unread_reasons(block, vars_, [], reasons)
             item["reasons"] = reasons[:12]
@@ -2641,6 +2640,9 @@ wiki_names_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wiki
 WIKI_NAMES = json.load(open(wiki_names_path, encoding="utf-8")) if os.path.exists(wiki_names_path) else {}
 wiki_count = collections.Counter(v["name"] for k, v in WIKI_NAMES.items() if k in event_by_id)
 for e in events:
+    if (e.get("part") or "").startswith("hub"):
+        e["title"] = ""
+        continue
     w = WIKI_NAMES.get(e["id"])
     if not w:
         continue
@@ -2665,8 +2667,12 @@ for e in events:
     f = (e.get("time") or {}).get("from") or {}
     t = (f.get("y", 0), f.get("m", 0), f.get("s", 0))
     place = e.get("place") or ""
-    if "留學：崆峒" in tags:
+    if "留學：崆峒" in tags or e.get("part") == "hub1":
         e["study"] = ["崆峒"]
+    elif "留學：青城" in tags or e.get("part") == "hub2":
+        e["study"] = ["青城"]
+    elif (2, 2, 1) <= t <= (2, 11, 3) and place in ("崆峒", "江陵／襄陽", "青城"):
+        e["study"] = ["青城" if place == "青城" else "崆峒"]
     elif "留學：青城" in tags:
         e["study"] = ["青城"]
     elif (2, 2, 2) <= t <= (2, 11, 3):
@@ -2682,7 +2688,8 @@ out = {
     "targets": TARGETS,
     "scriptTime": script_time,
     "events": events,
-    "scripts": {k: v for k, v in script_info.items() if k in used or k in entry_scripts},
+    # 事件裡的每一段、五塊錢列出的每一段都要有（網頁要畫出劇情、從五塊錢跳到那一段）
+    "scripts": {k: v for k, v in script_info.items() if k in used or k in entry_scripts or k in {sc for e in events for sc in e["scripts"]} or k in {u["s"] for u in unread}},
     "flags": {k: v[:12] for k, v in flag_setters.items()},
     "lovers": {str(k): v for k, v in lover_points.items()},
     "loverNames": {k[len("PlayerInfo/Lover/"):]: v for k, v in loc.items() if k.startswith("PlayerInfo/Lover/")},

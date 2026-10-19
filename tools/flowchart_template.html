@@ -456,7 +456,8 @@ body.show-time .stime { display: inline; }
     const k = mIdx(t.from.y, t.from.m);
     return k >= mIdx(...a.from) && k <= mIdx(...a.to) && (!a.study || !e.study || e.study.includes(a.study));
   }
-  const arcOf = e => ['時間不定', ...ARCS.map(a => a.name)].find(n => inArc(e, n)) || '時間不定';
+  // 有分線的事件優先放在自己那條線
+  const arcOf = e => ['時間不定', ...ARCS.filter(a => e.study && e.study.includes(a.study)).map(a => a.name), ...ARCS.map(a => a.name)].find(n => inArc(e, n)) || '時間不定';
   // 角色篩選（同五塊錢）：事件裡有她說話、立繪、傳說或旁白提到
   const castHit = e => !castSel || (castSel === '__none' ? !(e.cast || []).some(shownName) : (e.cast || []).includes(castSel));
   // 從別處跳到某個事件：分段模式就切到那個事件所在的段落再捲過去
@@ -1913,19 +1914,23 @@ body.show-time .stime { display: inline; }
         : '日常、地點行動、閒聊（不屬於任務事件）';
       html += `<details class="plcard"${rows.length <= 6 || who ? ' open' : ''}><summary style="cursor:pointer"><b>${head}</b>　<span class="need">${rows.length} 段（${[none ? `未讀 ${none}` : '', branches ? `沒走過的分支 ${branches}` : ''].filter(Boolean).join('、') || '都讀過一部分'}）</span></summary>`;
       // 事件是從別處接進來的（例如養成選單的行動）：先寫怎麼觸發
-      if (ev && ev.via) html += `<div style="margin:2px 0 6px">${routesBlock(ev.via, ev, '觸發')}</div>`;
+      if (ev && ev.via && !/^hub/.test(ev.part || '')) html += `<div style="margin:2px 0 6px">${routesBlock(ev.via, ev, '觸發')}</div>`;
       // 要先被前面的劇情啟動、而且還沒觸發過：寫出怎麼啟動
       if (ev && ev.activate && !(G.scripts[ev.start] || {}).read) html += `<div style="margin:2px 0 6px">${routesBlock(ev.activate, ev, '要先啟動（在前面的劇情裡）')}</div>`;
       for (const u of rows) {
         const ctx = u.ev ? byId.get(u.ev.toLowerCase()) : null;
         const hide = u.read === 0 ? ' unreadtxt' : '';
         const chip = isBranch(u) ? '<span class="ck no">◇</span>分支' : u.read === 0 ? '<span class="ck no">○</span>未讀' : `<span class="ck ok">◐</span>${Math.round(u.read * 100)}%`;
-        html += `<div class="plev" data-script="${esc(u.s)}"><span class="need">${chip}</span>　<span class="ttl${hide}">${esc((u.title || u.s).slice(0, 40))}</span>`
+        html += `<div class="plev"><span class="need">${chip}</span>　<span class="ttl${hide}" data-scene="${esc(u.s)}" title="到流程圖看這一段">${esc((u.title || u.s).slice(0, 40))}</span>`
           + `${u.heroines.some(shownName) ? `<span class="who">${esc(u.heroines.filter(shownName).join('、'))}</span>` : ''}`
           + ((G.scripts[u.s] || {}).achieve ? `<span class="rtag" title="這段有些台詞要先取得成就才會出現">🏆 要成就${G.scripts[u.s].achieve.map(a => `「${esc(a)}」`).join('')}</span>` : '');
         if (u.read === 0) {
           html += routesHtml(u, ctx);
         } else if (reasonsOf(u).length) {
+          // 讀了一部分：先寫怎麼進到這段（同事件開頭就進得來的不寫）
+          // 只列最短的一條，免得蓋過下面的「怎麼看到」
+          const enter = (u.routes || []).map(r => [r, routeText(r, ctx)]).filter(x => x[1]).sort((a, b) => a[1].length - b[1].length);
+          if (enter.length && !u.hubGroup) html += `<div class="need">怎麼進來${enter.length > 1 || u.moreRoutes ? '（最短的一條）' : ''}：${enter[0][1]}</div>`;
           const mine = who ? reasonsOf(u).filter(r => hits(r.heroines || [])) : [];
           const reasons = who && mine.length ? mine : reasonsOf(u);
           html += `<div class="need" style="margin-top:2px">怎麼看到沒讀的台詞：</div><ul class="need" style="margin:0;padding-left:18px">${reasons.map(r => reasonHtml(r, ctx, u.s)).join('')}</ul>`;
@@ -1998,7 +2003,23 @@ body.show-time .stime { display: inline; }
       return plainCondHtml(label.replace(/　〔(前提不是|需)：.*〕$/, ''), ctx, near);
     }).filter(Boolean).join(' → ');
   }
+  // 跳到流程圖：切到段落所屬事件、右側捲到那一段（#N）並閃一下；從那一段可以沿「接到 #N」往回找入口
+  function jumpToScene(s) {
+    const u = G.unread.find(x => x.s === s);
+    const owner = (u && u.ev ? u.ev.toLowerCase() : null) || scriptOwner.get(s);
+    if (!owner) { showScript(s); return; }
+    setView('chart');
+    revealEvent(owner);
+    const seg = document.getElementById('seg-' + s);
+    if (!seg) { showScript(s); return; }
+    for (let p = seg.parentElement; p; p = p.parentElement) if (p.tagName === 'DETAILS') p.open = true;
+    seg.scrollIntoView({block: 'center'});
+    seg.classList.add('flash');
+    setTimeout(() => seg.classList.remove('flash'), 1500);
+  }
   romance.addEventListener('click', ev => {
+    const scene = ev.target.closest('[data-scene]');
+    if (scene) { jumpToScene(scene.dataset.scene); return; }
     const go = ev.target.closest('[data-goto]');
     if (go) {
       setView('chart');
