@@ -1267,7 +1267,9 @@ def plain_battle_events(script, items):
                         w2, v2 = in_battle[m.group(1)]
                         hit, dflt = satisfies(v2, m.group(2), int(m.group(3))), satisfies(0, m.group(2), int(m.group(3)))
                         w2 = w2.replace(" 且 ", "")
-                        a = f"戰鬥中有「{w2}」" if hit and not dflt else f"戰鬥中沒有「{w2}」" if dflt and not hit else a
+                        # 出招、回合這類「發生過的事」寫有沒有；單純的屬性檢查（只觸發一次的台詞）寫那段發生過沒
+                        act = re.search(r"使用|使出|命中|回合|擋下", w2)
+                        a = (f"戰鬥中有「{w2}」" if act else f"戰鬥中「{w2}」那段發生過") if hit and not dflt else                             (f"戰鬥中沒有「{w2}」" if act else f"戰鬥中「{w2}」那段還沒發生") if dflt and not hit else a
                     atoms.append(a)
                 base = [a for a in atoms if not TEMP_ATOM.fullmatch(a)]
                 labels = [temp_label(script, *m.groups()[:2], int(m.group(3))) for m in map(TEMP_ATOM.fullmatch, atoms) if m]
