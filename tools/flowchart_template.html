@@ -735,15 +735,17 @@ body.show-time .stime { display: inline; }
     }
   }
   function entryHtml(x) {
-    let html = '';
     const ctx = x.ev ? byId.get(x.ev.toLowerCase()) : null;
+    const steps = [];
     for (const step of (x.entry || []).slice().reverse()) {
-      html += `<div class="entry"><span class="lbl">進入 <span class="chip link" data-script="${esc(step.into)}">${esc(step.into)}</span>${stime(step.into)} 需要：</span>`;
-      html += step.options.map(o => `<div>　在 <span class="chip link" data-script="${esc(o.from)}">${esc(o.from)}</span>：${pathHtml(o.path, ctx, o.from) || '直接接到'}</div>`).join('') + '</div>';
+      const opts = [...new Set(step.options.map(o => pathHtml(o.path, ctx, o.from)).filter(Boolean))];
+      if (opts.length) steps.push(opts.join('<br>或 '));
     }
-    if (x.path && x.path.length) html += `<div class="entry"><span class="lbl">腳本 ${esc(x.s)} 內需要：</span></div><ol class="path">${x.path.map(p => pathHtml([p], ctx, x.s)).filter(Boolean).map(t => `<li>${t}</li>`).join('')}</ol>`;
-    return html;
+    if (x.path && x.path.length) { const t = pathHtml(x.path, ctx, x.s); if (t) steps.push(t); }
+    return steps.length ? `<ol class="path">${steps.map(t => `<li>${t}</li>`).join('')}</ol>` : '';
   }
+  // 從旗標跳過來時的標題：「怎麼讓「神兵帖進度」= 1」
+  const focusHead = f => `怎麼讓${flagName(f.flag) ? `「${esc(flagName(f.flag))}」` : ` ${esc(f.flag)} `}${f.op === 'AddFlag' ? (f.v > 0 ? '+' : '') + f.v : '= ' + f.v}`;
   // 傳說（劇情摘要原文）先不顯示：資料還在，改 true 就回來
   const SHOW_LEGEND = false;
   function legendBlock(list, hide) {
@@ -1192,7 +1194,7 @@ body.show-time .stime { display: inline; }
     if (cgLibs(e).length) html += '<h3>這裡可取得</h3>' + cgLibs(e).map(libLink).join('');
     if (focus) {
       // 從旗標跳過來：只展開設定旗標的那段腳本與走到那裡的必要條件，其餘摺疊
-      html += `<h3>必要路徑（設 ${esc(focus.flag)} = ${focus.v}）</h3><div class="pt bond">${entryHtml(focus) || '<div class="empty">事件開始後直接進入，不需額外條件</div>'}</div>`;
+      html += `<h3>${focusHead(focus)}</h3><div class="pt bond">${entryHtml(focus) ? '在這個事件裡要：' + entryHtml(focus) : '觸發這個事件、跑完就會設，不用選特定選項（怎麼觸發見上面）。'}</div>`;
       html += `<h3>決定這件事的劇情</h3>` + scriptHtml(focus.s, e);
       const others = e.scripts.filter(s => s !== focus.s);
       if (others.length) html += `<details><summary class="bkind" style="cursor:pointer">⋯ 這個事件的其他段落</summary>${others.map(s => scriptHtml(s, e)).join('')}</details>`;
@@ -1227,14 +1229,15 @@ body.show-time .stime { display: inline; }
     const all = G.flags[f] || [];
     const setters = all.map((x, i) => [x, i]).filter(([x]) => !op || x.op === 'AddFlag' || satisfies(x.v, op, val));
     const nowVal = liveValue('flag', f);
-    let html = `<b>旗標 ${esc(f)}</b>${G.flagNames[f] ? '（' + esc(G.flagNames[f]) + '）' : ''}${op ? `　需要 ${op} ${esc(val)}` : ''}${nowVal !== null ? `　<b>目前 = ${nowVal}</b>` : ''}<br>`;
+    let html = `<b>${flagName(f) ? `「${esc(flagName(f))}」` : '旗標 ' + esc(f)}</b>${op ? `　需要 ${op} ${esc(val)}` : ''}${nowVal !== null ? `　<b>目前 = ${nowVal}</b>` : ''}<br>`;
     html += setters.length ? '設定位置：' : (all.length ? '劇本中沒有直接設成符合條件的值（可能由數值累加或系統設定）。' : '找不到劇本中直接設定的位置（可能由系統或數值累加）。');
     if (all.length > setters.length) html += `<span class="empty">（另有 ${all.length - setters.length} 處設為不符合的值，已隱藏）</span>`;
     for (const [x, i] of setters) {
       const owner = x.ev ? byId.get(x.ev.toLowerCase()) : null;
       const target = (owner ? `data-ev="${esc(owner.id.toLowerCase())}"` : `data-script="${esc(x.s)}"`) + ` data-f="${esc(f)}" data-i="${i}"`;
-      const where = owner ? `　→ 事件「${esc((owner.title || owner.key).slice(0, 14))}」${x.via ? '（經 ' + esc(x.via) + '）' : ''}` : '　→ 不屬於任何任務事件（日常／閒聊等），點此看腳本';
-      html += `<div class="row" ${target}>${x.op === 'AddFlag' ? (x.v > 0 ? '+' : '') + x.v + '（累加）' : '= ' + x.v}　${esc(x.s)}${x.path.length ? '　〔' + esc(x.path.join(' › ').slice(0, 60)) + '〕' : ''}${where}</div>`;
+      const how = x.path.length || (x.entry || []).length ? '，要走特定分支（點開看）' : '，跑完就會設';
+      const where = owner ? `在「${esc(evShort(owner))}」（${esc(whenText(owner))}）中${how}` : `在日常、閒聊的劇情裡${how}`;
+      html += `<div class="row" ${target}>${x.op === 'AddFlag' ? (x.v > 0 ? '+' : '') + x.v + '（累加）' : '= ' + x.v}　${where}</div>`;
     }
     pop.innerHTML = html;
     pop.style.display = 'block';
@@ -1264,7 +1267,7 @@ body.show-time .stime { display: inline; }
   }
   function showScript(s, focus) {
     const owner = G.events.find(e => e.scripts.includes(s));
-    const need = focus ? `<h3>必要路徑（設 ${esc(focus.flag)} = ${focus.v}）</h3><div class="pt bond">${entryHtml(focus) || '<div class="empty">不需額外條件</div>'}</div>` : '';
+    const need = focus ? `<h3>${focusHead(focus)}</h3><div class="pt bond">${entryHtml(focus) ? '在這段劇情裡要：' + entryHtml(focus) : '進到這段劇情就會設，不用選特定選項。'}</div>` : '';
     const ur = hasUnread(s) ? `　·　<span class="golink" data-ur="${esc(s)}">到五塊錢看沒讀到的台詞 ›</span>` : '';
     detail.innerHTML = `<h2>劇情段落${stime(s)}</h2><div class="meta">${owner ? '屬於事件 ' + evLink(owner.id.toLowerCase()) : '日常工作、閒聊或設施互動（不屬於任務事件）'}${ur}</div>` + need + (scriptHtml(s, owner) || '<div class="empty">只有過場對話，沒有選項或分歧。</div>');
     detail.scrollTop = 0;
