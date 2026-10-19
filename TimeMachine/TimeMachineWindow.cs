@@ -15,11 +15,11 @@ namespace LOM.TimeMachine;
 internal sealed class TimeMachineWindow
 {
     private const int WindowId = 0x544D31;
-    private const float WindowWidth = 1360f;
+    private const float WindowWidth = 1460f;
     private const float WindowHeight = 710f;
     private const float UiScale = 1.15f;
     private const float DoubleClickSeconds = 0.4f;
-    private const float YearLabelWidth = 84f;
+    private const float YearLabelWidth = 72f;
     private const float StageWidth = 32f;
     private const float CellWidth = StageWidth * 3 + 4f;
     private const float CellHeight = 44f;
@@ -526,13 +526,13 @@ internal sealed class TimeMachineWindow
             return;
         }
 
-        GUILayout.BeginHorizontal();
-        GUILayout.Label("", _header, GUILayout.Width(YearLabelWidth));
+        // 月份標題對齊下方格子的「中」旬（格子實際寬度比 CellWidth 多出邊距，逐月累積會偏掉）
+        Rect monthRow = GUILayoutUtility.GetRect(10f, 30f, GUILayout.ExpandWidth(true));
         for (int month = 1; month <= 12; month++)
         {
-            GUILayout.Label($"{month}月", _header, GUILayout.Width(CellWidth));
+            float cx = StageCenter(month, 2);
+            GUI.Label(new Rect(cx - CellWidth / 2f, monthRow.y, CellWidth, monthRow.height), $"{month}月", _header);
         }
-        GUILayout.EndHorizontal();
 
         foreach (int year in years)
         {
