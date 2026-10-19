@@ -1921,7 +1921,9 @@ body.show-time .stime { display: inline; }
         const ctx = u.ev ? byId.get(u.ev.toLowerCase()) : null;
         const hide = u.read === 0 ? ' unreadtxt' : '';
         const chip = isBranch(u) ? '<span class="ck no">◇</span>分支' : u.read === 0 ? '<span class="ck no">○</span>未讀' : `<span class="ck ok">◐</span>${Math.round(u.read * 100)}%`;
-        html += `<div class="plev"><span class="need">${chip}</span>　<span class="ttl${hide}" data-scene="${esc(u.s)}" title="到流程圖看這一段">${esc((u.title || u.s).slice(0, 40))}</span>`
+        // 段落名稱用規則組（事件名＋怎麼進到這段），不用劇情原文；原本的傳說開頭先留著對照
+        html += `<div class="plev"><span class="need">${chip}</span>　<span class="ttl" data-scene="${esc(u.s)}" title="到流程圖看這一段">${esc(sceneName(u, ctx))}</span>`
+          + (u.title ? `<span class="need${hide}" style="font-weight:400">　原：${esc(u.title.slice(0, 24))}${u.title.length > 24 ? '…' : ''}</span>` : '')
           + `${u.heroines.some(shownName) ? `<span class="who">${esc(u.heroines.filter(shownName).join('、'))}</span>` : ''}`
           + ((G.scripts[u.s] || {}).achieve ? `<span class="rtag" title="這段有些台詞要先取得成就才會出現">🏆 要成就${G.scripts[u.s].achieve.map(a => `「${esc(a)}」`).join('')}</span>` : '');
         if (u.read === 0) {
@@ -2002,6 +2004,47 @@ body.show-time .stime { display: inline; }
       if (/^(以上皆非|其他)/.test(label)) return '';
       return plainCondHtml(label.replace(/　〔(前提不是|需)：.*〕$/, ''), ctx, near);
     }).filter(Boolean).join(' → ');
+  }
+  // 段落名稱：事件名＋進到這段的最後一個選擇（選項、擲骰、戰鬥結果、養成地點）；
+  // 地點事件寫「地點・行動・結果」；事件開頭寫「開頭」
+  // 段落在事件細節裡的編號（#N），和右側劇情的編號一致
+  const segNumCache = new Map();
+  function segNum(ev, s) {
+    if (!segNumCache.has(ev.id)) {
+      const m = new Map();
+      for (const x of eventTree(ev).matchAll(/id="seg-([^"]+)"><div class="sname"><b>#(\d+)<\/b>/g)) m.set(x[1], x[2]);
+      segNumCache.set(ev.id, m);
+    }
+    return segNumCache.get(ev.id).get(s);
+  }
+  // 不屬於任務事件的段落：依劇本名稱分類
+  const DAILY = [[/^talk_brother/, '師兄弟閒聊'], [/^talk_girl/, '閒聊'], [/^travel_result/, '旅途事件'], [/^act\d/, '開場'],
+    [/^door_/, '大門'], [/^bi?rth/, '生日'], [/^section_0*1_/, '崆峒留學'], [/^section_0*2_/, '青城留學']];
+  function sceneName(u, ctx) {
+    for (const p of G.positions) for (const L of p.layers) for (const c of L.candidates)
+      if (c.rs === u.s || c.script === u.s) return [p.place, p.action, c.note].filter(Boolean).join('・');
+    const who = (u.heroines || []).filter(shownName)[0];
+    if (!ctx) {
+      const pre = u.s.replace(/(_\d+)+$/, '');
+      for (const p of G.positions) for (const L of p.layers) for (const c of L.candidates)
+        if (c.script.replace(/(_\d+)+$/, '') === pre) return `${p.place}・${p.action}・其他結果`;
+      const d = DAILY.find(([re]) => re.test(u.s));
+      return `${d ? d[1] : '日常'}${who ? '・' + who : ''}`;
+    }
+    const n = segNum(ctx, u.s);
+    const base = (ctx.desc || ctx.title || ctx.key).replace(/^「|」$/g, '').slice(0, 20) + (n ? ` #${n}` : '');
+    if (ctx.start === u.s) return `${base}・開頭`;
+    const routes = (u.routes || []).filter(r => r.length).sort((a, b) => a.length - b.length);
+    for (const r of routes) {
+      for (let i = r.length - 1; i >= 0; i--) {
+        const x = r[i];
+        if (x.hub) return `${base}・${x.hub}去「${x.path[0]}」`;
+        if (x.ev) continue;
+        const c = lastChoice(x.path || []);
+        if (c) return `${base}・${c.replace(/（需 .*）$/, '')}之後`;
+      }
+    }
+    return `${base}・後續段落`;
   }
   // 跳到流程圖：切到段落所屬事件、右側捲到那一段（#N）並閃一下；從那一段可以沿「接到 #N」往回找入口
   function jumpToScene(s) {
