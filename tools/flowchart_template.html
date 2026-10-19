@@ -842,7 +842,15 @@ body.show-time .stime { display: inline; }
     text = text.replace(/條件·(\S+?) = 1(?![0-9])/g, '$1').replace(/條件·(\S+?) = 0(?![0-9])/g, '不是「$1」');
     // 兩個旗標互相比較（例如票數）
     text = text.replace(/旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) 旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)?/g, (m, a, op, b) => `${flagNoun(a)} ${op} ${flagNoun(b)}`);
-    text = text.replace(/目前時間 (=|≥|>|≤|<) 任務時間〔[^〕]*〕/g, (m, op) => ({'=': '到了預定的時間', '≥': '到了預定的時間以後', '>': '過了預定的時間', '≤': '預定的時間以前（含當旬）', '<': '還沒到預定的時間'})[op])
+    text = text.replace(/目前時間 (=|≥|>|≤|<) 任務時間〔([^〕]*)〕/g, (m, op, k) => {
+      // 任務時間是哪個事件記下的：「小竹回家」那一旬／下一旬／一個月後
+      const src = ((G.missionTimes || {})[k] || []).filter(x => x.ev);
+      const names = [...new Set(src.map(x => byId.get(x.ev.toLowerCase())).filter(Boolean).map(evShort))];
+      const off = src[0] ? src[0].off : null;
+      const later = off ? [off[0] ? `${off[0]}年` : '', off[1] ? `${off[1]}個月` : '', off[2] ? `${off[2]}旬` : ''].join('') : '';
+      const base = names.length ? `「${names.join('」或「')}」${later ? `的${later}後` : '那一旬'}` : '預定的時間';
+      return ({'=': `剛好是${base}`, '≥': `${base}起`, '>': `${base}之後`, '≤': `${base}以前`, '<': `${base}之前`})[op];
+    })
       .replace(/行動次數 ≤ 旗標 ActionCheck\d+/g, '用掉部分行動後');
     // 逐項處理：連上遊戲時，每個條件前面標目前存檔是否符合（「不是（…）」裡面的不標，免得看反）
     const live = LIVE && LIVE.inGame;
@@ -1032,6 +1040,7 @@ body.show-time .stime { display: inline; }
       <div><span class="chip">🕒 ${esc(when)}</span>${e.place ? `<span class="chip">🏯 ${esc(e.place)}</span>` : ''}${e.pos ? `<span class="chip">📍 到「${esc(e.pos)}」觸發</span>` : e.part ? '<span class="chip">接續前一段劇情</span>' : '<span class="chip">時間到自動觸發</span>'}</div>`;
     html += '<h3>觸發條件</h3>' + (e.part ? `<div class="cond">接續 ${partFromHtml(e)}</div>` : e.conds.length ? e.conds.map(c => `<div class="cond">${plainCondHtml(c, e)}</div>`).join('') : '<div class="empty">時間到就觸發</div>');
     // 自由行動選單：每個留學事件結束都會回來，不用列從哪裡進
+    if (e.note) html += `<div class="when">※ ${esc(e.note)}</div>`;
     if (e.via && !/^hub/.test(e.part || '')) html += `<h3>從這裡觸發</h3><div class="cond">${routesBlock(e.via, e, '觸發方式')}</div>`;
     if (e.activate) html += `<h3>要先啟動</h3><div class="cond">${routesBlock(e.activate, e, '在前面的劇情裡')}</div>`;
     const from = e._from.filter(id => !byId.get(id).quiet), next = e._triggers.filter(id => !byId.get(id).quiet);
@@ -1688,6 +1697,7 @@ body.show-time .stime { display: inline; }
       html += `<div class="need">事件還沒觸發（觸發方式見上方）</div>`;
     } else if (ctx && !startRead) {
       const conds = ctx.conds.filter(c => c !== '（無條件）');
+      if (ctx.note) html += `<div class="need">※ ${esc(ctx.note)}</div>`;
       html += `<div class="need">事件還沒觸發：${esc(whenText(ctx))}${ctx.pos ? `到「${esc(ctx.pos)}」` : ''}${conds.length ? '，' + conds.map(c => plainCondHtml(c, ctx)).join('；') : ctx.activate ? '' : '（沒有其他條件）'}${ctx.activate ? '（要先啟動，見上方）' : ''}</div>`;
     }
     const routes = (u.routes || []).filter(r => routeText(r, ctx));

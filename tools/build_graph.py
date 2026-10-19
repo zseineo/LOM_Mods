@@ -494,6 +494,9 @@ script_cond_names = {}
 script_chars = {}
 CHAR_GET = re.compile(r'characters\.Get\("([^"]+)"\)')
 VIEW_NAME = re.compile(r'LoadView\("([^"]*)"\)')
+# 任務時間：劇本用 SetMissionTime(名稱, 年, 月, 旬) 記下「現在＋多久」，條件「目前時間 = 任務時間〔名稱〕」就是到了那時
+MISSION_TIME = re.compile(r'SetMissionTime\("([^"]+)", (\d+), (\d+), (\d+)\)')
+mission_time_set = collections.defaultdict(list)
 COND_NAME = re.compile(r'checkpointmanager\.(?:Switch|Condition)\("([^"]+)"\)')
 for name in os.listdir(lua_dir):
     if name.endswith(".txt"):
@@ -504,6 +507,8 @@ for name in os.listdir(lua_dir):
         say = RE["text"].search(text)
         script_first_say[key] = say.group(1) if say else None
         script_cond_names[key] = set(COND_NAME.findall(text))
+        for m in MISSION_TIME.finditer(text):
+            mission_time_set[m.group(1)].append((key, [int(m.group(2)), int(m.group(3)), int(m.group(4))]))
         script_chars[key] = {c for c in CHAR_GET.findall(text) if c != "player"}
 
 read_keys = set()
@@ -1854,6 +1859,13 @@ def event_place(e):
 
 for e in events:
     e["place"] = event_place(e)
+EVENT_NOTES = {
+    "S2902/S2902_01": "遊戲資料要求「剛好第3年5月下旬」，同時又要「目前時間 = 小竹回家結束那一旬」（小竹回家在崆峒留學期間）。"
+                      "兩者不可能同時成立，第3年5月下旬也沒有行動，照目前版本應該觸發不了。",
+}
+for e in events:
+    if e["id"] in EVENT_NOTES:
+        e["note"] = EVENT_NOTES[e["id"]]
 
 # ---------- 圖鑑：汗青書／結局 CG／死法 ----------
 # 單一腳本的地點：看它自己的背景圖，分不出來就用所屬事件的地點
@@ -2567,6 +2579,8 @@ out = {
     "battleFlags": battle_flag_values,
     "scriptVia": script_via,
     # 網頁連上遊戲時判斷條件用：條件文字裡的名稱 → 存檔鍵名
+    # 任務時間是在哪個事件裡記下的、記成多久之後
+    "missionTimes": {k: [{"ev": find_owner(sc)[0], "off": off} for sc, off in v] for k, v in mission_time_set.items()},
     "liveKeys": {"stat": parse_enum_strings("GameStatType"), "rel": parse_enum_strings("RelationshipStatType")},
 }
 json.dump(out, open(out_path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
