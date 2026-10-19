@@ -175,6 +175,8 @@ body.moretabs .tabs .extra { display: inline-block; }
 .script .sname b { color: var(--accent); margin-right: 6px; }
 .script .sname .pct { margin-right: 6px; }
 .script.flash, .plev.flash, .plcard.flash { outline: 2px solid var(--accent); }
+.golink { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.golink:hover { color: var(--accent); }
 .script > .sname { justify-content: flex-start; gap: 4px; }
 .forcebtn { float: right; background: var(--chip); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 1px 10px; font: inherit; font-size: 12px; cursor: pointer; }
 .forcebtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -1109,6 +1111,8 @@ body.show-time .stime { display: inline; }
     if (st.num.has(s) || (st.inCount.get(s) || 0) > 1) { if (!st.num.has(s)) st.root.push(s); return segRef(s); }
     return treeHtml(s, ctx, st);
   }
+  // 五塊錢有列這段（還有沒讀到的台詞）
+  const hasUnread = s => G.unread.some(u => u.s === s && u.read < 1);
   function treeHtml(s, ctx, st) {
     if (st.num.has(s)) return segRef(s);
     const info = G.scripts[s];
@@ -1116,8 +1120,9 @@ body.show-time .stime { display: inline; }
     st.num.set(s, st.num.size + 1);
     const hide = unread(info.read) ? ' unreadtxt' : '';
     const body = legendBlock(info.legend, hide) + plainItems(info.items, 0, ctx, s, st);
-    const pct = info.read == null ? '' : `<span class="pct">${Math.round(info.read * 100)}% 已讀</span>`;
-    let html = `<div class="script" id="seg-${esc(s)}"><div class="sname"><b>#${st.num.get(s)}</b>${pct}${stime(s)}</div>${body || '<div class="empty">過場對話</div>'}</div>`;
+    const ur = hasUnread(s) ? ` golink" data-ur="${esc(s)}" title="到五塊錢看沒讀到的台詞` : '';
+    const pct = info.read == null ? '' : `<span class="pct${ur}">${Math.round(info.read * 100)}% 已讀${ur ? ' ›' : ''}</span>`;
+    let html = `<div class="script" id="seg-${esc(s)}"><div class="sname"><b>#${st.num.get(s)}</b>${pct}${stime(s)}</div>${body || `<div class="empty${ur}">過場對話</div>`}</div>`;
     for (const it of info.items) if (inEvent(it, ctx)) html += treeChild(it.s.toLowerCase(), ctx, st);
     return html;
   }
@@ -1168,7 +1173,8 @@ body.show-time .stime { display: inline; }
     if (t && t.type === 'at' && valid(t.from)) when = tstr(t.from);
     else if (t && t.type === 'range' && valid(t.from)) when = t.open ? `${tstr(t.from)} 起${t.after ? '（條件最早在這時才湊得齊）' : ''}` : `${tstr(t.from)} ～ ${valid(t.to) ? tstr(t.to) : '?'}`;
     else if (t && t.type === 'period') when = `每月${STAGE[t.stage]}`;
-    const read = e._read == null ? '無對話' : `${Math.round(e._read * 100)}% 已讀`;
+    const evUr = G.unread.some(u => u.ev && u.ev.toLowerCase() === e.id.toLowerCase() && u.read < 1);
+    const read = e._read == null ? '無對話' : evUr ? `<span class="golink" data-ur-ev="${esc(e.id.toLowerCase())}" title="到五塊錢看這個事件沒讀到的台詞">${Math.round(e._read * 100)}% 已讀 ›</span>` : `${Math.round(e._read * 100)}% 已讀`;
     const full = e.desc || e.title || e.start || e.key;
     const head = full.length > 40 ? full.slice(0, 40) + '…' : full;
     let html = `<h2>${esc(head)}</h2>
@@ -1199,6 +1205,8 @@ body.show-time .stime { display: inline; }
   }
 
   detail.addEventListener('click', ev => {
+    const ur = ev.target.closest('[data-ur],[data-ur-ev]');
+    if (ur) { gotoUnread(ur.dataset.ur, ur.dataset.urEv); return; }
     const go = ev.target.closest('[data-goto]');
     if (go) { revealEvent(go.dataset.goto); return; }
     const el = ev.target.closest('[data-seg],[data-lib],[data-ev],[data-flag],[data-script],.unreadtxt');
@@ -1257,7 +1265,8 @@ body.show-time .stime { display: inline; }
   function showScript(s, focus) {
     const owner = G.events.find(e => e.scripts.includes(s));
     const need = focus ? `<h3>必要路徑（設 ${esc(focus.flag)} = ${focus.v}）</h3><div class="pt bond">${entryHtml(focus) || '<div class="empty">不需額外條件</div>'}</div>` : '';
-    detail.innerHTML = `<h2>劇情段落${stime(s)}</h2><div class="meta">${owner ? '屬於事件 ' + evLink(owner.id.toLowerCase()) : '日常工作、閒聊或設施互動（不屬於任務事件）'}</div>` + need + (scriptHtml(s, owner) || '<div class="empty">只有過場對話，沒有選項或分歧。</div>');
+    const ur = hasUnread(s) ? `　·　<span class="golink" data-ur="${esc(s)}">到五塊錢看沒讀到的台詞 ›</span>` : '';
+    detail.innerHTML = `<h2>劇情段落${stime(s)}</h2><div class="meta">${owner ? '屬於事件 ' + evLink(owner.id.toLowerCase()) : '日常工作、閒聊或設施互動（不屬於任務事件）'}${ur}</div>` + need + (scriptHtml(s, owner) || '<div class="empty">只有過場對話，沒有選項或分歧。</div>');
     detail.scrollTop = 0;
   }
   document.addEventListener('click', ev => { if (!ev.target.closest('#flagpop,[data-flag]')) pop.style.display = 'none'; });
@@ -2104,6 +2113,18 @@ body.show-time .stime { display: inline; }
     seg.scrollIntoView({block: 'center'});
     seg.classList.add('flash');
     setTimeout(() => seg.classList.remove('flash'), 1500);
+  }
+  function gotoUnread(s, evId) {
+    setView('unread');
+    const find = () => s ? romance.querySelector(`.ttl[data-scene="${CSS.escape(s)}"]`)?.closest('.plev')
+      : romance.querySelector(`details.plcard summary [data-goto="${CSS.escape(evId)}"]`)?.closest('details');
+    let row = find();
+    if (!row && (urState || urWho)) { urState = urWho = ''; savePref('urState', ''); savePref('urWho', ''); renderUnread(); row = find(); }
+    if (!row) return;
+    for (let p = row; p; p = p.parentElement) if (p.tagName === 'DETAILS') p.open = true;
+    row.scrollIntoView({block: s ? 'center' : 'start'});
+    row.classList.add('flash');
+    setTimeout(() => row.classList.remove('flash'), 1500);
   }
   function gotoPlace(script, place) {
     setView('places');
