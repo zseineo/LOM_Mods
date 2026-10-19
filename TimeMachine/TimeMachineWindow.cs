@@ -517,7 +517,8 @@ internal sealed class TimeMachineWindow
         {
             foreach (KeyNode node in KeyNodes.All)
             {
-                years.Add(_nodeEntries.TryGetValue(node.Id, out TimeEntry nodeEntry) ? nodeEntry.Year : node.Year);
+                _nodeEntries.TryGetValue(node.Id, out TimeEntry nodeEntry);
+                years.Add(NodePosition(node, nodeEntry).year);
             }
         }
         if (years.Count == 0)
@@ -576,7 +577,7 @@ internal sealed class TimeMachineWindow
         }
     }
 
-    // 年份列下方：從存檔所在的旬往下拉線，標出關鍵節點。還沒經過的節點以灰色標在預計觸發的旬。
+    // 年份列下方：從事件觸發的旬往下拉線，標出關鍵節點（金色＝已存，存檔本身的時間看下方說明）。還沒經過的節點以灰色標在預計觸發的旬。
     // 標籤超出可視範圍右緣時改畫在線的左邊。
     private void DrawNodeLane(int year)
     {
@@ -584,12 +585,11 @@ internal sealed class TimeMachineWindow
         foreach (KeyNode node in KeyNodes.All)
         {
             _nodeEntries.TryGetValue(node.Id, out TimeEntry entry);
-            if ((entry != null ? entry.Year : node.Year) != year)
+            (int nodeYear, int month, int stage) = NodePosition(node, entry);
+            if (nodeYear != year)
             {
                 continue;
             }
-            int month = entry != null ? entry.Month : node.Month;
-            int stage = entry != null ? (int)entry.Stage : node.Stage;
             float width = (entry != null ? _node : _nodeDim).CalcSize(new GUIContent(node.Name)).x + 12f;
             items.Add((node, entry, month, stage, width, 0, false));
         }
@@ -654,6 +654,20 @@ internal sealed class TimeMachineWindow
         }
     }
 
+    // 標籤位置：已存的節點用存檔記下的觸發時間（舊檔沒有就用存檔時間），沒存的用預計觸發時間
+    private static (int year, int month, int stage) NodePosition(KeyNode node, TimeEntry entry)
+    {
+        if (entry == null)
+        {
+            return (node.Year, node.Month, node.Stage);
+        }
+        if (KeyNodes.TryParseTrigger(entry.Source, out int y, out int m, out int s, out _) && m >= 1 && m <= 12 && s >= 1 && s <= 3)
+        {
+            return (y, m, s);
+        }
+        return (entry.Year, entry.Month, (int)entry.Stage);
+    }
+
     private float StageCenter(int month, int stage)
     {
         return _stageXReady ? _stageX[month, stage] : YearLabelWidth + (month - 1) * (CellWidth + 4f) + (stage - 0.5f) * StageWidth;
@@ -679,7 +693,7 @@ internal sealed class TimeMachineWindow
         }
         if (_selected == null)
         {
-            GUILayout.Label("每個月分上／中／下旬三格。點選有存檔的旬查看細節，再按「讀取」回到那個時間點。藍色（或 ▲）是目前所在的旬。格子下方拉線的是關鍵節點（灰色＝還沒經過）。", _small);
+            GUILayout.Label("每個月分上／中／下旬三格。點選有存檔的旬查看細節，再按「讀取」回到那個時間點。藍色（或 ▲）是目前所在的旬。格子下方拉線的是關鍵節點，標在事件觸發的旬（灰色＝還沒經過）。", _small);
             return;
         }
         TimeEntry entry = _selected;
