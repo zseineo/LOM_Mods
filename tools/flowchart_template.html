@@ -115,13 +115,6 @@ body.view-romance .chartonly { display: none; }
 .guide li::marker { color: var(--year); font-weight: 700; }
 .guide .anyhint { color: var(--muted); font-size: 12px; margin-left: 4px; }
 .autodetail { margin-top: 6px; }
-.libsec { margin: 4px 0 18px; max-width: 980px; }
-.libitem { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 8px 12px; margin: 6px 0; }
-.libitem h3 { margin: 0; font-size: 14px; display: flex; gap: 8px; align-items: baseline; }
-.libitem h3 .no { color: var(--muted); font-weight: 400; font-size: 12px; }
-.libitem .wiki { font-size: 13px; margin: 4px 0; }
-.libitem .wiki .tag { color: var(--year); font-size: 12px; margin-right: 4px; }
-.libitem.got { border-left: 4px solid var(--read); }
 .libtools { display: flex; gap: 14px; align-items: center; margin-bottom: 10px; font-size: 13px; flex-wrap: wrap; }
 /* 橫向篩選：一列選項，選中的反白 */
 .fchips { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
@@ -192,16 +185,17 @@ body.show-time .stime { display: inline; }
 <body class="spoil">
 <header>
   <h1>五塊錢</h1>
-  <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabLibend">汗青書</button><button id="tabLibdead">死法</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabMore" title="展開更多分頁">▸</button><button id="tabChart" class="extra">流程圖</button><button id="tabCheat" class="extra">作弊</button></span>
+  <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabMore" title="展開更多分頁">▸</button><button id="tabChart" class="extra">流程圖</button><button id="tabCheat" class="extra">作弊</button></span>
   <span class="stats" id="stats"></span>
   <span class="live" id="live">離線預覽</span>
   <input type="search" id="q" placeholder="搜尋事件、選項、腳本、旗標…">
   <label><input type="checkbox" id="spoil" checked>防雷（未讀內容模糊）</label>
+  <label title="只因性情、道德、處世、修養、學問、技能等屬性而換的台詞（不是選項造成的）。不勾：看過其中一種版本就算讀過；勾：每種版本都要讀過"><input type="checkbox" id="diffOn">列入差分</label>
   <label><input type="checkbox" id="showTime">顯示腳本推算時間</label>
   <label class="chartonly"><input type="checkbox" id="onlyChoice">只看有選項的事件</label>
   <label class="chartonly">分組 <select id="groupBy"><option value="place">劇情地點</option><option value="romance">結緣線</option></select></label>
   <label id="hiddenToggle" style="display:none"><input type="checkbox" id="showHidden">顯示隱藏的角色</label>
-  <span class="legend"><span><i style="background:var(--read)"></i>已讀</span><span><i style="background:var(--part)"></i>部分</span><span><i style="background:var(--unread)"></i>未讀</span><span>◆ 有選項　📍 指定地點　⚑ 有條件　📜 汗青書　🖼 結緣結局　💀 死法</span></span>
+  <span class="legend"><span><i style="background:var(--read)"></i>已讀</span><span><i style="background:var(--part)"></i>部分</span><span><i style="background:var(--unread)"></i>未讀</span><span>◆ 有選項　📍 指定地點　⚑ 有條件　🖼 結緣結局</span></span>
 </header>
 <main>
   <div id="chart"><div id="canvas"><svg id="links"></svg></div></div>
@@ -255,18 +249,39 @@ body.show-time .stime { display: inline; }
     liveReadCount = j.count;
     if (!changed) return false;
     for (const u of G.unread) {
-      const keys = u.ks.map(k => u.kp + k);
-      const r = keys.length ? keys.filter(k => LIVE_READ.has(k)).length / keys.length : 1;
-      if (Math.abs(r - u.read) < 1e-9) continue;
-      u.read = r;
-      if (G.scripts[u.s]) G.scripts[u.s].read = r;
+      const ratio = keys => { const k = [...new Set(keys)]; return k.length ? k.filter(x => LIVE_READ.has(x)).length / k.length : 1; };
+      u.readOff = ratio(treeKeys(u.kt, u.kp, false));
+      u.readAll = ratio(treeKeys(u.kt, u.kp, true));
+      const sc = G.scripts[u.s];
+      if (sc) { sc._off = u.readOff; sc.readAll = u.readAll; }
     }
     G.positions.forEach(p => p.layers.forEach(L => L.candidates.forEach(c => {
-      const u = G.unread.find(x => x.s === c.script);
-      if (u) c.read = u.read;
+      const u = G.unread.find(x => x.s === (c.rs || c.script));
+      if (u) { c._off = u.readOff; c.readAll = u.readAll; }
     })));
-    G.events.forEach(e => e._read = eventRead(e));
+    applyDiffMode();
     return true;
+  }
+  // 差分（屬性換台詞）：不列入時每組取讀得最多的版本，列入時每個版本都算
+  function treeKeys(node, kp, all) {
+    let keys = (node.k || []).map(k => kp + k);
+    for (const grp of node.g || []) {
+      if (all) grp.forEach(a => { keys = keys.concat(treeKeys(a, kp, true)); });
+      else {
+        const alts = grp.map(a => [...new Set(treeKeys(a, kp, false))]);
+        const score = ks => ks.length ? ks.filter(k => LIVE_READ.has(k)).length / ks.length : 0;
+        keys = keys.concat(alts.reduce((b, a) => score(a) > score(b) || (score(a) === score(b) && a.length < b.length) ? a : b));
+      }
+    }
+    return keys;
+  }
+  const diffOn = () => !!document.getElementById('diffOn')?.checked;
+  function applyDiffMode() {
+    const on = diffOn();
+    G.unread.forEach(u => { if (u.readOff == null) u.readOff = u.read; u.read = on ? u.readAll : u.readOff; });
+    Object.values(G.scripts).forEach(sc => { if (sc._off == null) sc._off = sc.read; sc.read = on && sc.readAll != null ? sc.readAll : sc._off; });
+    G.positions.forEach(p => p.layers.forEach(L => L.candidates.forEach(c => { if (c._off == null) c._off = c.read; c.read = on && c.readAll != null ? c.readAll : c._off; })));
+    G.events.forEach(e => e._read = eventRead(e));
   }
   async function poll() {
     if (!ONLINE) return;
@@ -299,7 +314,6 @@ body.show-time .stime { display: inline; }
     }
     if (currentView === 'romance') renderRomance(true);
     else if (currentView === 'targets') renderTargets(true);
-    else if (currentView.startsWith('lib')) renderLibrary(true);
     else if (currentView === 'places') renderPlaces(true);
     else drawNowLine();
   }
@@ -379,9 +393,10 @@ body.show-time .stime { display: inline; }
 
   const LIB_ICON = {end: '📜', cg: '🖼', dead: '💀'};
   const LIB_NAME = {end: '汗青書', cg: '結緣結局', dead: '死法'};
+  // 汗青書、死法的達成方式看 smilin.net wiki，這裡只留結緣結局
+  const cgLibs = e => (e.libs || []).filter(id => G.library[id]?.kind === 'cg');
   function libIcons(e) {
-    const kinds = new Set((e.libs || []).map(id => G.library[id]?.kind));
-    return ['end', 'cg', 'dead'].filter(k => kinds.has(k)).map(k => `<span class="ic">${LIB_ICON[k]}</span>`).join('');
+    return cgLibs(e).length ? `<span class="ic">${LIB_ICON.cg}</span>` : '';
   }
   function libGot(id) {
     if (LIVE && LIVE.lib) return (LIVE.lib[id] || 0) > 0;
@@ -876,7 +891,7 @@ body.show-time .stime { display: inline; }
     for (const it of items) {
       if (it.t === 'battle') {
         const after = it.after ? G.scripts[it.after] : null;
-        out.push(`<b>⚔ ${it.mode === 'Battle' ? '戰役' : '戰鬥'}</b>${enemyHtml(it.enemy, after ? after.read > 0 : false)}${it.dead ? `（打輸即死：${libLink(it.dead)}）` : ''}`
+        out.push(`<b>⚔ ${it.mode === 'Battle' ? '戰役' : '戰鬥'}</b>${enemyHtml(it.enemy, after ? after.read > 0 : false)}${it.dead ? '（打輸即死）' : ''}`
           // 決鬥中的事件（第幾回合有人出場…）：沒打過的防雷
           + (it.events ? `<details class="when ${after && after.read > 0 ? '' : 'unreadtxt'}"><summary>戰鬥中會發生的事（${it.events.length}）</summary><ul>${it.events.map(x => `<li>${esc(plainCondText(x, ctx))}</li>`).join('')}</ul></details>` : ''));
       }
@@ -886,10 +901,10 @@ body.show-time .stime { display: inline; }
       }
       else if (it.t === 'scene' && it.s === 'Free') out.push('→ 回到養成');
       else if (it.t === 'scene' && it.s === 'Title') out.push('→ <b>回標題（遊戲結束）</b>');
-      else if (it.t === 'scene' && it.s === 'GameOver') out.push(`→ <b>死亡</b> ${libLink(it.key)}`);
+      else if (it.t === 'scene' && it.s === 'GameOver') out.push('→ <b>死亡</b>');
       else if (it.t === 'cg') out.push(libLink(it.id));
       else if (it.t === 'mission') { const id = `${it.m}/${it.k}`.toLowerCase(); if (byId.has(id) && !byId.get(id).quiet) out.push(`→ 之後觸發 ${evLink(id)}`); }
-      else if (it.t === 'ending') out.push(`<b>★ 結局</b> ${it.id ? libLink(it.id) : ''}`);
+      else if (it.t === 'ending') out.push('<b>★ 結局</b>');
       else if (it.t === 'time') out.push(`時間跳到 ${tstr({y: it.y, m: it.m, s: it.st})}`);
       else if (it.t === 'flag' && G.flagNames[it.f]) named.push(it.op === 'AddFlag' ? `${G.flagNames[it.f]} ${it.v > 0 ? '+' : ''}${it.v}` : `${G.flagNames[it.f]} = ${it.v}`);
       else if (it.t === 'flag' && !TEMP_FLAG.test(it.f)) {
@@ -982,7 +997,7 @@ body.show-time .stime { display: inline; }
     const from = e._from.filter(id => !byId.get(id).quiet), next = e._triggers.filter(id => !byId.get(id).quiet);
     if (from.length && !e.part) html += '<h3>由這些事件啟動</h3>' + from.map(evLink).join('');
     if (next.length) html += `<h3>${next.every(id => byId.get(id).part) ? '接下去的劇情' : '之後會啟動'}</h3>` + next.map(evLink).join('');
-    if ((e.libs || []).length) html += '<h3>這裡可取得</h3>' + e.libs.map(libLink).join('');
+    if (cgLibs(e).length) html += '<h3>這裡可取得</h3>' + cgLibs(e).map(libLink).join('');
     if (focus) {
       // 從旗標跳過來：只展開設定旗標的那段腳本與走到那裡的必要條件，其餘摺疊
       html += `<h3>必要路徑（設 ${esc(focus.flag)} = ${focus.v}）</h3><div class="pt bond">${entryHtml(focus) || '<div class="empty">事件開始後直接進入，不需額外條件</div>'}</div>`;
@@ -1002,11 +1017,7 @@ body.show-time .stime { display: inline; }
     if (!el) return;
     if (el.dataset.seg) { const t = document.getElementById('seg-' + el.dataset.seg); t?.scrollIntoView({block: 'center', behavior: 'smooth'}); t?.classList.add('flash'); setTimeout(() => t?.classList.remove('flash'), 1200); return; }
     // 結緣結局沒有圖鑑分頁，跳到結緣條件
-    if (el.dataset.lib) {
-      const kind = G.library[el.dataset.lib]?.kind || 'end';
-      setView(kind === 'cg' ? 'romance' : 'lib' + kind);
-      document.getElementById('lib-' + el.dataset.lib)?.scrollIntoView({block: 'center'});
-    }
+    if (el.dataset.lib) setView('romance');
     else if (el.dataset.script) showScript(el.dataset.script);
     else if (el.dataset.ev) { const n = nodes.get(el.dataset.ev); select(el.dataset.ev, true); n?.scrollIntoView({block: 'center', inline: 'center', behavior: 'smooth'}); }
     else if (el.dataset.flag) showFlag(el.dataset.flag, ev);
@@ -1068,12 +1079,14 @@ body.show-time .stime { display: inline; }
   document.getElementById('showTime').addEventListener('change', ev => document.body.classList.toggle('show-time', ev.target.checked));
   document.getElementById('onlyChoice').addEventListener('change', layout);
   document.getElementById('groupBy').addEventListener('change', layout);
-  for (const id of ['spoil', 'showTime', 'onlyChoice', 'groupBy', 'showHidden']) {
+  for (const id of ['spoil', 'diffOn', 'showTime', 'onlyChoice', 'groupBy', 'showHidden']) {
     const el = document.getElementById(id), box = el.type === 'checkbox';
     if (id in PREFS && (box || [...el.options].some(o => o.value === PREFS[id]))) el[box ? 'checked' : 'value'] = PREFS[id];
     el.addEventListener('change', () => savePref(id, box ? el.checked : el.value));
   }
   document.body.classList.toggle('spoil', document.getElementById('spoil').checked);
+  applyDiffMode();
+  document.getElementById('diffOn').addEventListener('change', () => { applyDiffMode(); currentView === 'chart' ? layout() : setView(currentView); });
   document.body.classList.toggle('show-time', document.getElementById('showTime').checked);
   canvas.addEventListener('click', ev => {
     const mc = ev.target.closest('.monthcell');
@@ -1484,8 +1497,8 @@ body.show-time .stime { display: inline; }
     loadIcons();
     const allWho = new Set();
     G.positions.forEach(p => p.layers.forEach(L => L.candidates.forEach(c => {
-      presence(c.cond).inn.filter(shownName).forEach(n => allWho.add(n));
-      [...(c.chars || []).map(fullName), ...(p.who || [])].filter(shownName).forEach(n => allWho.add(n));
+      // 篩選只看真的有出場的（說話、立繪、傳說裡提到）；條件裡要求「在唐門」的不算
+      (c.chars || []).map(fullName).filter(shownName).forEach(n => allWho.add(n));
     })));
     let html = `<div class="rintro">在各養成地點行動時（唐門、留學、錦香宮…，旅途中的隨機事件也列在最後），遊戲會從「候選事件」裡依權重抽一個（實際機率 ＝ 權重 ÷ 當下所有符合條件事件的權重總和）。
       後山、鍛冶場、大門、外堡會先抽一次「有沒有人插進來」，再抽行動結果，兩層都列在下面。
@@ -1512,12 +1525,13 @@ body.show-time .stime { display: inline; }
             const pr = presence(c.cond);
             const needInn = presence(p.need || '').inn;
             needInn.forEach(n => { if (!pr.inn.includes(n)) pr.inn.unshift(n); });
-            const who = [...new Set([...pr.inn, ...(c.chars || []).map(fullName), ...(p.who || [])])].filter(shownName);
+            const present = (c.chars || []).map(fullName);
+            const who = [...new Set([...pr.inn, ...present])].filter(shownName);
             const special = /^[59]/.test(c.code);
             const related = who.some(n => !RESIDENTS.has(n));
             // 預設：角色事件與特殊事件；勾選後連平常／成功／失敗等一般結果都列
             if (!showAll && !related && !special) continue;
-            if (pick && !who.includes(pick)) continue;
+            if (pick && !present.includes(pick)) continue;
             rows += placeEventHtml(c, p.layers.length > 1 && li === 0 ? '（先抽：有人插進來）' : '', live && live.get(c.id), p.need, li > 0 ? passThrough(p.layers[0]) : '');
           }
         });
@@ -1544,7 +1558,7 @@ body.show-time .stime { display: inline; }
   }
 
   // ---------- 五塊錢：還沒讀完的場景 ----------
-  const REASON_KIND = {choice: '選項', switch: '條件', cond: '條件', dice: '擲骰', battle: '戰鬥', position: '隨機'};
+  const REASON_KIND = {choice: '選項', switch: '條件', cond: '條件', dice: '擲骰', battle: '戰鬥', position: '隨機', variant: '差分'};
   function reasonHtml(r, ctx, s) {
     const path = (r.path || []).map(l => pathHtml([l], ctx, s)).filter(Boolean);
     const where = path.length ? `<span class="need">（在 ${path.join(' → ')} 之後）</span>` : '';
@@ -1559,7 +1573,7 @@ body.show-time .stime { display: inline; }
       if (label.startsWith('以上皆非（不是：')) label = negatedCond(label.slice(8, -1));
       what = (label === '以上皆非' || label === '其他' ? '其他情況' : '若 ' + plainCondHtml(label, ctx, s)) + ' 時的台詞';
     }
-    return `<li><b>${REASON_KIND[r.kind] || '分歧'}</b>　${what}${where}<span class="need">　${r.lines} 句</span></li>`;
+    return `<li><b>${REASON_KIND[r.kind] || '分歧'}</b>${r.variant && r.kind !== 'variant' ? '<span class="need">（差分裡）</span>' : ''}　${what}${where}<span class="need">　${r.lines} 句</span></li>`;
   }
   // 角色頭像：Mod 開的網頁才有（遊戲執行時從遊戲資料轉出來，不存檔案）；本機開檔或還沒轉好就只顯示名字
   let ICONS = null, iconTries = 0;
@@ -1665,12 +1679,14 @@ body.show-time .stime { display: inline; }
     // 「其他」：沒有（列出來的）女主角
     const NONE = '__none';
     const hits = hs => who === NONE ? !hs.some(shownName) : hs.includes(who);
-    const relevant = u => !who || (u.read === 0 ? hits(u.heroines) : (u.reasons || []).some(r => hits(r.heroines || [])));
+    // 差分不列入時，差分的原因也不列
+    const reasonsOf = u => (u.reasons || []).filter(r => diffOn() || !r.variant);
+    const relevant = u => !who || (u.read === 0 ? hits(u.heroines) : reasonsOf(u).some(r => hits(r.heroines || [])));
     const fresh = u => u.read === 0 && !isBranch(u);
     const list = G.unread.filter(u => u.read < 1 && (!st || (st === 'none' ? fresh(u) : !fresh(u))) && relevant(u));
-    const unreadLines = list.reduce((a, u) => a + Math.round(u.lines * (1 - u.read)), 0);
+    const unreadLines = list.reduce((a, u) => a + Math.round((diffOn() ? u.linesAll || u.lines : u.lines) * (1 - u.read)), 0);
     let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落（以重建頁面時的「已讀」紀錄計算）。
-      只因性情、道德、處世、修養或技能／天賦而換台詞、走向相同的地方算「差分」，看過其中一種就算讀過；
+      只因性情、道德、處世、修養、學問或技能／天賦而換台詞（不是選項造成、走向相同）的地方算「差分」，預設看過其中一種就算讀過，上方勾「列入差分」才每種都算；
       其他沒讀到的地方會列出原因（沒選過的選項、沒達成的條件、擲骰、戰鬥勝負）。玩過的事件裡整段沒走到的標「◇ 分支」。選了女主角時，只列「沒讀到的部分」有她出場或和她有關的段落；「其他」是沒有女主角的。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
     const fchip = (attr, v, cur, label) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${label}</button>`;
     html += currentEventHtml();
@@ -1713,8 +1729,8 @@ body.show-time .stime { display: inline; }
           + `${u.heroines.some(shownName) ? `<span class="who">${esc(u.heroines.filter(shownName).join('、'))}</span>` : ''}${u.place ? `<span class="need">　${esc(u.place)}</span>` : ''}`;
         if (u.read === 0) {
           html += routesHtml(u, ctx);
-        } else if ((u.reasons || []).length) {
-          const reasons = who ? u.reasons.filter(r => hits(r.heroines || [])) : u.reasons;
+        } else if (reasonsOf(u).length) {
+          const reasons = who ? reasonsOf(u).filter(r => hits(r.heroines || [])) : reasonsOf(u);
           html += `<ul class="need" style="margin:2px 0 0 0;padding-left:18px">${reasons.map(r => reasonHtml(r, ctx, u.s)).join('')}</ul>`;
         }
         html += '</div>';
@@ -1730,8 +1746,6 @@ body.show-time .stime { display: inline; }
     }
   }
 
-  // ---------- 汗青書・結局・死法 ----------
-  const LIBWIKI = GUIDES.libraryWiki || {};
   // 分支標籤 → 白話；只有旗標的條件也轉成「在哪裡選了什麼」
   // 「前提不是：A；B」裡，和主條件矛盾的整項刪掉（本來就不可能成立），被主條件涵蓋的那幾個小條件省略
   const ATOM = /^(.+?) (=|≠|<|≤|>|≥) (-?\d+)$/;
@@ -1787,53 +1801,6 @@ body.show-time .stime { display: inline; }
       return plainCondHtml(label.replace(/　〔(前提不是|需)：.*〕$/, ''), ctx, near);
     }).filter(Boolean).join(' → ');
   }
-  function libPointHtml(x, kind) {
-    const ev = x.ev ? byId.get(x.ev.toLowerCase()) : null;
-    const t = ev && ev.time && valid(ev.time.from) ? ev.time.from : G.scriptTime[x.s];
-    const steps = (x.entry || []).slice().reverse().map(st => altsHtml(st.options.map(o => pathHtml(o.path, ev, o.from))));
-    if (kind !== 'cg') steps.push(pathHtml(x.path, ev, x.s));
-    const route = steps.filter(Boolean).join(' → ');
-    const how = x.how === 'battle' ? `打輸「${esc(x.enemy || '')}」的戰鬥` : x.how === 'gameover' ? '死亡' : '';
-    const where = ev ? `<span class="chip link" data-goto="${esc(ev.id.toLowerCase())}">${esc(evShort(ev))}…</span>` : '<span class="chip">日常／外出的隨機事件</span>';
-    const note = kind === 'cg' ? '最終章依結緣狀態播放（條件看「結緣條件」分頁；同時結緣多人時依小師妹 → 龍湘 → 夏侯蘭 → 葉雲裳 → 虞小梅 → 郁竹的順序取第一個）'
-      : (route ? '經過：' + route : '事件中直接觸發') + (how ? `${route ? '；' : ''}${how}` : '');
-    const place = x.place || (ev && ev.place);
-    return `<div class="pt"><div>${t ? esc(tstr(t)) + (ev && ev.time && ev.time.type === 'range' ? ' 起' : '') : '時間不定'}${place ? '・' + esc(place) : ''}　${where}</div><div class="when">${note}</div></div>`;
-  }
-  function renderLibrary(keepScroll) {
-    const top = romance.scrollTop;
-    const open = keepScroll ? [...romance.querySelectorAll('details')].map(d => d.open) : [];
-    const onlyMissing = !!PREFS.libMissing;
-    const libKind = {libend: 'end', libdead: 'dead'}[currentView] || 'end';
-    let html = `<div class="rintro">遊戲講經堂的圖鑑。✓ 是已取得（${LIVE && LIVE.lib ? '遊戲目前的紀錄' : '重建頁面當時的紀錄'}）。
-      ${'達成條件取自 smilin.net 活俠傳 wiki（汗青書、生死簿）；wiki 沒有的新內容只列遊戲資料推出的取得位置。沒取得的連條件都防雷，點一下顯示。'}點事件會跳到流程圖。</div>`;
-    html += `<div class="libtools"><label><input type="checkbox" id="libMissing"${onlyMissing ? ' checked' : ''}>只看未取得</label></div>`;
-    for (const [kind, title] of [['end', '汗青書'], ['dead', '死法（生死簿）']].filter(([k]) => k === libKind)) {
-      const ids = Object.keys(G.library).filter(id => G.library[id].kind === kind).sort();
-      const got = ids.filter(libGot).length;
-      html += `<h2 style="margin:18px 0 6px">${LIB_ICON[kind]} ${title}　<span class="tag" style="font-size:13px;color:var(--muted)">${got} / ${ids.length}</span></h2><div class="libsec">`;
-      for (const id of ids) {
-        const item = G.library[id], has = libGot(id), wiki = LIBWIKI[id];
-        if (onlyMissing && has) continue;
-        const hide = has ? '' : ' unreadtxt';
-        html += `<div class="libitem${has ? ' got' : ''}" id="lib-${esc(id)}"><h3>${has ? '<span class="ck ok">✓</span>' : '<span class="ck no">○</span>'}<span class="${hide.trim()}">${esc(item.title)}</span><span class="no">${esc(wiki ? wiki.wikiNo : id)}</span></h3>`;
-        // 沒取得的：連達成條件與取得位置都防雷（點一下顯示）
-        const spoil = !has ? ' unreadtxt' : '';
-        if (wiki && (wiki.how || (wiki.tags || []).length)) html += `<div class="wiki${spoil}">${(wiki.tags || []).map(t => `<span class="tag">【${esc(t)}】</span>`).join('')}${esc(wiki.how)}${wiki.note ? `<div class="when">備註：${esc(wiki.note)}</div>` : ''}</div>`;
-        if (item.points.length) html += `<details${wiki ? '' : ' open'}><summary class="bkind" style="cursor:pointer">⋯ 取得位置（遊戲資料，${item.points.length} 處）</summary><div class="${spoil.trim()}">${item.points.map(x => libPointHtml(x, kind)).join('')}</div></details>`;
-        else html += '<div class="empty">劇本中找不到取得位置（可能尚未實裝）。</div>';
-        if (item.desc) html += `<details><summary class="bkind" style="cursor:pointer">⋯ 圖鑑內文</summary><div class="legendtxt${hide}">${esc(item.desc)}</div></details>`;
-        html += '</div>';
-      }
-      html += '</div>';
-    }
-    romance.innerHTML = html;
-    document.getElementById('libMissing').onchange = ev => { savePref('libMissing', ev.target.checked); renderLibrary(); };
-    if (keepScroll) {
-      romance.querySelectorAll('details').forEach((d, i) => { if (open[i]) d.open = true; });
-      romance.scrollTop = top;
-    }
-  }
   romance.addEventListener('click', ev => {
     const go = ev.target.closest('[data-goto]');
     if (go) {
@@ -1849,7 +1816,7 @@ body.show-time .stime { display: inline; }
     else if (el.dataset.flag) showFlag(el.dataset.flag, ev);
     else el.classList.add('reveal');
   });
-  const TAB_IDS = {unread: 'tabUnread', places: 'tabPlaces', libend: 'tabLibend', libdead: 'tabLibdead', romance: 'tabRomance', targets: 'tabTargets', chart: 'tabChart', cheat: 'tabCheat'};
+  const TAB_IDS = {unread: 'tabUnread', places: 'tabPlaces', romance: 'tabRomance', targets: 'tabTargets', chart: 'tabChart', cheat: 'tabCheat'};
   // 流程圖、作弊平常摺疊在「▸」裡，點開才顯示；正在看的話一直顯示
   function setMoreTabs(open) {
     document.body.classList.toggle('moretabs', open);
@@ -1864,7 +1831,6 @@ body.show-time .stime { display: inline; }
     currentView = v;
     if (v === 'romance') renderRomance();
     if (v === 'targets') renderTargets();
-    if (v.startsWith('lib')) renderLibrary();
     if (v === 'places') renderPlaces();
     if (v === 'unread') renderUnread();
     if (v === 'cheat') renderCheat();
@@ -1964,9 +1930,7 @@ body.show-time .stime { display: inline; }
   if (ONLINE) setInterval(poll, 3000);
   if (/view=romance/.test(location.hash)) setView('romance');
   if (/view=targets/.test(location.hash)) setView('targets');
-  if (/view=(library|libend)/.test(location.hash)) setView('libend');
   if (/view=libcg/.test(location.hash)) setView('romance');
-  if (/view=libdead/.test(location.hash)) setView('libdead');
   if (/view=chart/.test(location.hash)) setView('chart');
   if (/view=cheat/.test(location.hash)) setView('cheat');
   // 預設打開五塊錢

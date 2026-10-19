@@ -493,8 +493,6 @@ script_first_say = {}
 script_cond_names = {}
 script_chars = {}
 CHAR_GET = re.compile(r'characters\.Get\("([^"]+)"\)')
-# 只有旁白、插圖的結果（例如跑步）沒有立繪：有增減誰的好感，也算那個人有出場
-CHAR_FAVOR = re.compile(r'statmodifymanager\.Character\("([^"]+)", -?\d+')
 VIEW_NAME = re.compile(r'LoadView\("([^"]*)"\)')
 COND_NAME = re.compile(r'checkpointmanager\.(?:Switch|Condition)\("([^"]+)"\)')
 for name in os.listdir(lua_dir):
@@ -506,7 +504,7 @@ for name in os.listdir(lua_dir):
         say = RE["text"].search(text)
         script_first_say[key] = say.group(1) if say else None
         script_cond_names[key] = set(COND_NAME.findall(text))
-        script_chars[key] = {c for c in CHAR_GET.findall(text) + CHAR_FAVOR.findall(text) if c != "player"}
+        script_chars[key] = {c for c in CHAR_GET.findall(text) if c != "player"}
 
 read_keys = set()
 if universe_path != "-" and os.path.exists(universe_path):
@@ -1850,6 +1848,8 @@ for o in by_name["LibraryItemData"].values():
 for name, gi, lover, cg in HEROINES:
     if cg in library:
         library[cg]["title"] = f"{name}結緣結局"
+# 汗青書、死法的達成方式改看 smilin.net wiki：網頁只留結緣結局（腳本仍照樣收進來）
+library = {lid: item for lid, item in library.items() if item["kind"] == "cg"}
 for e in events:
     e["libs"] = sorted({lid for lid, item in library.items() for x in item["points"] if x["ev"] == e["id"]})
 
@@ -1922,6 +1922,34 @@ POSITION_GROUPS = [
     ("旅途（移動途中）", "小竹回家", "回程", ["Travel_S2901_05"]),
 ]
 char_names = {o["Value"]: o["Key"] for o in by_name.get("StoryMappingItem", {}).values() if not o["m_Name"].startswith("P_")}
+# 出場的人：說話者、立繪（characters.Get），再加上傳說紀錄裡提到的名字（只有旁白、插圖的結果，例如跑步）
+LEGEND_NAMES = sorted({n for n in char_names.values() if len(n) >= 2 and not re.match(r"^(弟子|女弟子|武師|店小二|路人|村民|官兵|捕快|乞丐|特殊|鄉民|小販)\d*$", n)
+                       and not re.search(r"幼年|^小小梅手$|\d", n)}, key=len, reverse=True)
+
+
+def block_legend(block, out):
+    for it in block:
+        if it["t"] == "story":
+            t = loc.get("LegendInfo/" + it["k"])
+            if t:
+                out.append(t)
+        elif it["t"] == "if":
+            for br in it["branches"]:
+                block_legend(br["block"], out)
+    return out
+
+
+def legend_names(text):
+    found = set()
+    for n in LEGEND_NAMES:
+        if n in text:
+            found.add(n)
+            text = text.replace(n, "")
+    return found
+
+
+for key, (block, _) in scripts.items():
+    script_chars[key] = script_chars.get(key, set()) | legend_names("".join(block_legend(block, [])))
 # 兒時立繪（回憶場景裡的小梅、小竹、小蘭、雲裳）不算本人出場
 CHILD_FORM = re.compile(r"幼年|^小小梅手$")
 GENERIC_CHAR = re.compile(r"^(弟子|女弟子|武師|店小二|路人|村民|官兵|捕快|乞丐|特殊|鄉民|小販)\d*$")
@@ -1984,7 +2012,7 @@ for area, place, action, groups, *option in POSITION_GROUPS:
                 "cond": cond, "once": once,
                 "rate": o.get("_defaultRate", 0),
                 "bonus": [{"cond": cond_item_text(r["_condition"]), "rate": r["_rate"]} for r in o.get("_eventRateItem", [])],
-                "chars": sorted(set(result_chars(script)) | set(result_chars(content))), "read": cinfo["read"] if cinfo else None,
+                "chars": sorted(set(result_chars(script)) | set(result_chars(content))), "read": cinfo["read"] if cinfo else None, "rs": content,
                 "title": first_line(content) or (re.sub(r"<[^>]+>|\{[^}]*\}", "", loc.get("Story/" + script_first_say[content], "")).replace("\n", "")
                                                  if script_first_say.get(content) else ""),
             })
@@ -2033,14 +2061,60 @@ def is_variant(kind, labels, block):
 def branch_texts(it, vars_):
     kind, name, labels, _ = resolve_if(it, vars_)
     out = []
-    # 選項文字不算（遊戲不記選項的已讀）
+    # 選項文字不算（遊戲不記選項的已讀）；遊戲裡不會出現的選項（條件不存在）也不算
     for br, (label, key) in zip(it["branches"], labels):
-        out.append((label, eff_texts(br["block"], vars_), br))
+        if not never_shown(label):
+            out.append((label, eff_texts(br["block"], vars_), br))
     return kind, labels, out
 
 
 def best_branch(branches):
     return max(branches, key=lambda b: (read_ratio(b[1]) or 0, -len(b[1])))
+
+
+def text_tree(block, vars_):
+    """台詞樹：k 是一定要讀的台詞（劇情分支全部算），g 是差分組，每組是幾個版本（各自又是一棵樹）"""
+    node = {"k": [], "g": []}
+    for it in block:
+        if it["t"] == "text":
+            node["k"].append(it["k"])
+        elif it["t"] == "if":
+            kind, labels, branches = branch_texts(it, vars_)
+            subs = [text_tree(br["block"], vars_) for _, _, br in branches]
+            if is_variant(kind, labels, it):
+                subs = [x for x in subs if x["k"] or x["g"]]
+                if subs:
+                    node["g"].append(subs)
+            else:
+                for x in subs:
+                    node["k"] += x["k"]
+                    node["g"] += x["g"]
+    return node
+
+
+def tree_keys(node, all_variants, read):
+    """不列入差分：每組取讀得最多的版本；列入差分：每個版本都算"""
+    keys = list(node["k"])
+    for group in node["g"]:
+        if all_variants:
+            for alt in group:
+                keys += tree_keys(alt, True, read)
+        else:
+            alts = [tree_keys(alt, False, read) for alt in group]
+            keys += max(alts, key=lambda ks: (sum(k in read for k in set(ks)) / len(set(ks)) if ks else 0, -len(set(ks))))
+    return keys
+
+
+def tree_strip(node, kp):
+    return {"k": [k[len(kp):] for k in dict.fromkeys(node["k"])], **({"g": [[tree_strip(a, kp) for a in grp] for grp in node["g"]]} if node["g"] else {})}
+
+
+def tree_all(node):
+    out = list(node["k"])
+    for grp in node["g"]:
+        for a in grp:
+            out += tree_all(a)
+    return out
 
 
 def eff_texts(block, vars_):
@@ -2069,16 +2143,14 @@ def heroine_of(name):
     return [h for h in HEROINE_NAMES if h in name]
 
 
-# 地點本身就寫明是誰的（「小梅找你跑步」）：底下每個事件都算她
-for p in positions:
-    p["who"] = heroine_of(p["place"] + p["action"])
-
-
 def block_heroines(block, out):
     for it in block:
         if it["t"] == "char":
             n = char_names.get(it["c"], it["c"])
             if not CHILD_FORM.search(n):
+                out.update(heroine_of(n))
+        elif it["t"] == "story" and loc.get("LegendInfo/" + it["k"]):
+            for n in legend_names(loc["LegendInfo/" + it["k"]]):
                 out.update(heroine_of(n))
         elif it["t"] == "if":
             for br in it["branches"]:
@@ -2086,23 +2158,24 @@ def block_heroines(block, out):
     return out
 
 
-def label_heroines(label):
-    names = set(heroine_of(re.sub(r"旗標 [A-Za-z0-9_]+", "", label)))
-    for n in re.findall(r"愛人 = (\d+)", label):
-        if LOVER_NAMES.get(n) in HEROINE_NAMES:
-            names.add(LOVER_NAMES[n])
-    for f in re.findall(r"旗標 ([A-Za-z0-9_]+)", label):
-        names.update(heroine_of(FLAG_NOTE.get(f, "")))
-    return names
-
-
-def unread_reasons(block, vars_, path, out):
+def unread_reasons(block, vars_, path, out, variant=False):
     for it in block:
         if it["t"] != "if":
             continue
         kind, labels, branches = branch_texts(it, vars_)
         if is_variant(kind, labels, it):
-            unread_reasons(best_branch(branches)[2]["block"], vars_, path, out)
+            # 差分：讀得最多的版本照常往下找；其他版本標成差分（網頁勾「列入差分」才顯示）
+            best = best_branch(branches)
+            unread_reasons(best[2]["block"], vars_, path, out, variant)
+            for label, t, br in branches:
+                if br is best[2]:
+                    continue
+                r = read_ratio(tree_all(text_tree(br["block"], vars_)))
+                if r == 0:
+                    who = block_heroines(br["block"], set())
+                    out.append({"kind": "variant", "label": label, "path": path[-3:], "lines": len(set(t)), "heroines": sorted(who), "variant": True})
+                elif r is not None and r < 1:
+                    unread_reasons(br["block"], vars_, path + [label], out, True)
             continue
         for label, t, br in branches:
             if re.match(r"^(exit\+|~x)", label):
@@ -2115,10 +2188,10 @@ def unread_reasons(block, vars_, path, out):
                 m = re.match(r"^([a-z0-9]+)\+(work|free)", label)
                 if m:
                     label = loc.get("Position/title/" + m.group(1), label)
-                who = block_heroines(br["block"], set()) | label_heroines(label)
-                out.append({"kind": kind, "label": label, "path": path[-3:], "lines": len(set(t)), "heroines": sorted(who)})
+                who = block_heroines(br["block"], set())
+                out.append({"kind": kind, "label": label, "path": path[-3:], "lines": len(set(t)), "heroines": sorted(who), **({"variant": True} if variant else {})})
             elif r < 1:
-                unread_reasons(br["block"], vars_, path + [label], out)
+                unread_reasons(br["block"], vars_, path + [label], out, variant)
 
 
 def heroines_in(script):
@@ -2140,16 +2213,23 @@ unread = []
 if read_keys:
     for name, (block, vars_) in scripts.items():
         CURRENT[0] = name
-        texts = eff_texts(block, vars_)
+        tree = text_tree(block, vars_)
+        texts = tree_keys(tree, False, read_keys)
         r = read_ratio(texts)
-        if r is None or r >= 1:
+        r_all = read_ratio(tree_all(tree))
+        if name in script_info and r is not None:
+            # 流程圖的已讀度也用「差分看一種就算」；列入差分時網頁改用 readAll
+            script_info[name]["read"] = r
+            if r_all != r:
+                script_info[name]["readAll"] = r_all
+        if r is None or r_all >= 1:
             continue
         ev, _ = find_owner(name)
         # 台詞鍵（去掉共同前綴）：網頁連上遊戲時用遊戲目前的已讀紀錄即時重算
-        uniq = list(dict.fromkeys(texts))
+        uniq = list(dict.fromkeys(tree_all(tree)))
         kp = os.path.commonprefix(uniq)
-        item = {"s": name, "ev": ev, "read": r, "lines": len(set(texts)), "heroines": heroines_in(name),
-                "kp": kp, "ks": [k[len(kp):] for k in uniq],
+        item = {"s": name, "ev": ev, "read": r, "readAll": r_all, "lines": len(set(texts)), "linesAll": len(uniq), "heroines": heroines_in(name),
+                "kp": kp, "kt": tree_strip(tree, kp),
                 "place": script_place(name, ev), "title": first_line(name) or (
                     re.sub(r"<[^>]+>|\{[^}]*\}", "", loc.get("Story/" + script_first_say[name], "")).replace("\n", "") if script_first_say.get(name) else "")}
         if r == 0:
@@ -2166,6 +2246,15 @@ if read_keys:
             unread_reasons(block, vars_, [], reasons)
             item["reasons"] = reasons[:12]
         unread.append(item)
+
+for pos in positions:
+    for ly in pos["layers"]:
+        for c in ly["candidates"]:
+            info = script_info.get(c["rs"])
+            if info:
+                c["read"] = info["read"]
+                if "readAll" in info:
+                    c["readAll"] = info["readAll"]
 
 for e in events:
     act = event_activate(e)
