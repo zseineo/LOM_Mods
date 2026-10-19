@@ -649,7 +649,7 @@ def combat_cond(ref):
         return ref_tail(ref)
     if t == "CombatEventConditionRound":
         r, op = o["_round"], o["_op"]
-        return (f"撐到第 {r} 回合" if r > 1 else "第 1 回合") if op == 0 else f"第 {r} 回合起" if op == 5 else f"回合數 {CMP.get(op, op)} {r}"
+        return (f"撐到第 {r} 回合" if r > 1 else "第 1 回合") if op == 0 else f"第 {r} 回合起" if op == 5 else             f"前 {r} 回合內" if op == 3 else f"前 {r - 1} 回合內" if op == 2 else f"回合數 {CMP.get(op, op)} {r}"
     if t == "CombatEventConditionEffectState":
         return f"{SIDE.get(o.get('_character'), '')}身上有「{ref_tail(o.get('_effectState'))}」"
     if t == "CombatEventConditionRoundFlag":
@@ -661,10 +661,10 @@ def combat_cond(ref):
 
 def action_text(text):
     """「動作_嘴攻_發動」→「使出嘴攻」（沒抽出來的出招條件只剩名稱）"""
-    m = re.search(r"動作[_·](.+?)[_·](發動|命中|未命中)$", text)
+    m = re.search(r"動作[_·](.+?)[_·](發動|命中|未命中|使用)$", text)
     if not m:
         return text
-    return {"發動": f"使出{m.group(1)}", "命中": f"{m.group(1)}命中", "未命中": f"{m.group(1)}沒命中"}[m.group(2)]
+    return {"發動": f"使出{m.group(1)}", "使用": f"使用{m.group(1)}的動作", "命中": f"{m.group(1)}命中", "未命中": f"{m.group(1)}沒命中"}[m.group(2)]
 
 
 def combat_actions(refs):
@@ -1253,9 +1253,22 @@ def plain_battle_events(script, items):
     for it in items:
         if it["t"] == "battle" and it.get("events"):
             out = []
+            # 戰鬥中自己設的旗標（「前 7 回合用了備揍、嘴攻以外的動作」記成 TC0003 = 1）：寫成戰鬥中有沒有發生那件事
+            in_battle = {}
+            for e2 in level_info.get(level_name(it["mode"], it["key"]), {}).get("events", []):
+                for f2, v2 in e2["flags"]:
+                    in_battle[f2] = (re.sub(r"^旗標 \S+ \S+ -?\d+ 且 | 且 旗標 \S+ \S+ -?\d+", "", e2["when"]), v2)
             for ev in it["events"]:
                 when, _, what = ev.partition("：")
-                atoms = when.split(" 且 ")
+                atoms = []
+                for a in when.split(" 且 "):
+                    m = TEMP_ATOM.fullmatch(a)
+                    if m and m.group(1) in in_battle:
+                        w2, v2 = in_battle[m.group(1)]
+                        hit, dflt = satisfies(v2, m.group(2), int(m.group(3))), satisfies(0, m.group(2), int(m.group(3)))
+                        w2 = w2.replace(" 且 ", "")
+                        a = f"戰鬥中有「{w2}」" if hit and not dflt else f"戰鬥中沒有「{w2}」" if dflt and not hit else a
+                    atoms.append(a)
                 base = [a for a in atoms if not TEMP_ATOM.fullmatch(a)]
                 labels = [temp_label(script, *m.groups()[:2], int(m.group(3))) for m in map(TEMP_ATOM.fullmatch, atoms) if m]
                 head = " 且 ".join(base) or "戰鬥中"
