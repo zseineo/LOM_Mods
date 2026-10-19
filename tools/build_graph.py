@@ -2649,6 +2649,15 @@ for e in events:
     e["wikiPath"] = w["path"]
     e["desc"] = w["name"] if wiki_count[w["name"]] == 1 or not old or old == w["name"] else f"{w['name']}（{old[:10]}）"
 
+for e in events:
+    cast = set()
+    for sc in e["scripts"]:
+        cast |= set(heroines_in(sc))
+        if sc in scripts:
+            cast |= {h for k in block_text_keys(scripts[sc][0], []) for h in key_names(k)}
+    if cast:
+        e["cast"] = sorted(cast)
+
 # 留學線：崆峒（2月～8月在崆峒，接著江陵）、青城（8月前在唐門，8月中旬起在青城）、不留學（一直在唐門）
 # 第2年2月上旬（月會決定留學）之前、11月之後大家都一樣，不分
 for e in events:

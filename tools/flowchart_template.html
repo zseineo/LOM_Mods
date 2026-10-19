@@ -43,6 +43,7 @@ main { flex: 1; display: flex; min-height: 0; }
 #arcbar button { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
 #arcbar button small { color: var(--muted); font-size: 11px; margin-left: 4px; }
 #arcbar button.on { border-color: var(--accent); color: var(--accent); }
+#arcbar button img { width: 18px; height: 18px; border-radius: 50%; vertical-align: middle; margin-right: 3px; object-fit: cover; object-position: top; }
 #arcview { padding: 4px 12px 40px; }
 #arcview .arow { display: grid; grid-template-columns: 118px 1fr; border-top: 1px solid var(--line); padding: 6px 0; }
 #arcview .arow.empty { opacity: .45; padding: 1px 0; font-size: 12px; }
@@ -435,22 +436,42 @@ body.show-time .stime { display: inline; }
 
   // ---------- 分段的直式時間軸 ----------
   // 依劇本章節（ch1～ch8）分段；事件放在最早可能發生的那一旬，期間型的事件寫出期間
+  // 第2年2月～11月分成三條留學線（同一個事件可能在好幾條線都有）
   const ARCS = [
     {name: '入門', from: [1, 4], to: [1, 9]}, {name: '南宮壽宴', from: [1, 10], to: [2, 1]},
-    {name: '留學', from: [2, 2], to: [2, 7], note: '去崆峒、去青城或留在唐門'}, {name: '江陵・青城', from: [2, 8], to: [2, 11]},
+    {name: '不留學', from: [2, 2], to: [2, 11], study: '不留學', note: '一直留在唐門'},
+    {name: '崆峒留學', from: [2, 2], to: [2, 11], study: '崆峒', note: '崆峒，8月起江陵'},
+    {name: '青城留學', from: [2, 2], to: [2, 11], study: '青城', note: '8月上旬前在唐門，8月中旬起青城'},
     {name: '唐門內戰・臥雲崗', from: [2, 12], to: [3, 2]}, {name: '小師妹招親', from: [3, 3], to: [3, 5]},
     {name: '雪山・武林大會', from: [3, 6], to: [3, 10]}, {name: '決策', from: [3, 11], to: [4, 2]}, {name: '終局', from: [4, 3], to: [4, 12]},
   ];
-  const STUDY = ['不留學', '崆峒', '青城'];
-  let arcSel = PREFS.arc != null ? PREFS.arc : '入門';
-  let studySel = PREFS.study || '';
+  let arcSel = PREFS.arc != null && (PREFS.arc === '' || PREFS.arc === '時間不定' || ARCS.some(a => a.name === PREFS.arc)) ? PREFS.arc : '入門';
+  let castSel = PREFS.cast || '';
   const mIdx = (y, m) => y * 12 + m;
-  function arcOf(e) {
+  function inArc(e, name) {
     const t = e.time;
-    if (!t || t.type === 'period' || !valid(t.from)) return '時間不定';
+    if (!t || t.type === 'period' || !valid(t.from)) return name === '時間不定';
+    const a = ARCS.find(x => x.name === name);
+    if (!a) return false;
     const k = mIdx(t.from.y, t.from.m);
-    const a = ARCS.find(a => k >= mIdx(...a.from) && k <= mIdx(...a.to));
-    return a ? a.name : '時間不定';
+    return k >= mIdx(...a.from) && k <= mIdx(...a.to) && (!a.study || !e.study || e.study.includes(a.study));
+  }
+  const arcOf = e => ['時間不定', ...ARCS.map(a => a.name)].find(n => inArc(e, n)) || '時間不定';
+  // 角色篩選（同五塊錢）：事件裡有她說話、立繪、傳說或旁白提到
+  const castHit = e => !castSel || (castSel === '__none' ? !(e.cast || []).some(shownName) : (e.cast || []).includes(castSel));
+  // 從別處跳到某個事件：分段模式就切到那個事件所在的段落再捲過去
+  function revealEvent(id) {
+    const e = byId.get(id);
+    if (arcSel && e) {
+      if (!inArc(e, arcSel)) { arcSel = arcOf(e); savePref('arc', arcSel); }
+      if (!castHit(e)) { castSel = ''; savePref('cast', ''); }
+      layout();
+      select(id, true);
+      document.querySelector(`#arcview [data-arc-ev="${CSS.escape(id)}"]`)?.scrollIntoView({block: 'center'});
+      return;
+    }
+    select(id, true);
+    nodes.get(id)?.scrollIntoView({block: 'center', inline: 'center'});
   }
   function cardHtml(e) {
     const r = e._read;
@@ -464,19 +485,21 @@ body.show-time .stime { display: inline; }
       + `<div class="am">${pct}${range ? '　' + esc(range) : ''}${how ? '　' + esc(how) : ''}${routeTag(e)}</div></div>`;
   }
   function renderArcBar() {
+    loadIcons();
     const bar = document.getElementById('arcbar');
     const chip = (attr, v, cur, text) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${text}</button>`;
-    bar.innerHTML = `<div class="fchips"><span>留學</span>${chip('study', '', studySel, '全部')}${STUDY.map(x => chip('study', x, studySel, esc(x))).join('')}</div>`
-      + `<div class="fchips"><span>段落</span>${ARCS.map(a => chip('arc', a.name, arcSel, `${esc(a.name)}<small>${a.from[0]}年${a.from[1]}月～</small>`)).join('')}`
-      + `${chip('arc', '時間不定', arcSel, '時間不定')}${chip('arc', '', arcSel, '全部（大圖）')}</div>`;
+    const names = [...new Set(SHOWN.flatMap(e => e.cast || []))].filter(shownName).sort();
+    bar.innerHTML = `<div class="fchips"><span>段落</span>${ARCS.map(a => chip('arc', a.name, arcSel, `${esc(a.name)}<small>${a.from[0]}年${a.from[1]}月～</small>`)).join('')}`
+      + `${chip('arc', '時間不定', arcSel, '時間不定')}${chip('arc', '', arcSel, '全部（大圖）')}</div>`
+      + `<div class="fchips"><span>角色</span>${chip('cast', '', castSel, '全部')}${names.map(n => chip('cast', n, castSel, iconImg(n) + esc(n))).join('')}${chip('cast', '__none', castSel, '其他')}</div>`;
     bar.querySelectorAll('[data-arc]').forEach(b => b.onclick = () => { arcSel = b.dataset.arc; savePref('arc', arcSel); layout(); });
-    bar.querySelectorAll('[data-study]').forEach(b => b.onclick = () => { studySel = b.dataset.study; savePref('study', studySel); layout(); });
+    bar.querySelectorAll('[data-cast]').forEach(b => b.onclick = () => { castSel = b.dataset.cast; savePref('cast', castSel); layout(); });
   }
   function renderArc() {
     const view = document.getElementById('arcview');
     const onlyChoice = document.getElementById('onlyChoice').checked;
-    const show = e => !e.quiet && !e.meeting && (!onlyChoice || e._choice) && (!studySel || !e.study || e.study.includes(studySel));
-    const list = SHOWN.filter(e => show(e) && arcOf(e) === arcSel);
+    const show = e => !e.quiet && !e.meeting && (!onlyChoice || e._choice) && castHit(e);
+    const list = SHOWN.filter(e => show(e) && inArc(e, arcSel));
     const a = ARCS.find(x => x.name === arcSel);
     let html = `<h2 class="ahead">${esc(arcSel)}${a ? `<span>　第${a.from[0]}年${a.from[1]}月～第${a.to[0]}年${a.to[1]}月${a.note ? '　·　' + esc(a.note) : ''}</span>` : '<span>　沒有固定時間：到地點或條件符合就觸發、每月固定時間</span>'}</h2>`;
     const byPlace = evs => {
@@ -652,6 +675,7 @@ body.show-time .stime { display: inline; }
     const q = document.getElementById('q').value.trim().toLowerCase();
     G.events.forEach(e => { const n = nodes.get(e.id.toLowerCase()); if (n) n.classList.toggle('dim', !!q && !haystack(e).includes(q)); });
     document.querySelectorAll('#arcview .acard').forEach(c => c.classList.toggle('dim', !!q && !haystack(byId.get(c.dataset.arcEv)).includes(q)));
+    if (!arcSel && castSel) G.events.forEach(e => { const n = nodes.get(e.id.toLowerCase()); if (n && !castHit(e)) n.classList.add('dim'); });
   }
 
   // 細節面板
@@ -663,6 +687,7 @@ body.show-time .stime { display: inline; }
     const rel = new Set([...e._triggers, ...e._from]);
     rel.forEach(r => nodes.get(r)?.classList.add('rel'));
     nodes.get(id)?.classList.add('sel');
+    document.querySelectorAll('#arcview .acard').forEach(c => c.classList.toggle('sel', c.dataset.arcEv === id));
     drawLinks(e);
     renderDetail(e, focus);
     if (scroll) detail.scrollTop = 0;
@@ -1177,7 +1202,7 @@ body.show-time .stime { display: inline; }
     // 結緣結局沒有圖鑑分頁，跳到結緣條件
     if (el.dataset.lib) setView('romance');
     else if (el.dataset.script) showScript(el.dataset.script);
-    else if (el.dataset.ev) { const n = nodes.get(el.dataset.ev); select(el.dataset.ev, true); n?.scrollIntoView({block: 'center', inline: 'center', behavior: 'smooth'}); }
+    else if (el.dataset.ev) revealEvent(el.dataset.ev);
     else if (el.dataset.flag) showFlag(el.dataset.flag, ev);
     else el.classList.add('reveal');
   });
@@ -1207,7 +1232,7 @@ body.show-time .stime { display: inline; }
   pop.addEventListener('click', ev => {
     const row = ev.target.closest('[data-ev],[data-script]');
     const focus = row && row.dataset.f ? {...G.flags[row.dataset.f][+row.dataset.i], flag: row.dataset.f} : null;
-    if (row && row.dataset.ev) { select(row.dataset.ev, true, focus); nodes.get(row.dataset.ev)?.scrollIntoView({block: 'center', inline: 'center', behavior: 'smooth'}); }
+    if (row && row.dataset.ev) { revealEvent(row.dataset.ev); select(row.dataset.ev, true, focus); }
     else if (row && row.dataset.script) showScript(row.dataset.script, focus);
     pop.style.display = 'none';
   });
@@ -1745,6 +1770,7 @@ body.show-time .stime { display: inline; }
         ICONS = new Set(j.names);
         if (currentView === 'unread') renderUnread(true);
         if (currentView === 'places') renderPlaces(true);
+        if (currentView === 'chart') renderArcBar();
       }
       ok = true;
     } catch (e) { }
@@ -1882,7 +1908,7 @@ body.show-time .stime { display: inline; }
       const ev = hubGroup ? null : byId.get(key);
       const none = rows.filter(fresh).length, branches = rows.filter(isBranch).length;
       const head = hubGroup ? `${esc(hubGroup)}　<span class="need">（留學期間的養成地點）</span>${hubGroup.startsWith('崆峒') ? '<span class="rtag">限定：留學：崆峒</span>' : hubGroup.startsWith('青城') ? '<span class="rtag">限定：留學：青城</span>' : ''}`
-        : ev ? `${esc(whenText(ev))}　${ev.place ? esc(ev.place) + '　' : ''}<span class="chip link" data-goto="${esc(key)}">${esc(evShort(ev))}${ev.desc ? '' : '…'}</span>`
+        : ev ? `${esc(whenText(ev))}　<span class="chip link" data-goto="${esc(key)}">${esc(evShort(ev))}${ev.desc ? '' : '…'}</span>`
           + (ev.desc && ev.title ? `<span class="need${ev._read ? '' : ' unreadtxt'}" style="font-weight:400">　${esc(ev.title.replace(/^「|」$/g, '').slice(0, 26))}…</span>` : '') + routeTag(ev)
         : '日常、地點行動、閒聊（不屬於任務事件）';
       html += `<details class="plcard"${rows.length <= 6 || who ? ' open' : ''}><summary style="cursor:pointer"><b>${head}</b>　<span class="need">${rows.length} 段（${[none ? `未讀 ${none}` : '', branches ? `沒走過的分支 ${branches}` : ''].filter(Boolean).join('、') || '都讀過一部分'}）</span></summary>`;
@@ -1895,7 +1921,7 @@ body.show-time .stime { display: inline; }
         const hide = u.read === 0 ? ' unreadtxt' : '';
         const chip = isBranch(u) ? '<span class="ck no">◇</span>分支' : u.read === 0 ? '<span class="ck no">○</span>未讀' : `<span class="ck ok">◐</span>${Math.round(u.read * 100)}%`;
         html += `<div class="plev" data-script="${esc(u.s)}"><span class="need">${chip}</span>　<span class="ttl${hide}">${esc((u.title || u.s).slice(0, 40))}</span>`
-          + `${u.heroines.some(shownName) ? `<span class="who">${esc(u.heroines.filter(shownName).join('、'))}</span>` : ''}${u.place ? `<span class="need">　${esc(u.place)}</span>` : ''}`
+          + `${u.heroines.some(shownName) ? `<span class="who">${esc(u.heroines.filter(shownName).join('、'))}</span>` : ''}`
           + ((G.scripts[u.s] || {}).achieve ? `<span class="rtag" title="這段有些台詞要先取得成就才會出現">🏆 要成就${G.scripts[u.s].achieve.map(a => `「${esc(a)}」`).join('')}</span>` : '');
         if (u.read === 0) {
           html += routesHtml(u, ctx);
@@ -1976,8 +2002,7 @@ body.show-time .stime { display: inline; }
     const go = ev.target.closest('[data-goto]');
     if (go) {
       setView('chart');
-      select(go.dataset.goto, true);
-      nodes.get(go.dataset.goto)?.scrollIntoView({block: 'center', inline: 'center'});
+      revealEvent(go.dataset.goto);
       return;
     }
     const el = ev.target.closest('[data-ev],[data-flag],[data-script],.unreadtxt');
@@ -2109,7 +2134,7 @@ body.show-time .stime { display: inline; }
   if (/view=places/.test(location.hash)) setView('places');
   if (/view=unread/.test(location.hash)) setView('unread');
   const m = location.hash.match(/ev=([^&]+)/);
-  if (m) { const id = decodeURIComponent(m[1]).toLowerCase(); if (byId.has(id)) { select(id, true); nodes.get(id)?.scrollIntoView({block: 'center', inline: 'center'}); } }
+  if (m) { const id = decodeURIComponent(m[1]).toLowerCase(); if (byId.has(id)) revealEvent(id); }
 })();
 </script>
 </body>
