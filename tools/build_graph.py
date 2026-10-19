@@ -190,7 +190,7 @@ def value_text(v):
     if ct == 14:
         return "精通書籍數"
     if ct == 15:
-        return "風雲史·" + ref_name(v["_libraryAchieve"])
+        return f"成就「{loc.get('Library/Title/' + ref_name(v['_libraryAchieve'])) or ref_name(v['_libraryAchieve'])}」"
     if ct == 16:
         return "條件·" + ref_name(v["_condition"])
     return f"?{ct}"
@@ -1874,6 +1874,27 @@ def event_place(e):
 
 for e in events:
     e["place"] = event_place(e)
+
+ACHIEVE_VAR = {}
+for o in by_name.get("StatGroupVariable", {}).values():
+    for v in o.get("_value") or []:
+        if v.get("_checkType") == 15 and v.get("_libraryAchieve"):
+            lid = ref_name(v["_libraryAchieve"])
+            ACHIEVE_VAR[o["m_Name"]] = loc.get("Library/Title/" + lid) or lid
+achieve_cond = {}
+for o in list(by_name["ConditionResultData"].values()) + list(by_name["SwitchResultData"].values()):
+    used = {ACHIEVE_VAR[ref_name(it.get("_value1"))] for g in o.get("_items") or [] for it in g.get("_items") or []
+            if ref_name(it.get("_value1")) in ACHIEVE_VAR}
+    if used:
+        achieve_cond[o["m_Name"]] = used
+for name, info in script_info.items():
+    got = sorted(set().union(*(achieve_cond[c] for c in script_cond_names.get(name, ()) if c in achieve_cond)))
+    if got:
+        info["achieve"] = got
+for e in events:
+    got = sorted({a for sc in e["scripts"] for a in script_info.get(sc, {}).get("achieve", [])})
+    if got:
+        e["achieve"] = got
 EVENT_NOTES = {
     "S2902/S2902_01": "遊戲資料要求「剛好第3年5月下旬」，同時又要「目前時間 = 小竹回家結束那一旬」（小竹回家在崆峒留學期間）。"
                       "兩者不可能同時成立，第3年5月下旬也沒有行動，照目前版本應該觸發不了。",
@@ -2148,7 +2169,7 @@ for setters in flag_setters.values():
 # 只因性格／技能而換台詞的分歧（走向相同）算「差分」：看過其中一個版本就算讀過
 IGNORE_STAT = re.compile(r"^(性情|道德|處世|修養|學問|嘴力|心相|陰陽|內力|體力|廚藝|輕功|變心|全武學點數|全毒藥點數|全鍛造點數|天賦·.*)$")
 ATOM_LHS = re.compile(r"^(.*?) (=|≠|<|≤|>|≥) (.*)$")
-HEROINE_NAMES = [v for k, v in loc.items() if k.startswith("PlayerInfo/Lover/") and v != "自己"]
+HEROINE_NAMES = [v for k, v in loc.items() if k.startswith("PlayerInfo/Lover/") and v != "自己"] + ["瑞笙", "南溪", "孟仙謠"]
 NICKNAMES = {"小竹": "郁竹", "小梅": "虞小梅", "小蘭": "夏侯蘭", "小菊": "魏菊"}
 
 

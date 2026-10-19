@@ -195,7 +195,7 @@ body.show-time .stime { display: inline; }
   <label class="chartonly"><input type="checkbox" id="onlyChoice">只看有選項的事件</label>
   <label class="chartonly">分組 <select id="groupBy"><option value="place">劇情地點</option><option value="romance">結緣線</option></select></label>
   <label id="hiddenToggle" style="display:none"><input type="checkbox" id="showHidden">顯示隱藏的角色</label>
-  <span class="legend"><span><i style="background:var(--read)"></i>已讀</span><span><i style="background:var(--part)"></i>部分</span><span><i style="background:var(--unread)"></i>未讀</span><span>◆ 有選項　📍 指定地點　⚑ 有條件　🖼 結緣結局</span></span>
+  <span class="legend"><span><i style="background:var(--read)"></i>已讀</span><span><i style="background:var(--part)"></i>部分</span><span><i style="background:var(--unread)"></i>未讀</span><span>◆ 有選項　📍 指定地點　⚑ 有條件　🏆 有要成就解鎖的劇情　🖼 結緣結局</span></span>
 </header>
 <main>
   <div id="chart"><div id="canvas"><svg id="links"></svg></div></div>
@@ -411,7 +411,7 @@ body.show-time .stime { display: inline; }
   function readClass(r) { return r == null ? 'r-unread' : r >= 0.95 ? 'r-read' : r > 0 ? 'r-part' : 'r-unread'; }
   function label(e) {
     const t = e.desc ? e.desc.slice(0, 14) : e.title ? e.title.slice(0, 14) : (e.start || e.key);
-    return `${e._choice ? '<span class="ic">◆</span>' : ''}${e.pos ? '<span class="ic">📍</span>' : ''}${e.conds.length ? '<span class="ic">⚑</span>' : ''}${libIcons(e)}${esc(t)}`;
+    return `${e._choice ? '<span class="ic">◆</span>' : ''}${e.achieve ? '<span class="ic">🏆</span>' : ''}${e.pos ? '<span class="ic">📍</span>' : ''}${e.conds.length ? '<span class="ic">⚑</span>' : ''}${libIcons(e)}${esc(t)}`;
   }
 
   function layout() {
@@ -887,6 +887,7 @@ body.show-time .stime { display: inline; }
         return `${who}好感${op === '=' ? '是' : '不是'}${names}裡最高的`;
       })
       .replace(/好感·(\S+?) (=|≠|<|≤|>|≥) (-?\d+)/g, '$1好感$2$3')
+      .replace(/成就「([^」]+)」 (=|≠|<|≤|>|≥) (-?\d+)/g, (m, n, op, v) => isYes(op, +v) || (op === '=' && v === '1') ? `🏆已取得成就「${n}」` : isNo(op, +v) ? `🏆沒取得成就「${n}」` : m)
       .replace(/天賦·(?:天賦_\d+_)?(\S+?) (=|≠|<|≤|>|≥) (-?\d+)/g, (m, n, op, v) => isYes(op, +v) ? `有天賦「${n}」` : isNo(op, +v) ? `沒有天賦「${n}」` : `天賦「${n}」${op}${v}`)
       .replace(/持有·(\S+?) (=|≠|<|≤|>|≥) (-?\d+)/g, (m, n, op, v) => isYes(op, +v) ? `持有「${n}」` : isNo(op, +v) ? `沒有「${n}」` : `「${n}」數量${op}${v}`)
       .replace(/愛人 (=|≠) (\d+)/g, (m, op, v) => {
@@ -1041,6 +1042,7 @@ body.show-time .stime { display: inline; }
     html += '<h3>觸發條件</h3>' + (e.part ? `<div class="cond">接續 ${partFromHtml(e)}</div>` : e.conds.length ? e.conds.map(c => `<div class="cond">${plainCondHtml(c, e)}</div>`).join('') : '<div class="empty">時間到就觸發</div>');
     // 自由行動選單：每個留學事件結束都會回來，不用列從哪裡進
     if (e.note) html += `<div class="when">※ ${esc(e.note)}</div>`;
+    if (e.achieve) html += `<div class="when">🏆 有些劇情要先取得成就（風雲史）才會出現：${e.achieve.map(a => `「${esc(a)}」`).join('、')}</div>`;
     if (e.via && !/^hub/.test(e.part || '')) html += `<h3>從這裡觸發</h3><div class="cond">${routesBlock(e.via, e, '觸發方式')}</div>`;
     if (e.activate) html += `<h3>要先啟動</h3><div class="cond">${routesBlock(e.activate, e, '在前面的劇情裡')}</div>`;
     const from = e._from.filter(id => !byId.get(id).quiet), next = e._triggers.filter(id => !byId.get(id).quiet);
@@ -1744,7 +1746,7 @@ body.show-time .stime { display: inline; }
     html += currentEventHtml();
     html += `<div class="libtools"><div class="fchips"><span>狀態</span>${[['', '全部'], ['none', '未讀'], ['part', '部分已讀']].map(([v, l]) => fchip('ur-st', v, st, l)).join('')}</div>`
       + `<span class="tag" style="color:var(--muted)">${list.length} 段，約 ${unreadLines} 句沒讀過</span></div>`
-      + `<div class="libtools"><div class="fchips"><span>登場的女主角</span>${fchip('ur-who', '', who, '全部')}${heroines.map(h => fchip('ur-who', h, who, iconImg(h) + esc(h))).join('')}${fchip('ur-who', NONE, who, '其他')}</div></div>`;
+      + `<div class="libtools"><div class="fchips"><span>登場角色</span>${fchip('ur-who', '', who, '全部')}${heroines.map(h => fchip('ur-who', h, who, iconImg(h) + esc(h))).join('')}${fchip('ur-who', NONE, who, '其他')}</div></div>`;
     // 依所屬事件分組，事件依時間排序；不屬於任務事件的歸到最後
     const groups = new Map();
     // 從留學養成選單進去的段落（例如鶴崖）不算在帶你去留學的那個事件底下，依地點另外分組
@@ -1778,7 +1780,8 @@ body.show-time .stime { display: inline; }
         const hide = u.read === 0 ? ' unreadtxt' : '';
         const chip = isBranch(u) ? '<span class="ck no">◇</span>分支' : u.read === 0 ? '<span class="ck no">○</span>未讀' : `<span class="ck ok">◐</span>${Math.round(u.read * 100)}%`;
         html += `<div class="plev" data-script="${esc(u.s)}"><span class="need">${chip}</span>　<span class="ttl${hide}">${esc((u.title || u.s).slice(0, 40))}</span>`
-          + `${u.heroines.some(shownName) ? `<span class="who">${esc(u.heroines.filter(shownName).join('、'))}</span>` : ''}${u.place ? `<span class="need">　${esc(u.place)}</span>` : ''}`;
+          + `${u.heroines.some(shownName) ? `<span class="who">${esc(u.heroines.filter(shownName).join('、'))}</span>` : ''}${u.place ? `<span class="need">　${esc(u.place)}</span>` : ''}`
+          + ((G.scripts[u.s] || {}).achieve ? `<span class="rtag" title="這段有些台詞要先取得成就才會出現">🏆 要成就${G.scripts[u.s].achieve.map(a => `「${esc(a)}」`).join('')}</span>` : '');
         if (u.read === 0) {
           html += routesHtml(u, ctx);
         } else if (reasonsOf(u).length) {
