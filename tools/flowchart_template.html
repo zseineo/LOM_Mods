@@ -174,7 +174,7 @@ body.moretabs .tabs .extra { display: inline-block; }
 .tref { font-size: 12px; color: var(--muted); margin: 4px 0; }
 .script .sname b { color: var(--accent); margin-right: 6px; }
 .script .sname .pct { margin-right: 6px; }
-.script.flash { outline: 2px solid var(--accent); }
+.script.flash, .plev.flash, .plcard.flash { outline: 2px solid var(--accent); }
 .script > .sname { justify-content: flex-start; gap: 4px; }
 .forcebtn { float: right; background: var(--chip); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 1px 10px; font: inherit; font-size: 12px; cursor: pointer; }
 .forcebtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -1199,6 +1199,8 @@ body.show-time .stime { display: inline; }
   }
 
   detail.addEventListener('click', ev => {
+    const go = ev.target.closest('[data-goto]');
+    if (go) { revealEvent(go.dataset.goto); return; }
     const el = ev.target.closest('[data-seg],[data-lib],[data-ev],[data-flag],[data-script],.unreadtxt');
     if (!el) return;
     if (el.dataset.seg) { const t = document.getElementById('seg-' + el.dataset.seg); t?.scrollIntoView({block: 'center', behavior: 'smooth'}); t?.classList.add('flash'); setTimeout(() => t?.classList.remove('flash'), 1200); return; }
@@ -1725,7 +1727,7 @@ body.show-time .stime { display: inline; }
       }
       if (!body) continue;
       if (info.area !== lastArea) { html += `<h2 style="margin:16px 0 8px">${esc(info.area)}</h2>`; lastArea = info.area; }
-      html += `<div class="plcard"><h2>${esc(place)}</h2>${body}</div>`;
+      html += `<div class="plcard" data-place="${esc(place)}"><h2>${esc(place)}</h2>${body}</div>`;
     }
     romance.innerHTML = html;
     romance.querySelectorAll('[data-pl-who]').forEach(b => b.onclick = () => { plWho = b.dataset.plWho; savePref('plWho', plWho); renderPlaces(true); });
@@ -1787,19 +1789,40 @@ body.show-time .stime { display: inline; }
   // 事件本身還沒觸發時先列事件的觸發時間與條件
   // 一條路線：養成選單的地點寫成「某某期間去「地點」」，其餘每步翻成白話
   // 路線的一步：養成選單的地點寫「某某期間去「地點」」，別的事件寫「在「事件」中」，其餘翻成白話
+  // 劇本屬於哪個地點事件：候選結果本身，或同名前綴（藥鋪坐診的病人 pharmacy_work_402 這類）
+  function posOf(script) {
+    const entry = script.match(/^([a-z]+)_001(_\d+)?$/);
+    if (entry) {
+      for (const p of G.positions) for (const L of p.layers) for (const c of L.candidates)
+        if (c.script.split('_')[0] === entry[1]) return {p, c, entry: true};
+    }
+    const pre = script.replace(/(_\d+)+$/, '');
+    let hit = null;
+    for (const p of G.positions) for (const L of p.layers) for (const c of L.candidates) {
+      if (c.script === script || c.rs === script) return {p, c};
+      if (!hit && (c.script.replace(/(_\d+)+$/, '') === pre || script.startsWith(c.script + '_'))) hit = {p, c};
+    }
+    return hit;
+  }
+  // 地點事件起點的連結：點進地點本身跳到地點卡，否則跳到那個候選結果
+  function posChip(o) {
+    return o.entry ? `點進<span class="chip link" data-place="${esc(o.p.place)}">${esc(o.p.place)}</span>時`
+      : `在地點事件<span class="chip link" data-pos="${esc(o.c.script)}">${esc(o.p.place)}・${esc(o.p.action)}</span>`;
+  }
   function stepHtml(x, ctx) {
-    if (x.ev) { const ev = byId.get(x.ev.toLowerCase()); return ev ? `在「${esc(evShort(ev))}」（${esc(whenText(ev))}）中` : ''; }
+    if (x.ev) { const ev = byId.get(x.ev.toLowerCase()); return ev ? `在<span class="chip link" data-goto="${esc(ev.id.toLowerCase())}">${esc(evShort(ev))}</span>（${esc(whenText(ev))}）中` : ''; }
+    if (x.pos) { const o = posOf(x.pos); return o ? posChip(o) : ''; }
     if (x.hub) return `${esc(x.hub)}去「${esc(x.path[0])}」`;
     return pathHtml(x.path, ctx, x.from);
   }
   function routeText(r, ctx) {
     // 已經走過的分支（那段台詞讀過）是已滿足的步驟，省略；養成選單的地點、所在事件一律保留
-    const keep = r.filter(x => x.hub || x.ev || !x.done);
+    const keep = r.filter(x => x.hub || x.ev || x.pos || !x.done);
     // 同一句條件在路線上重複出現（選單來回進出）只寫第一次
     const raw = keep.map(x => stepHtml(x, ctx));
     const parts = [...new Set(raw.filter(Boolean))];
     const skipped = r.length - keep.length;
-    if (!parts.length || raw.every((p, i) => !p || keep[i].ev)) return skipped ? '<span class="need">（路線上的選擇都走過了，要看當下的條件或擲骰）</span>' : '';
+    if (!parts.length || raw.every((p, i) => !p || keep[i].ev || keep[i].pos)) return skipped ? '<span class="need">（路線上的選擇都走過了，要看當下的條件或擲骰）</span>' : '';
     return (skipped ? `<span class="need" title="已經走過的 ${skipped} 個步驟">（已走過 ${skipped} 步）</span> → ` : '') + parts.join(' → ');
   }
   // 多條路線：每一步都來自同一段劇情時，合併成逐步列出（同一步不同選法寫「或」）；步驟多的單一路線也逐步列
@@ -1838,9 +1861,18 @@ body.show-time .stime { display: inline; }
       if (ctx.note) html += `<div class="need">※ ${esc(ctx.note)}</div>`;
       html += `<div class="need">事件還沒觸發：${esc(whenText(ctx))}${ctx.pos ? `到「${esc(ctx.pos)}」` : ''}${conds.length ? '，' + conds.map(c => plainCondHtml(c, ctx)).join('；') : ctx.activate ? '' : '（沒有其他條件）'}${ctx.activate ? '（要先啟動，見上方）' : ''}</div>`;
     }
-    const routes = (u.routes || []).filter(r => routeText(r, ctx));
+    // 不屬於任務事件的段落：路線最前面補上「從哪裡開始」（哪個事件、哪個地點事件），可以點過去
+    const origin = r => {
+      const from = r.length && r[0].from;
+      if (!from || ctx) return r;
+      if (scriptOwner.has(from)) return [{ev: scriptOwner.get(from), path: []}, ...r];
+      return posOf(from) ? [{pos: from, path: []}, ...r] : r;
+    };
+    const routes = (u.routes || []).filter(r => routeText(r, ctx)).map(origin);
     if (!routes.length) {
-      if (!(ctx && !startRead)) html += `<div class="need">${ctx ? '事件開始後沒有要經過的分歧（可能經由旅途、地點選單接過來）' : '沒有找到要經過的分歧（日常、地點選單或閒聊接過來）'}</div>`;
+      const o = !ctx && posOf(u.s);
+      if (o) html += `<div class="need">${posChip(o)}${o.entry ? '' : `抽到${o.c.script === u.s || o.c.rs === u.s ? '' : '後接續'}`}</div>`;
+      else if (!(ctx && !startRead)) html += `<div class="need">${ctx ? '事件開始後沒有要經過的分歧（可能經由旅途、地點選單接過來）' : '沒有找到要經過的分歧（日常、閒聊接過來）'}</div>`;
       return html;
     }
     const more = u.moreRoutes ? `<span class="need">　還有其他路線</span>` : '';
@@ -2062,9 +2094,34 @@ body.show-time .stime { display: inline; }
     seg.classList.add('flash');
     setTimeout(() => seg.classList.remove('flash'), 1500);
   }
+  function gotoPlace(script, place) {
+    setView('places');
+    if (place) {
+      const card = romance.querySelector(`.plcard[data-place="${CSS.escape(place)}"]`);
+      if (!card) return;
+      card.scrollIntoView({block: 'start'});
+      card.classList.add('flash');
+      setTimeout(() => card.classList.remove('flash'), 1500);
+      return;
+    }
+    let row = romance.querySelector(`.plev[data-script="${CSS.escape(script)}"]`);
+    if (!row && !plAll) { plAll = true; savePref('plAll', true); renderPlaces(); row = romance.querySelector(`.plev[data-script="${CSS.escape(script)}"]`); }
+    if (!row && plWho) { plWho = ''; savePref('plWho', ''); renderPlaces(); row = romance.querySelector(`.plev[data-script="${CSS.escape(script)}"]`); }
+    if (!row) return;
+    for (let p = row.parentElement; p; p = p.parentElement) if (p.tagName === 'DETAILS') p.open = true;
+    row.scrollIntoView({block: 'center'});
+    row.classList.add('flash');
+    setTimeout(() => row.classList.remove('flash'), 1500);
+  }
   romance.addEventListener('click', ev => {
+    const pos = ev.target.closest('[data-pos],[data-place]');
+    if (pos) { gotoPlace(pos.dataset.pos, pos.dataset.place); return; }
     const scene = ev.target.closest('[data-scene]');
-    if (scene) { jumpToScene(scene.dataset.scene); return; }
+    if (scene) {
+      const o = !scriptOwner.has(scene.dataset.scene) && posOf(scene.dataset.scene);
+      if (o) gotoPlace(o.c.script, o.entry && o.p.place); else jumpToScene(scene.dataset.scene);
+      return;
+    }
     const go = ev.target.closest('[data-goto]');
     if (go) {
       setView('chart');
