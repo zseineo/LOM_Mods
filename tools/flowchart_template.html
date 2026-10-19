@@ -742,8 +742,10 @@ body.show-time .stime { display: inline; }
     if (x.path && x.path.length) html += `<div class="entry"><span class="lbl">腳本 ${esc(x.s)} 內需要：</span></div><ol class="path">${x.path.map(p => pathHtml([p], ctx, x.s)).filter(Boolean).map(t => `<li>${t}</li>`).join('')}</ol>`;
     return html;
   }
+  // 傳說（劇情摘要原文）先不顯示：資料還在，改 true 就回來
+  const SHOW_LEGEND = false;
   function legendBlock(list, hide) {
-    return list && list.length ? legendHtml(list.join('\n'), hide) : '';
+    return SHOW_LEGEND && list && list.length ? legendHtml(list.join('\n'), hide) : '';
   }
   function legendHtml(text, hide) {
     const paras = String(text).split('\n').filter(x => x.trim());
@@ -1192,7 +1194,7 @@ body.show-time .stime { display: inline; }
       html += '<h3>劇情</h3>';
       html += eventTree(e) || '<div class="empty">只有過場對話，沒有選項或分歧。</div>';
     }
-    html += `<div class="note">只列出：選項、擲骰、戰鬥勝敗、會改變劇情走向的條件。有底線的條件可以點開看它在哪裡決定。摘要文字取自遊戲的「傳說」紀錄。</div>`;
+    html += `<div class="note">只列出：選項、擲骰、戰鬥勝敗、會改變劇情走向的條件。有底線的條件可以點開看它在哪裡決定。</div>`;
     detail.innerHTML = html;
   }
 
@@ -1853,7 +1855,7 @@ body.show-time .stime { display: inline; }
     const s = recent.find(x => scriptOwner.has(x.toLowerCase()));
     const ev = s ? byId.get(scriptOwner.get(s.toLowerCase())) : null;
     const t = LIVE.time ? `第${LIVE.time.y}年${LIVE.time.m}月${STAGE[LIVE.time.s]}` : '';
-    const body = ev ? `<span class="chip link" data-goto="${esc(ev.id.toLowerCase())}">${esc(evShort(ev))}</span>${ev.desc && ev.title ? `<span class="need">　${esc(ev.title.slice(0, 30))}…</span>` : ''}`
+    const body = ev ? `<span class="chip link" data-goto="${esc(ev.id.toLowerCase())}">${esc(evShort(ev))}</span>${SHOW_LEGEND && ev.desc && ev.title ? `<span class="need">　${esc(ev.title.slice(0, 30))}…</span>` : ''}`
       : '<span class="need">養成中（沒有進行中的任務事件）</span>';
     return `<div class="curev"><b>目前</b>　${esc(t)}　${body}${recent[0] ? `<span class="need" style="font-family:Consolas,monospace">　${esc(recent[0])}</span>` : ''}</div>`;
   }
@@ -1910,7 +1912,7 @@ body.show-time .stime { display: inline; }
       const none = rows.filter(fresh).length, branches = rows.filter(isBranch).length;
       const head = hubGroup ? `${esc(hubGroup)}　<span class="need">（留學期間的養成地點）</span>${hubGroup.startsWith('崆峒') ? '<span class="rtag">限定：留學：崆峒</span>' : hubGroup.startsWith('青城') ? '<span class="rtag">限定：留學：青城</span>' : ''}`
         : ev ? `${esc(whenText(ev))}　<span class="chip link" data-goto="${esc(key)}">${esc(evShort(ev))}${ev.desc ? '' : '…'}</span>`
-          + (ev.desc && ev.title ? `<span class="need${ev._read ? '' : ' unreadtxt'}" style="font-weight:400">　${esc(ev.title.replace(/^「|」$/g, '').slice(0, 26))}…</span>` : '') + routeTag(ev)
+          + (SHOW_LEGEND && ev.desc && ev.title ? `<span class="need${ev._read ? '' : ' unreadtxt'}" style="font-weight:400">　${esc(ev.title.replace(/^「|」$/g, '').slice(0, 26))}…</span>` : '') + routeTag(ev)
         : '日常、地點行動、閒聊（不屬於任務事件）';
       html += `<details class="plcard"${rows.length <= 6 || who ? ' open' : ''}><summary style="cursor:pointer"><b>${head}</b>　<span class="need">${rows.length} 段（${[none ? `未讀 ${none}` : '', branches ? `沒走過的分支 ${branches}` : ''].filter(Boolean).join('、') || '都讀過一部分'}）</span></summary>`;
       // 事件是從別處接進來的（例如養成選單的行動）：先寫怎麼觸發
@@ -1923,7 +1925,7 @@ body.show-time .stime { display: inline; }
         const chip = isBranch(u) ? '<span class="ck no">◇</span>分支' : u.read === 0 ? '<span class="ck no">○</span>未讀' : `<span class="ck ok">◐</span>${Math.round(u.read * 100)}%`;
         // 段落名稱用規則組（事件名＋怎麼進到這段），不用劇情原文；原本的傳說開頭先留著對照
         html += `<div class="plev"><span class="need">${chip}</span>　<span class="ttl" data-scene="${esc(u.s)}" title="到流程圖看這一段">${esc(sceneName(u, ctx))}</span>`
-          + (u.title ? `<span class="need${hide}" style="font-weight:400">　原：${esc(u.title.slice(0, 24))}${u.title.length > 24 ? '…' : ''}</span>` : '')
+          + (SHOW_LEGEND && u.title ? `<span class="need${hide}" style="font-weight:400">　原：${esc(u.title.slice(0, 24))}${u.title.length > 24 ? '…' : ''}</span>` : '')
           + `${u.heroines.some(shownName) ? `<span class="who">${esc(u.heroines.filter(shownName).join('、'))}</span>` : ''}`
           + ((G.scripts[u.s] || {}).achieve ? `<span class="rtag" title="這段有些台詞要先取得成就才會出現">🏆 要成就${G.scripts[u.s].achieve.map(a => `「${esc(a)}」`).join('')}</span>` : '');
         if (u.read === 0) {
