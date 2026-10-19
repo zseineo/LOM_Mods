@@ -37,6 +37,25 @@ header input[type=search] { padding: 5px 9px; border: 1px solid var(--line); bor
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
 main { flex: 1; display: flex; min-height: 0; }
 #chart { flex: 1; overflow: auto; position: relative; }
+#arcbar { position: sticky; top: 0; left: 0; z-index: 6; background: var(--bg); padding: 8px 12px 6px; border-bottom: 1px solid var(--line); }
+#arcbar .fchips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 2px 0; }
+#arcbar .fchips > span { color: var(--muted); font-size: 12px; margin-right: 2px; }
+#arcbar button { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+#arcbar button small { color: var(--muted); font-size: 11px; margin-left: 4px; }
+#arcbar button.on { border-color: var(--accent); color: var(--accent); }
+#arcview { padding: 4px 12px 40px; }
+#arcview .arow { display: grid; grid-template-columns: 118px 1fr; border-top: 1px solid var(--line); padding: 6px 0; }
+#arcview .arow.empty { opacity: .45; padding: 1px 0; font-size: 12px; }
+#arcview .arow.now { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+#arcview .awhen { color: var(--year); cursor: pointer; } #arcview .awhen b { color: var(--ink); font-weight: 600; margin-right: 4px; }
+#arcview .acells { display: flex; gap: 10px; flex-wrap: wrap; }
+#arcview .acol { min-width: 190px; } #arcview .apl { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+#arcview .acard { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--unread); border-radius: 8px; padding: 4px 9px; margin-bottom: 5px; max-width: 330px; cursor: pointer; }
+#arcview .acard.read { border-left-color: var(--read); } #arcview .acard.part { border-left-color: var(--part); } #arcview .acard.none { border-left-color: var(--line); }
+#arcview .acard.sel { outline: 2px solid var(--sel); } #arcview .acard.dim { opacity: .3; }
+#arcview .acard .am { font-size: 12px; color: var(--muted); } #arcview .acard .mainmark { color: var(--accent); font-size: 12px; margin-right: 4px; }
+#arcview .ahead { margin: 8px 0 4px; font-size: 16px; } #arcview .ahead span { color: var(--muted); font-size: 13px; font-weight: 400; }
+body.arcmode #canvas { display: none; }
 #canvas { position: relative; }
 #detail { width: 440px; max-width: 46vw; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 14px 16px 40px; }
 .timehead { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
@@ -198,7 +217,7 @@ body.show-time .stime { display: inline; }
   <span class="legend"><span><i style="background:var(--read)"></i>已讀</span><span><i style="background:var(--part)"></i>部分</span><span><i style="background:var(--unread)"></i>未讀</span><span>◆ 有選項　📍 指定地點　⚑ 有條件　🏆 有要成就解鎖的劇情　🖼 結緣結局</span></span>
 </header>
 <main>
-  <div id="chart"><div id="canvas"><svg id="links"></svg></div></div>
+  <div id="chart"><div id="arcbar"></div><div id="arcview"></div><div id="canvas"><svg id="links"></svg></div></div>
   <div id="romance"></div>
   <aside id="detail"><p class="empty">點選左側事件查看觸發條件、選項分支與結果。<br>點月份標題：遊戲內版本會讀取該月的時光機存檔。</p></aside>
 </main>
@@ -414,7 +433,94 @@ body.show-time .stime { display: inline; }
     return `${e._choice ? '<span class="ic">◆</span>' : ''}${e.achieve ? '<span class="ic">🏆</span>' : ''}${e.pos ? '<span class="ic">📍</span>' : ''}${e.conds.length ? '<span class="ic">⚑</span>' : ''}${libIcons(e)}${esc(t)}`;
   }
 
+  // ---------- 分段的直式時間軸 ----------
+  // 依劇本章節（ch1～ch8）分段；事件放在最早可能發生的那一旬，期間型的事件寫出期間
+  const ARCS = [
+    {name: '入門', from: [1, 4], to: [1, 9]}, {name: '南宮壽宴', from: [1, 10], to: [2, 1]},
+    {name: '留學', from: [2, 2], to: [2, 7], note: '去崆峒、去青城或留在唐門'}, {name: '江陵・青城', from: [2, 8], to: [2, 11]},
+    {name: '唐門內戰・臥雲崗', from: [2, 12], to: [3, 2]}, {name: '小師妹招親', from: [3, 3], to: [3, 5]},
+    {name: '雪山・武林大會', from: [3, 6], to: [3, 10]}, {name: '決策', from: [3, 11], to: [4, 2]}, {name: '終局', from: [4, 3], to: [4, 12]},
+  ];
+  const STUDY = ['不留學', '崆峒', '青城'];
+  let arcSel = PREFS.arc != null ? PREFS.arc : '入門';
+  let studySel = PREFS.study || '';
+  const mIdx = (y, m) => y * 12 + m;
+  function arcOf(e) {
+    const t = e.time;
+    if (!t || t.type === 'period' || !valid(t.from)) return '時間不定';
+    const k = mIdx(t.from.y, t.from.m);
+    const a = ARCS.find(a => k >= mIdx(...a.from) && k <= mIdx(...a.to));
+    return a ? a.name : '時間不定';
+  }
+  function cardHtml(e) {
+    const r = e._read;
+    const cls = r == null ? 'none' : r >= 0.999 ? 'read' : r > 0 ? 'part' : '';
+    const t = e.time;
+    const range = t && t.type === 'range' ? whenText(e) : t && t.type === 'period' ? `每月${STAGE[t.stage]}` : '';
+    const how = e.pos ? `📍到「${e.pos}」` : e.part ? '接續前一段' : '';
+    const pct = r == null ? '無對話' : r >= 0.999 ? '已讀' : r > 0 ? `${Math.round(r * 100)}%` : '未讀';
+    return `<div class="acard ${cls}${selected === e.id.toLowerCase() ? ' sel' : ''}" data-arc-ev="${esc(e.id.toLowerCase())}">`
+      + `<div>${e.main ? '<span class="mainmark">主線</span>' : ''}${label(e)}</div>`
+      + `<div class="am">${pct}${range ? '　' + esc(range) : ''}${how ? '　' + esc(how) : ''}${routeTag(e)}</div></div>`;
+  }
+  function renderArcBar() {
+    const bar = document.getElementById('arcbar');
+    const chip = (attr, v, cur, text) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${text}</button>`;
+    bar.innerHTML = `<div class="fchips"><span>留學</span>${chip('study', '', studySel, '全部')}${STUDY.map(x => chip('study', x, studySel, esc(x))).join('')}</div>`
+      + `<div class="fchips"><span>段落</span>${ARCS.map(a => chip('arc', a.name, arcSel, `${esc(a.name)}<small>${a.from[0]}年${a.from[1]}月～</small>`)).join('')}`
+      + `${chip('arc', '時間不定', arcSel, '時間不定')}${chip('arc', '', arcSel, '全部（大圖）')}</div>`;
+    bar.querySelectorAll('[data-arc]').forEach(b => b.onclick = () => { arcSel = b.dataset.arc; savePref('arc', arcSel); layout(); });
+    bar.querySelectorAll('[data-study]').forEach(b => b.onclick = () => { studySel = b.dataset.study; savePref('study', studySel); layout(); });
+  }
+  function renderArc() {
+    const view = document.getElementById('arcview');
+    const onlyChoice = document.getElementById('onlyChoice').checked;
+    const show = e => !e.quiet && !e.meeting && (!onlyChoice || e._choice) && (!studySel || !e.study || e.study.includes(studySel));
+    const list = SHOWN.filter(e => show(e) && arcOf(e) === arcSel);
+    const a = ARCS.find(x => x.name === arcSel);
+    let html = `<h2 class="ahead">${esc(arcSel)}${a ? `<span>　第${a.from[0]}年${a.from[1]}月～第${a.to[0]}年${a.to[1]}月${a.note ? '　·　' + esc(a.note) : ''}</span>` : '<span>　沒有固定時間：到地點或條件符合就觸發、每月固定時間</span>'}</h2>`;
+    const byPlace = evs => {
+      const g = new Map();
+      evs.forEach(e => { const p = e.place || '旅途／其他'; if (!g.has(p)) g.set(p, []); g.get(p).push(e); });
+      return [...g.entries()].map(([p, xs]) => `<div class="acol"><div class="apl">${esc(p)}</div>${xs.map(cardHtml).join('')}</div>`).join('');
+    };
+    if (a) {
+      const now = LIVE && LIVE.inGame && LIVE.time ? [LIVE.time.y, LIVE.time.m, LIVE.time.s].join('-') : '';
+      for (let k = mIdx(...a.from); k <= mIdx(...a.to); k++) {
+        const y = Math.floor((k - 1) / 12), m = (k - 1) % 12 + 1;
+        for (let st = 1; st <= 3; st++) {
+          const evs = list.filter(e => e.time.from.y === y && e.time.from.m === m && e.time.from.s === st);
+          html += `<div class="arow${evs.length ? '' : ' empty'}${now === `${y}-${m}-${st}` ? ' now' : ''}"><div class="awhen" data-arc-month="${y}-${m}" title="遊戲內點這裡會讀取該月的時光機存檔"><b>第${y}年${m}月</b>${STAGE[st]}</div><div class="acells">${evs.length ? byPlace(evs) : '—'}</div></div>`;
+        }
+      }
+    } else {
+      html += `<div class="arow"><div class="awhen">　</div><div class="acells">${list.length ? byPlace(list) : '—'}</div></div>`;
+    }
+    view.innerHTML = html;
+    applyFilter();
+  }
+  document.getElementById('arcview').addEventListener('click', ev => {
+    const c = ev.target.closest('[data-arc-ev]');
+    if (c) {
+      document.querySelectorAll('#arcview .acard.sel').forEach(x => x.classList.remove('sel'));
+      c.classList.add('sel');
+      select(c.dataset.arcEv, true);
+      return;
+    }
+    const mo = ev.target.closest('[data-arc-month]');
+    if (mo) {
+      const [y, m] = mo.dataset.arcMonth.split('-').map(Number);
+      document.querySelector(`#canvas .monthcell[title^="${y}年${m}月"]`)?.click();
+    }
+  });
   function layout() {
+    renderArcBar();
+    document.body.classList.toggle('arcmode', !!arcSel);
+    document.getElementById('arcview').style.display = arcSel ? '' : 'none';
+    layoutCanvas();
+    if (arcSel) renderArc();
+  }
+  function layoutCanvas() {
     canvas.querySelectorAll('.node,.track,.section,.vline,.timehead,.untimed').forEach(n => n.remove());
     nodes.clear();
     const groupBy = document.getElementById('groupBy').value;
@@ -545,6 +651,7 @@ body.show-time .stime { display: inline; }
   function applyFilter() {
     const q = document.getElementById('q').value.trim().toLowerCase();
     G.events.forEach(e => { const n = nodes.get(e.id.toLowerCase()); if (n) n.classList.toggle('dim', !!q && !haystack(e).includes(q)); });
+    document.querySelectorAll('#arcview .acard').forEach(c => c.classList.toggle('dim', !!q && !haystack(byId.get(c.dataset.arcEv)).includes(q)));
   }
 
   // 細節面板

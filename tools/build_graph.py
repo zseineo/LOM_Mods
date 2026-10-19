@@ -2649,6 +2649,25 @@ for e in events:
     e["wikiPath"] = w["path"]
     e["desc"] = w["name"] if wiki_count[w["name"]] == 1 or not old or old == w["name"] else f"{w['name']}（{old[:10]}）"
 
+# 留學線：崆峒（2月～8月在崆峒，接著江陵）、青城（8月前在唐門，8月中旬起在青城）、不留學（一直在唐門）
+# 第2年2月上旬（月會決定留學）之前、11月之後大家都一樣，不分
+for e in events:
+    tags = set(e.get("routeOnly") or [])
+    f = (e.get("time") or {}).get("from") or {}
+    t = (f.get("y", 0), f.get("m", 0), f.get("s", 0))
+    place = e.get("place") or ""
+    if "留學：崆峒" in tags:
+        e["study"] = ["崆峒"]
+    elif "留學：青城" in tags:
+        e["study"] = ["青城"]
+    elif (2, 2, 2) <= t <= (2, 11, 3):
+        if place in ("崆峒", "江陵／襄陽"):
+            e["study"] = ["崆峒"]
+        elif place == "青城":
+            e["study"] = ["青城"]
+        elif place in ("唐門", "唐門山下"):
+            e["study"] = ["不留學", "青城"] if t <= (2, 8, 1) else ["不留學"]
+
 out = {
     "heroines": heroines,
     "targets": TARGETS,
