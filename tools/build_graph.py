@@ -1261,7 +1261,9 @@ def plain_battle_events(script, items):
                     out.append([head, what, "依戰前情況", tuple(m.group(1) for m in map(TEMP_ATOM.fullmatch, atoms) if m)])
                 else:
                     known = [l for l in labels if l]
-                    out.append([head, what, "戰前「" + "」且「".join(known) + "」" if known else "其他情況", None])
+                    # 選項寫「選「X」」，條件直接寫（網頁再轉白話）
+                    known = [k if re.search(r"[=≠<>≤≥]", k) and "「" not in k else f"選「{k}」" for k in known]
+                    out.append([head, what, "戰前" + "且".join(known) if known else "其他情況", None])
             # 同一個時間點、只差戰前情況的接成一行：「第 1 回合（依戰前情況）：我方血量減5%／10%」
             merged = []
             for head, what, cond, fl in out:
