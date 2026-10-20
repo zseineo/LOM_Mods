@@ -1756,8 +1756,8 @@ body.show-time .stime { display: inline; }
     for (const h of G.heroines) {
       if (h.hidden && !showHidden) continue;
       html += `<div class="hcard"><h2>${checkMark(h.bondFlag ? 'flag:' + h.bondFlag + '=1' : '')}${esc(h.name)}${h.bondFlag ? `<span class="tag">結緣旗標 <span class="flag" data-flag="${h.bondFlag}">${h.bondFlag}</span></span>` : ''}</h2>`;
-      if (h.ending) html += legendHtml(h.ending, ' unreadtxt');
-      else html += `<div class="empty">沒有對應的結緣結局（結緣結局只有小師妹、龍湘、夏侯蘭、葉雲裳、虞小梅、郁竹）。</div>`;
+      // 結局的傳奇文本不顯示，只提示沒有結緣結局的角色
+      if (!h.ending) html += `<div class="empty">沒有對應的結緣結局（結緣結局只有小師妹、龍湘、夏侯蘭、葉雲裳、虞小梅、郁竹）。</div>`;
       const guide = findGuide('romance', h.name);
       if (guide) html += '<h4>結緣條件</h4>' + guideHtml(guide);
       let auto = '';
@@ -1791,7 +1791,6 @@ body.show-time .stime { display: inline; }
       if (t.conds) html += `<h4>條件</h4><ul class="guide">${t.conds.map(briefItem).join('')}</ul>`;
       if (t.steps) html += `<h4>步驟</h4><ol class="guide">${t.steps.map(briefItem).join('')}</ol>`;
       if (t.brief) { html += '</div>'; continue; }
-      if (t.ending) html += legendHtml(t.ending, ' unreadtxt');
       const guide = findGuide('targets', t.name);
       if (guide) html += '<h4>達成條件</h4>' + guideHtml(guide);
       let auto = '';
