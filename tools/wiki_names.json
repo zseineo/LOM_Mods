@@ -473,5 +473,17 @@
   "name": "大師兄找樂子",
   "path": "1-04-1-大師兄找樂子",
   "score": 6.0
+ },
+ "M7006_04/M7006_04_01": {
+  "name": "陪小蘭",
+  "path": null,
+  "score": 0,
+  "manual": true
+ },
+ "M7006_06/M7006_06_01": {
+  "name": "陪伴（任一人）",
+  "path": null,
+  "score": 0,
+  "manual": true
  }
 }
