@@ -275,6 +275,76 @@ body.show-time .stime { display: inline; }
   // 遊戲目前的已讀紀錄：第一次全部抓，之後只抓新增的；有變就重算五塊錢、地點事件、流程圖的已讀
   const LIVE_READ = new Set();
   let liveReadCount = 0;
+  // 台詞樹（k 一定要讀、g 差分組）從分支樹推出來：和 build_graph 的 text_tree 同一套
+  function ktOf(node) {
+    const t = {k: node.k.slice(), g: []};
+    for (const s of node.sub || []) {
+      const subs = s.br.map(ktOf);
+      if (s.v) { const alts = subs.filter(x => x.k.length || x.g.length); if (alts.length) t.g.push(alts); }
+      else subs.forEach(x => { t.k.push(...x.k); t.g.push(...x.g); });
+    }
+    return t;
+  }
+  G.unread.forEach(u => { u.kt = ktOf(u.rt); });
+  // ---- 「怎麼看到沒讀的台詞」：照 build_graph 的 unread_reasons，用遊戲目前的已讀即時算 ----
+  const liveRatio = (keys, kp) => { const s = new Set(keys); if (!s.size) return null; let n = 0; s.forEach(k => { if (LIVE_READ.has(kp + k)) n++; }); return n / s.size; };
+  // 分支實際要讀的台詞：差分組只算讀得最多的版本（同分取短的）；all＝每個版本都算
+  function effKeys(b, kp, all) {
+    let ks = b.k.slice();
+    for (const s of b.sub || []) {
+      if (s.v && !all) { const best = bestAlt(s, kp); if (best) ks = ks.concat(effKeys(best, kp, false)); }
+      else s.br.forEach(a => { ks = ks.concat(effKeys(a, kp, all)); });
+    }
+    return ks;
+  }
+  function bestAlt(s, kp) {
+    let best = null, br = -1, bl = 0;
+    for (const a of s.br) {
+      const t = effKeys(a, kp, false), r = liveRatio(t, kp) || 0;
+      if (!best || r > br || (r === br && -t.length > bl)) { best = a; br = r; bl = -t.length; }
+    }
+    return best;
+  }
+  // 台詞 → 算誰的（u.who 是 角色 → 台詞）
+  function keyHeroines(u) {
+    if (!u._kh) { u._kh = new Map(); for (const [h, ks] of Object.entries(u.who || {})) ks.forEach(k => { if (!u._kh.has(k)) u._kh.set(k, []); u._kh.get(k).push(h); }); }
+    return u._kh;
+  }
+  function liveReasons(u) {
+    if (u._rsAt === liveReadCount) return u._rs;
+    const kp = u.kp, kh = keyHeroines(u), out = [];
+    const push = (b, kind, path, t, whoKeys, variant) => {
+      if (b.n || path.slice(-3).some(p => p.n)) return;
+      out.push({kind, label: b.d || b.l, path: path.slice(-3).map(p => p.l), lines: new Set(t).size,
+        heroines: [...new Set(whoKeys.flatMap(k => kh.get(k) || []))].sort(), ...(variant ? {variant: true} : {})});
+    };
+    const walk = (node, path, variant) => {
+      for (const s of node.sub || []) {
+        if (s.v) {
+          // 差分：讀得最多的版本照常往下找；其他版本整段沒讀的標成差分
+          const best = bestAlt(s, kp);
+          if (best) walk(best, path, variant);
+          for (const b of s.br) {
+            if (b === best) continue;
+            const all = effKeys(b, kp, true), r = liveRatio(all, kp);
+            if (r === 0) push(b, 'variant', path, effKeys(b, kp, false), all, true);
+            else if (r != null && r < 1) walk(b, path.concat([b]), true);
+          }
+          continue;
+        }
+        for (const b of s.br) {
+          if (b.x) continue;
+          const t = effKeys(b, kp, false), r = liveRatio(t, kp);
+          if (r == null) continue;
+          if (r === 0) push(b, s.kind, path, t, t, variant);
+          else if (r < 1) walk(b, path.concat([b]), variant);
+        }
+      }
+    };
+    walk(u.rt, [], false);
+    u._rsAt = liveReadCount;
+    return (u._rs = out.slice(0, 12));
+  }
   async function syncRead() {
     let j;
     try { j = await (await fetch(`/api/readkeys?from=${liveReadCount}`, {cache: 'no-store'})).json(); } catch (e) { return false; }
@@ -322,6 +392,7 @@ body.show-time .stime { display: inline; }
   async function poll() {
     if (!ONLINE) return;
     const readChanged = LIVE && LIVE.live ? await syncRead() : false;
+    if (readChanged) statsText();
     try {
       const res = await fetch('/api/state', {cache: 'no-store'});
       LIVE = await res.json();
@@ -1853,7 +1924,7 @@ body.show-time .stime { display: inline; }
   // 已讀狀態：和五塊錢同一套算法（性格／技能台詞差分看過一種就算讀過），連同事件後續的子段落一起看
   let unreadIndex = null;
   function readBadge(script, raw) {
-    if (raw == null || !G.stats.readKeys) return '';
+    if (raw == null || (!G.stats.readKeys && !LIVE_READ.size)) return '';
     if (!unreadIndex) {
       unreadIndex = new Map();
       for (const u of G.unread) unreadIndex.set(u.s, u);
@@ -1944,7 +2015,7 @@ body.show-time .stime { display: inline; }
     let html = `<div class="rintro">在各養成地點行動時（唐門、留學、錦香宮…，旅途中的隨機事件也列在最後），遊戲會從「候選事件」裡依權重抽一個（實際機率 ＝ 權重 ÷ 當下所有符合條件事件的權重總和）。
       後山、鍛冶場、大門、外堡會先抽一次「有沒有人插進來」，再抽行動結果，兩層都列在下面。
       預設列出角色事件和特殊事件，平常、成功、失敗這些一般結果可勾選顯示；橘色標籤是要多人同時在唐門才會出現的。
-      最前面的「已讀／部分／未讀」是重建頁面當下的閱讀紀錄。
+      最前面的「已讀／部分／未讀」連上遊戲時依遊戲的已讀紀錄即時更新。
       ${LIVE && LIVE.inGame ? (LIVE_POS ? '連上遊戲時顯示「目前權重・機率」（由遊戲本身計算，紅字是目前不成立的條件）。' : '正在向遊戲取得目前機率…（需要時光機 Mod 0.6.0 以上）') : ''}點事件會在右側顯示劇情。${LIVE && LIVE.inGame ? '✓／✗ 是依目前存檔的旗標與時間判斷（其他屬性條件不判斷）。' : ''}</div>`;
     const fchip = (v, label) => `<button data-pl-who="${esc(v)}"${v === pick ? ' class="on"' : ''}>${label}</button>`;
     html += currentEventHtml();
@@ -2265,11 +2336,14 @@ body.show-time .stime { display: inline; }
     const NONE = '__none';
     const hits = hs => who === NONE ? !hs.some(shownName) : hs.includes(who);
     // 差分不列入時，差分的原因也不列
-    const reasonsOf = u => (u.reasons || []).filter(r => diffOn() || !r.variant);
-    // 她還沒讀的句數：她說的台詞＋旁白提到她的句子；連上遊戲用即時已讀，否則用重建當下的數字
+    // 連上遊戲用玩家自己的已讀即時算；沒連上用重建當下的（發布版沒有）
+    const reasonsOf = u => (LIVE_READ.size ? liveReasons(u) : u.reasons || []).filter(r => diffOn() || !r.variant);
+    // 她還沒讀的句數：她說的台詞＋旁白提到她的句子（差分沒列入時只算讀得最多的版本）；連上遊戲用即時已讀，否則用重建當下的數字
     const herUnread = (u, h) => {
-      const ks = ((diffOn() && u.whoAll) || u.who || {})[h] || [];
-      if (LIVE_READ.size) return ks.filter(k => !LIVE_READ.has(u.kp + k)).length;
+      if (LIVE_READ.size) {
+        const kh = keyHeroines(u);
+        return [...new Set(treeKeys(u.kt, u.kp, diffOn()))].filter(k => !LIVE_READ.has(k) && (kh.get(k.slice(u.kp.length)) || []).includes(h)).length;
+      }
       return ((diffOn() ? u.whoUAll : u.whoU) || {})[h] || 0;
     };
     const namesOf = u => Object.keys(u.who || {}).filter(h => herUnread(u, h) > 0).concat(u.read === 0 ? u.heroines : []);
@@ -2601,7 +2675,7 @@ body.show-time .stime { display: inline; }
     </ul></div>
     <div class="hcard"><h2>✓／✗</h2><div class="rintro">✓／✗ 是你目前存檔的值；有些旗標在事件之後會被改掉，過了那個時間點的 ✗ 不一定代表當時沒達成。</div></div>
     <div class="hcard"><h2>五塊錢的未讀怎麼算</h2><ul class="guide">
-      <li>列出有台詞、但還沒讀完的劇情段落。連上遊戲時，已讀狀態會跟著遊戲即時更新。</li>
+      <li>列出有台詞、但還沒讀完的劇情段落。已讀紀錄是從遊戲即時讀的：要從遊戲裡按 F7 開；沒連上遊戲時全部當成未讀。</li>
       <li><b>差分</b>：只因性情、道德、處世、修養、學問或技能／天賦而換台詞（不是選項造成、走向相同）的地方，預設看過其中一種就算讀過；上方勾「列入差分」才每種都算。</li>
       <li>讀了一部分的段落，會列出沒讀到的台詞在哪個分支、要怎麼走才看得到（選哪個選項、符合什麼條件、擲骰、戰鬥勝負）。這是從劇本推出來的，不是存檔記下的原因。整段沒進去過的，列出怎麼進去。</li>
       <li>標記：「○ 未讀」整段沒讀過；「◐ N%」讀了 N%；「◇ 分支」玩過的事件裡整段沒走到的分支。</li>
@@ -2699,7 +2773,12 @@ body.show-time .stime { display: inline; }
   });
 
   const choiceCount = G.events.filter(e => e._choice).length;
-  document.getElementById('stats').textContent = `${SHOWN.length} 個事件（主線 ${SHOWN.filter(e => e.main).length}）· 含選項 ${choiceCount} · 已讀文本 ${G.stats.readKeys} 句`;
+  // 已讀句數：連上遊戲用遊戲的，否則用重建當下存檔的（發布版沒有就不寫）
+  const statsText = () => {
+    const n = LIVE_READ.size || G.stats.readKeys;
+    document.getElementById('stats').textContent = `${SHOWN.length} 個事件（主線 ${SHOWN.filter(e => e.main).length}）· 含選項 ${choiceCount}${n ? ` · 已讀文本 ${n} 句` : ''}`;
+  };
+  statsText();
   layout();
   poll();
   if (ONLINE) setInterval(poll, 3000);

@@ -5,7 +5,10 @@ set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DATA="$ROOT/data"
 GAME="/c/Program Files (x86)/Steam/steamapps/common/LegendOfMortal"
-UNIVERSE="$(ls "$USERPROFILE"/AppData/LocalLow/Obb\ Studio/Mortal/*/Save_universe.json | head -1)"
+# 預設是發布版：不讀存檔（所有段落都列進五塊錢，網頁連上遊戲後依玩家自己的已讀重算）
+# --save：用自己存檔的已讀建（沒連上遊戲時也看得到自己的狀態，比對用）
+UNIVERSE="-"
+if [ "$1" = "--save" ]; then UNIVERSE="$(ls "$USERPROFILE"/AppData/LocalLow/Obb\ Studio/Mortal/*/Save_universe.json | head -1)"; fi
 python -I "$ROOT/tools/build_graph.py" "$DATA/so2.json" "$DATA/lua_tc" "$DATA/loc_tc" "$DATA/decomp" "$UNIVERSE" "$DATA/graph.json" "$DATA/battle_dump.json"
 python -I "$ROOT/tools/render_preview.py" "$DATA/graph.json" "$ROOT/tools/flowchart_template.html" "$ROOT/preview/flowchart_preview.html" "$ROOT/tools/guides.json"
 mkdir -p "$GAME/BepInEx/plugins/LOM_TimeMachine/guide"

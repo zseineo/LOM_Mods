@@ -2406,10 +2406,6 @@ def tree_keys(node, all_variants, read):
     return keys
 
 
-def tree_strip(node, kp):
-    return {"k": [k[len(kp):] for k in dict.fromkeys(node["k"])], **({"g": [[tree_strip(a, kp) for a in grp] for grp in node["g"]]} if node["g"] else {})}
-
-
 def tree_all(node):
     out = list(node["k"])
     for grp in node["g"]:
@@ -2500,6 +2496,32 @@ def unread_reasons(block, vars_, path, out, variant=False):
                 unread_reasons(br["block"], vars_, path + [label], out, variant)
 
 
+def reason_tree(block, vars_, kp):
+    """分支樹（網頁連上遊戲時依玩家自己的已讀，用 unread_reasons 同一套規則即時算「怎麼看到」）：
+    k 是這層直接的台詞，sub 是這層的每個分歧；分歧 v=差分，br 是各分支（l 標籤、d 顯示名稱、x 不當原因、n 做不到）"""
+    node = {"k": [it["k"][len(kp):] for it in block if it["t"] == "text"]}
+    subs = []
+    for it in block:
+        if it["t"] != "if":
+            continue
+        kind, labels, branches = branch_texts(it, vars_)
+        brs = []
+        for label, _, br in branches:
+            b = {"l": label, **reason_tree(br["block"], vars_, kp)}
+            m = re.match(r"^([a-z0-9]+)\+(work|free)", label)
+            if m and loc.get("Position/title/" + m.group(1)):
+                b["d"] = loc["Position/title/" + m.group(1)]
+            if re.match(r"^(exit\+|~x)", label):
+                b["x"] = 1
+            if label_never(label):
+                b["n"] = 1
+            brs.append(b)
+        subs.append({"kind": kind, "br": brs, **({"v": 1} if is_variant(kind, labels, it) else {})})
+    if subs:
+        node["sub"] = subs
+    return node
+
+
 def key_names(key):
     """這句台詞算誰的：說話者本人；旁白就看提到誰"""
     sp = key_speaker.get(key)
@@ -2534,50 +2556,51 @@ def heroines_in(script):
     return sorted(names)
 
 
+# 發布版（不給存檔）：所有有台詞的段落都列，玩家連上遊戲後網頁依他自己的已讀重算
 unread = []
-if read_keys:
-    for name, (block, vars_) in scripts.items():
-        CURRENT[0] = name
-        tree = text_tree(block, vars_)
-        texts = tree_keys(tree, False, read_keys)
-        r = read_ratio(texts)
-        r_all = read_ratio(tree_all(tree))
-        if name in script_info and r is not None:
-            # 流程圖的已讀度也用「差分看一種就算」；列入差分時網頁改用 readAll
-            script_info[name]["read"] = r
-            if r_all != r:
-                script_info[name]["readAll"] = r_all
-        if r is None or r_all >= 1:
-            continue
-        ev, _ = find_owner(name)
-        # 台詞鍵（去掉共同前綴）：網頁連上遊戲時用遊戲目前的已讀紀錄即時重算
-        uniq = list(dict.fromkeys(tree_all(tree)))
-        kp = os.path.commonprefix(uniq)
-        item = {"s": name, "ev": ev, "read": r, "readAll": r_all, "lines": len(set(texts)), "linesAll": len(uniq), "heroines": heroines_in(name),
-                "kp": kp, "kt": tree_strip(tree, kp),
-                # 角色篩選用：她說的台詞、旁白提到她的句子（差分不列入／列入兩種）＋重建當下還沒讀的句數
-                "who": who_keys(texts, kp), **({"whoAll": who_keys(uniq, kp)} if len(uniq) != len(set(texts)) else {}),
-                "whoU": {h: n for h, n in collections.Counter(h for k in dict.fromkeys(texts) if k not in read_keys for h in key_names(k)).items()},
-                "whoUAll": {h: n for h, n in collections.Counter(h for k in uniq if k not in read_keys for h in key_names(k)).items()},
-                "place": script_place(name, ev), "title": say_title(name)}
-        routes = entry_routes(name, ev)
-        if routes and all(route_never(r) for r in routes):
-            item["never"] = True
-        elif routes and all(route_never(r, MAYBE_VALUES) for r in routes):
-            item["maybeNever"] = sorted({a for r in routes for x in r for l in x.get("path", []) if label_never(l, MAYBE_VALUES) for a in maybe_never_reason(l)})
-        # 網頁只列 3 條，其餘只記有沒有
-        item["routes"] = [[{k: v for k, v in x.items() if k != "into"} for x in r] for r in routes[:3]]
-        item["moreRoutes"] = len(routes) > 3
-        hubs = {(r[0].get("hub"), r[0]["path"][0]) for r in routes if r and r[0].get("hub")}
-        if hubs and all(r and r[0].get("hub") for r in routes) and len(hubs) == 1:
-            hub, place = next(iter(hubs))
-            item["hubGroup"] = f"{hub}・{place}"
-        if r > 0:
-            reasons = []
-            unread_reasons(block, vars_, [], reasons)
-            reasons = [x for x in reasons if not label_never(x["label"]) and not any(label_never(l) for l in x.get("path", []))]
-            item["reasons"] = reasons[:12]
-        unread.append(item)
+for name, (block, vars_) in scripts.items():
+    CURRENT[0] = name
+    tree = text_tree(block, vars_)
+    texts = tree_keys(tree, False, read_keys)
+    r = read_ratio(texts)
+    r_all = read_ratio(tree_all(tree))
+    if name in script_info and r is not None:
+        # 流程圖的已讀度也用「差分看一種就算」；列入差分時網頁改用 readAll
+        script_info[name]["read"] = r
+        if r_all != r:
+            script_info[name]["readAll"] = r_all
+    if r is None or r_all >= 1:
+        continue
+    ev, _ = find_owner(name)
+    # 台詞鍵（去掉共同前綴）：網頁連上遊戲時用遊戲目前的已讀紀錄即時重算
+    uniq = list(dict.fromkeys(tree_all(tree)))
+    kp = os.path.commonprefix(uniq)
+    item = {"s": name, "ev": ev, "read": r, "readAll": r_all, "lines": len(set(texts)), "linesAll": len(uniq), "heroines": heroines_in(name),
+            # 分支樹：網頁從這裡推出台詞樹（差分組）和「怎麼看到」
+            "kp": kp, "rt": reason_tree(block, vars_, kp),
+            # 角色篩選用：每句台詞算誰的（她說的、旁白提到她的，含所有差分版本）＋重建當下還沒讀的句數（沒連上遊戲時用）
+            "who": who_keys(uniq, kp),
+            "whoU": {h: n for h, n in collections.Counter(h for k in dict.fromkeys(texts) if k not in read_keys for h in key_names(k)).items()},
+            "whoUAll": {h: n for h, n in collections.Counter(h for k in uniq if k not in read_keys for h in key_names(k)).items()},
+            "place": script_place(name, ev), "title": say_title(name)}
+    routes = entry_routes(name, ev)
+    if routes and all(route_never(r) for r in routes):
+        item["never"] = True
+    elif routes and all(route_never(r, MAYBE_VALUES) for r in routes):
+        item["maybeNever"] = sorted({a for r in routes for x in r for l in x.get("path", []) if label_never(l, MAYBE_VALUES) for a in maybe_never_reason(l)})
+    # 網頁只列 3 條，其餘只記有沒有
+    item["routes"] = [[{k: v for k, v in x.items() if k != "into"} for x in r] for r in routes[:3]]
+    item["moreRoutes"] = len(routes) > 3
+    hubs = {(r[0].get("hub"), r[0]["path"][0]) for r in routes if r and r[0].get("hub")}
+    if hubs and all(r and r[0].get("hub") for r in routes) and len(hubs) == 1:
+        hub, place = next(iter(hubs))
+        item["hubGroup"] = f"{hub}・{place}"
+    if r > 0:
+        reasons = []
+        unread_reasons(block, vars_, [], reasons)
+        reasons = [x for x in reasons if not label_never(x["label"]) and not any(label_never(l) for l in x.get("path", []))]
+        item["reasons"] = reasons[:12]
+    unread.append(item)
 
 # 地點事件：開啟條件一定不成立的結果不列
 for pos in positions:

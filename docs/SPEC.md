@@ -197,8 +197,9 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 ### 已讀來源
 
 遊戲自己的已讀紀錄（ReadStorySystem，記的是每句台詞的鍵）。
-重建網頁時讀 `Save_universe.json`；連上遊戲時每 3 秒從 `/api/readkeys` 即時更新已讀比例。
-「怎麼看到」是重建當下算的，要重跑 `rebuild_guide.sh` 才會更新。
+**發布版（預設）**：重建時不讀存檔，所有有台詞的段落都進五塊錢；連上遊戲時每 3 秒從 `/api/readkeys` 取已讀，網頁即時重算已讀比例、角色句數、「怎麼看到」。
+每段帶分支樹 `rt`（每層台詞 k、分歧 sub、分支 br：l 標籤／d 顯示名稱／x 不當原因／n 做不到／v 差分），網頁的 `liveReasons` 和 build_graph 的 `unread_reasons` 同一套規則；台詞樹 `kt` 也由 `rt` 推出。
+沒連上遊戲時全部當未讀。`rebuild_guide.sh --save` 用自己的 `Save_universe.json` 建（比對用：連上遊戲時兩版五塊錢應完全一樣）。
 
 ### 單位與計算
 
@@ -260,7 +261,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 ```
 遊戲更新 → bash tools/refresh_data.sh   # 重抽 Lua、在地化、設定物件、戰鬥、反編譯到 data/（舊的改名 data_old_<時間>；data/wiki_events 快取會沿用）
 更新後    → python -I tools/diff_graph.py data_old_<時間>/graph.json data/graph.json  # 事件條件、劇本分歧、手寫條件用到的旗標有變的，逐項對照 TARGETS／guides.json 改寫
-改規則    → bash tools/rebuild_guide.sh  # build_graph.py → data/graph.json → render_preview.py → 安裝到遊戲
+改規則    → bash tools/rebuild_guide.sh  # 發布版；build_graph.py → data/graph.json → render_preview.py → 安裝到遊戲（--save 用自己的已讀）
 改 Mod    → cd TimeMachine && dotnet build -c Release，複製 bin/Release/LOM_TimeMachine.dll 到 BepInEx/plugins/LOM_TimeMachine/
 ```
 
