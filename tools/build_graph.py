@@ -1363,22 +1363,27 @@ def first_line(script):
     return None
 
 
+# 名稱不用傳奇（劇情摘要）文本，用第一句台詞；第一句旁白和傳奇是同一段文字的也不用。傳奇只用來判斷有沒有劇情
+LEGEND_HEADS = {p.strip()[:12] for k, v in loc.items() if k.startswith("LegendInfo/") for p in v.split("\n") if len(p.strip()) >= 12}
+
+
+def say_title(script):
+    text = loc.get("Story/" + script_first_say[script], "") if script_first_say.get(script) else ""
+    text = re.sub(r"<[^>]+>|\{[^}]*\}", "", text).replace("\n", "")
+    return "" if any(text[i:i + 12] in LEGEND_HEADS for i in range(len(text) - 11)) else text
+
+
 for e in events:
     title = None
+    e["hasLegend"] = any(first_line(sc) for sc in e["scripts"])
     for sc in e["scripts"]:
-        title = first_line(sc)
-        if title:
+        text = say_title(sc)
+        if text:
+            title = "「" + text + "」"
             break
-    e["hasLegend"] = bool(title)
-    if not title:
-        for sc in e["scripts"]:
-            text = loc.get("Story/" + script_first_say[sc]) if script_first_say.get(sc) else None
-            if text:
-                title = "「" + re.sub(r"<[^>]+>|\{[^}]*\}", "", text).replace("\n", "") + "」"
-                break
     if e.get("meeting"):
         title = "唐門月會（選單）"
-    elif e.get("meetingOption") and not e["hasLegend"]:
+    elif e.get("meetingOption"):
         title = f"月會：{e['meetingOption']}"
     e["title"] = title
 
@@ -2310,8 +2315,7 @@ for area, place, action, groups, *option in POSITION_GROUPS:
                 "rate": o.get("_defaultRate", 0),
                 "bonus": [{"cond": cond_item_text(r["_condition"]), "rate": r["_rate"]} for r in o.get("_eventRateItem", [])],
                 "chars": sorted(set(result_chars(script)) | set(result_chars(content))), "read": cinfo["read"] if cinfo else None, "rs": content,
-                "title": first_line(content) or (re.sub(r"<[^>]+>|\{[^}]*\}", "", loc.get("Story/" + script_first_say[content], "")).replace("\n", "")
-                                                 if script_first_say.get(content) else ""),
+                "title": say_title(content),
             })
         layers.append({"group": gname, "candidates": cands})
     need = condition_text(option[0]).strip("（）") if option else ""
@@ -2555,8 +2559,7 @@ if read_keys:
                 "who": who_keys(texts, kp), **({"whoAll": who_keys(uniq, kp)} if len(uniq) != len(set(texts)) else {}),
                 "whoU": {h: n for h, n in collections.Counter(h for k in dict.fromkeys(texts) if k not in read_keys for h in key_names(k)).items()},
                 "whoUAll": {h: n for h, n in collections.Counter(h for k in uniq if k not in read_keys for h in key_names(k)).items()},
-                "place": script_place(name, ev), "title": first_line(name) or (
-                    re.sub(r"<[^>]+>|\{[^}]*\}", "", loc.get("Story/" + script_first_say[name], "")).replace("\n", "") if script_first_say.get(name) else "")}
+                "place": script_place(name, ev), "title": say_title(name)}
         routes = entry_routes(name, ev)
         if routes and all(route_never(r) for r in routes):
             item["never"] = True

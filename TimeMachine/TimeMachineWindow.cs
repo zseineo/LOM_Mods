@@ -195,7 +195,7 @@ internal sealed class TimeMachineWindow
 
     private static string KeyName(ConfigEntry<Key> entry)
     {
-        return entry == Plugin.ToggleKey ? "時光機" : "五塊錢";
+        return entry == Plugin.ToggleKey ? "時光機" : "算命仙";
     }
 
     private string FindKeyConflict(ConfigEntry<Key> target, Key key)

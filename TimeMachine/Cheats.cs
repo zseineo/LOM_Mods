@@ -5,7 +5,7 @@ using Mortal.Story;
 
 namespace LOM.TimeMachine;
 
-// 作弊：從「五塊錢」網頁的作弊分頁開關，設定存在 BepInEx 設定檔（Cheat 區）
+// 作弊：從「算命仙」網頁的作弊分頁開關，設定存在 BepInEx 設定檔（Cheat 區）
 internal static class Cheats
 {
     // 決策選單（ch7_4_2_break_start_01）：滿足西武林盟條件（M70004 = 1）時，遊戲會藏起「戰他娘親」「退隱江湖」
