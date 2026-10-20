@@ -95,7 +95,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 | 分頁 | 內容 |
 |---|---|
 | 五塊錢 | 有台詞但沒讀完的段落＋怎麼看到（規則見第 5 節） |
-| 地點事件 | 各養成地點的候選事件、權重、條件；連上遊戲顯示目前機率，可強制觸發 |
+| 地點事件 | 各養成地點的候選事件、權重、條件；連上遊戲顯示目前機率（權重 ÷ 總權重，2026-10-20 版遊戲的抽法），可強制觸發 |
 | 結緣條件 | 各女主角結緣步驟（手寫 `tools/guides.json` 的 romance）＋自動追溯 |
 | 其他條件 | 其他目標（`build_graph.py` 的 `TARGETS`；`brief` 只列條件／步驟，不附詳細追溯） |
 | ▸ 流程圖 | 預設分段的直式時間軸（見下）；「全部（大圖）」是原本的橫向大圖。點事件看觸發條件、劇情分支 |
@@ -109,6 +109,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 - 參考 smilin.net wiki 的短寫法：`處世<60`、`小師妹好感≥60`、`🚩「收留小梅」`（旗標用開發備註）、`選「X」（🎲≥50）`、`接續「X」`、`第2年3月下旬起`、`持有「X」`、`心上人是虞小梅`。
 - 不寫「需要」等贅字；條件前面的 ✓／✗ 是**目前存檔**是否符合，不是「要／不要」。
 - 旗標編號收成 ⓘ 小圖示（點開看設定位置）；內文不出現腳本名、旗標編號。
+- 旗標浮動視窗每列寫「在哪個事件／地點行動」＋該段裡要選的選項或條件；怎麼進到那段太長，點開看。
 - 暫存旗標（TC／A／B／C、Talk_Option…）翻成戰前／先前的選項或條件；查不到就寫「依戰前情況」或「要從特定的前段劇情進來」。
 - 遊戲資料裡條件不存在的選項（`XXX`、`Meeting_Option_703_02_XXX`）遊戲判定不成立，不列。
 - 前後要求互相矛盾、半路又沒有改旗標的路線，走不通，不列。
@@ -251,7 +252,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 ## 6. 資料與建置
 
 ```
-遊戲更新 → bash tools/refresh_data.sh   # 重抽 Lua、在地化、設定物件、戰鬥、反編譯到 data/（舊的改名 data_old_<時間>）
+遊戲更新 → bash tools/refresh_data.sh   # 重抽 Lua、在地化、設定物件、戰鬥、反編譯到 data/（舊的改名 data_old_<時間>；data/wiki_events 快取會沿用）
 改規則    → bash tools/rebuild_guide.sh  # build_graph.py → data/graph.json → render_preview.py → 安裝到遊戲
 改 Mod    → cd TimeMachine && dotnet build -c Release，複製 bin/Release/LOM_TimeMachine.dll 到 BepInEx/plugins/LOM_TimeMachine/
 ```
@@ -264,7 +265,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 
 | 名稱 | 用途 |
 |---|---|
-| `TARGETS` | 其他條件分頁的目標（brief 格式：conds／steps，每項 `{t, c}`，c 是存檔檢查式如 `flag:G10004=1&rel:girl5>=20`） |
+| `TARGETS` | 其他條件分頁的目標（brief 格式：conds／steps，每項 `{t, c}`，c 是存檔檢查式如 `flag:G10004=1&rel:girl5>=20`；可加 `pop: {text, flag, op, val}` 把 text 那幾個字做成可點的旗標，列出設定／累加位置） |
 | `HEROINES` | 女主角與結緣旗標、結緣結局 |
 | `PART_NAMES` | 切段段名 |
 | `EVENT_NOTES` | 事件備註 |

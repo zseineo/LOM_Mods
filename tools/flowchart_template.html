@@ -212,7 +212,7 @@ details.more summary { cursor: pointer; }
 .pt .entry .lbl { color: var(--muted); }
 .stime { display: none; color: var(--year); font-size: 11px; margin-left: 6px; }
 body.show-time .stime { display: inline; }
-#flagpop { position: fixed; z-index: 20; max-width: 380px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; box-shadow: 0 6px 20px rgba(0,0,0,.25); font-size: 12px; display: none; }
+#flagpop { position: fixed; z-index: 20; max-width: 380px; overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; box-shadow: 0 6px 20px rgba(0,0,0,.25); font-size: 12px; display: none; }
 #flagpop .row { margin: 3px 0; cursor: pointer; }
 #flagpop .row:hover { color: var(--accent); }
 @media (max-width: 760px) { main { flex-direction: column; } #detail { width: auto; max-width: none; height: 45vh; border-left: 0; border-top: 1px solid var(--line); } }
@@ -1428,15 +1428,21 @@ body.show-time .stime { display: inline; }
     for (const [x, i] of setters) {
       const owner = x.ev ? byId.get(x.ev.toLowerCase()) : null;
       const target = (owner ? `data-ev="${esc(owner.id.toLowerCase())}"` : `data-script="${esc(x.s)}"`) + ` data-f="${esc(f)}" data-i="${i}"`;
-      const how = x.path.length || (x.entry || []).length ? '，要走特定分支（點開看）' : '，跑完就會設';
-      const where = owner ? `在「${esc(evShort(owner))}」（${esc(whenText(owner))}）中${how}` : `在日常、閒聊的劇情裡${how}`;
+      // 段落裡要選的選項／條件直接列出；怎麼進到這段太長，點開看
+      const need = x.path.length ? pathHtml(x.path, owner, x.s) : '';
+      const more = (x.entry || []).length;
+      const how = need ? `，要：${need}${more ? '（怎麼進到這段點開看）' : ''}` : more ? '，要走特定分支（點開看）' : '，跑完就會設';
+      const where = owner ? `在「${esc(evShort(owner))}」（${esc(whenText(owner))}）中${how}`
+        : x.pos ? `在地點行動「${esc(x.pos)}」${how}` : `在日常、閒聊的劇情裡${how}`;
       html += `<div class="row" ${target}>${x.op === 'AddFlag' ? (x.v > 0 ? '+' : '') + x.v + '（累加）' : '= ' + x.v}　${where}</div>`;
     }
     pop.innerHTML = html;
     pop.style.display = 'block';
     const r = ev.target.getBoundingClientRect();
     pop.style.left = Math.max(8, Math.min(window.innerWidth - 390, r.left - 200)) + 'px';
-    pop.style.top = Math.min(window.innerHeight - 40, r.bottom + 6) + 'px';
+    // 來源多時往上挪、超出視窗高度就捲動
+    pop.style.maxHeight = (window.innerHeight - 16) + 'px';
+    pop.style.top = Math.max(8, Math.min(window.innerHeight - pop.offsetHeight - 8, r.bottom + 6)) + 'px';
   }
   pop.addEventListener('click', ev => {
     const row = ev.target.closest('[data-ev],[data-script]');
@@ -1778,7 +1784,10 @@ body.show-time .stime { display: inline; }
       if (t.note && !findGuide('targets', t.name)) html += `<div class="rintro">${esc(t.note)}</div>`;
       // 精簡版：只列條件、步驟，不附詳細追溯
       // 每項可帶存檔檢查（連上遊戲時標 ✓／✗）
-      const briefItem = c => typeof c === 'string' ? `<li>${esc(tidy(c))}</li>` : `<li>${checkMark(c.c)}${esc(tidy(c.t))}</li>`;
+      // pop：把其中一段字做成可點的旗標（點了列出設定、累加的位置）
+      const popSpan = p => `<span class="flag" data-flag="${esc(p.flag)}" data-op="${esc(p.op)}" data-val="${esc(p.val)}">${esc(p.text)}</span>`;
+      const briefItem = c => typeof c === 'string' ? `<li>${esc(tidy(c))}</li>`
+        : `<li>${checkMark(c.c)}${c.pop ? esc(tidy(c.t)).replace(esc(c.pop.text), popSpan(c.pop)) : esc(tidy(c.t))}</li>`;
       if (t.conds) html += `<h4>條件</h4><ul class="guide">${t.conds.map(briefItem).join('')}</ul>`;
       if (t.steps) html += `<h4>步驟</h4><ol class="guide">${t.steps.map(briefItem).join('')}</ol>`;
       if (t.brief) { html += '</div>'; continue; }

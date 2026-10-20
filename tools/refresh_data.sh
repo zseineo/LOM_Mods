@@ -37,6 +37,8 @@ for dll in Mortal.Battle Mortal.Combat Mortal.Core Mortal.Free Mortal.Story; do
 done
 
 rm -rf "$TMP"
+# match_wiki.py 的 wiki 頁面快取不是從遊戲抽的，沿用
+if [ -d "$ROOT/data/wiki_events" ]; then cp -r "$ROOT/data/wiki_events" "$NEW/"; fi
 if [ -d "$ROOT/data" ]; then mv "$ROOT/data" "$ROOT/data_old_$(date +%Y%m%d_%H%M)"; fi
 mv "$NEW" "$ROOT/data"
 echo "完成：$ROOT/data"
