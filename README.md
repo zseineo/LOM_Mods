@@ -49,6 +49,13 @@
 - `AutoSkip.ToggleKey`：開關「自動跳過已讀」的按鍵（預設 F8）。遇到未讀、選項、擲骰會自動停下
 - `AutoSkip.ShowIndicator`：開啟時在畫面左上角顯示提示
 
+## 資料來源與授權
+
+算命仙網頁裡的事件名稱與部分結緣攻略整理自 [smilin.net 活俠傳 wiki](https://smilin.net/LoM-wiki/)，
+依 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh_TW) 授權使用，並有修改（同名事件加註區分、攻略改寫並對照遊戲資料補上條件）。
+這部分（`tools/wiki_names.json`、`tools/guides.json`，以及網頁中由它們產生的內容）同樣以 CC BY-NC-SA 4.0 授權，不得用於商業用途。
+本 Mod 免費提供。
+
 ## 回報問題
 
 請附上 `BepInEx\LogOutput.log`（遊戲當掉或 Mod 沒反應時最有用），並寫明 Mod 版本與怎麼重現。
