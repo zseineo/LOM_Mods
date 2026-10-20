@@ -2933,7 +2933,7 @@ out = {
     "events": events,
     # 事件裡的每一段、五塊錢列出的每一段都要有（網頁要畫出劇情、從五塊錢跳到那一段）
     "scripts": {k: v for k, v in script_info.items() if k in used or k in entry_scripts or k in {sc for e in events for sc in e["scripts"]} or k in {u["s"] for u in unread}},
-    "flags": {k: v[:12] for k, v in flag_setters.items()},
+    "flags": dict(flag_setters),
     "lovers": {str(k): v for k, v in lover_points.items()},
     "loverNames": {k[len("PlayerInfo/Lover/"):]: v for k, v in loc.items() if k.startswith("PlayerInfo/Lover/")},
     "flagNames": {k[len("Flag/Name/"):]: v for k, v in loc.items() if k.startswith("Flag/Name/")},

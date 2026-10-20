@@ -952,7 +952,12 @@ body.show-time .stime { display: inline; }
   // 開發備註尾巴的「(0/1)」只是說明它是開關
   const noteHead = f => ((G.flagNotes || {})[f] || '').split(/\r?\n/)[0].trim().replace(/\s*[（(]0\/1[)）]$/, '');
   // 不只 0／1 的旗標（進度、次數）：條件要寫出數值
-  const isMulti = f => !TEMP_FLAG.test(f) && (G.flags[f] || []).some(x => x.op === 'AddFlag' || (x.v !== 0 && x.v !== 1));
+  // 有 0/1 以外的值、或真的在累加（兩處以上加、或沒有直接設成 1 的）才算多值；只在一處 +1 當開關用的（主角不在唐門）不算
+  const isMulti = f => {
+    if (TEMP_FLAG.test(f)) return false;
+    const all = G.flags[f] || [], adds = all.filter(x => x.op === 'AddFlag');
+    return all.some(x => x.v !== 0 && x.v !== 1) || adds.length >= 2 || (adds.length > 0 && !all.some(x => x.op !== 'AddFlag' && x.v === 1));
+  };
   // 遊戲內名稱有重複的（兩個都叫「小師妹」）改用開發備註
   const FLAG_NAME_COUNT = {};
   Object.values(G.flagNames).forEach(n => { FLAG_NAME_COUNT[n] = (FLAG_NAME_COUNT[n] || 0) + 1; });
@@ -1083,12 +1088,19 @@ body.show-time .stime { display: inline; }
       if (/決鬥/.test((G.flagNotes || {})[f] || '')) return `決鬥中的結果（${op} ${val}）`;
       // 暫存旗標換一段劇情就重設，全劇本的設定位置沒有參考價值
       // 同一章（chX_Y）別的事件裡設的：例如第2年8月中旬各地點事件共用的暫存旗標
+      // 其他劇本（act2_1 → act2_2、travel_result_601_101 → _101_01）：名稱去掉最後的編號，一層層往上找同一系列的
       const ch = (near || '').match(/^(ch\d+_\d+)_/);
-      if (ch) {
-        const same = (G.flags[f] || []).filter(x => x.s.startsWith(ch[1] + '_') && x.op !== 'AddFlag');
+      const fams = [];
+      if (ch) fams.push(ch[1]);
+      else for (let b = near || ''; /_\d+$/.test(b);) { b = b.replace(/_\d+$/, ''); fams.push(b); }
+      for (const fam of fams) {
+        const same = (G.flags[f] || []).filter(x => (x.s === fam || x.s.startsWith(fam + '_')) && x.op !== 'AddFlag');
+        if (!same.length) continue;
         const hit = same.filter(x => x.v !== 0 && sat(x.v, op, n)), miss = same.filter(x => x.v !== 0 && !sat(x.v, op, n));
         if (hit.length && !sat(0, op, n)) return `先前${originList(hit)}`;
-        if (!hit.length && miss.length && sat(0, op, n)) return `先前沒有${originList(miss)}`;
+        // 0 就成立的（A≠2）：只要先前沒有設成不符合的值
+        if (miss.length && sat(0, op, n)) return `先前沒有${originList(miss)}`;
+        break;
       }
       return '要從特定的前段劇情進來';
     }
@@ -1222,7 +1234,7 @@ body.show-time .stime { display: inline; }
     // 逐項處理：連上遊戲時，每個條件前面標目前存檔是否符合（「不是（…）」裡面的不標，免得看反）
     const live = LIVE && LIVE.inGame;
     const stack = [];
-    return text.split(/( 且 | 或 )/).map((piece, i) => {
+    const parts = text.split(/( 且 | 或 )/).map((piece, i) => {
       if (i % 2 === 1) return piece === ' 且 ' ? '、' : ' 或 ';
       const negated = stack.includes('neg') || piece.includes('不是（');
       for (let k = 0; k < piece.length; k++) {
@@ -1249,7 +1261,13 @@ body.show-time .stime { display: inline; }
         last = m.index + m[0].length;
       }
       return mark + html + esc(tidy(piece.slice(last)));
-    }).join('');
+    });
+    // 全部是「且」的：寫出來一樣的項目（不同暫存旗標翻成同一句）只留一個；括號沒配對的（跨項目的「不是（…）」）不動
+    if (!text.includes(' 或 ')) {
+      const raw = text.split(' 且 '), balanced = t => (t.match(/（/g) || []).length === (t.match(/）/g) || []).length;
+      if (raw.every(balanced)) return [...new Set(parts.filter((_, i) => i % 2 === 0))].join('、');
+    }
+    return parts.join('');
   }
   // wiki 式短寫法：「處世<60」「小師妹好感≥60」「第2年3月下旬起」「持有「金念珠」」「心上人是虞小梅」
   const isYes = (op, v) => (op === '≥' && v === 1) || (op === '>' && v === 0) || (op === '≠' && v === 0);
@@ -2077,7 +2095,7 @@ body.show-time .stime { display: inline; }
     let what;
     if (r.kind === 'choice') what = /^choice_option/.test(r.label) ? '另一個選項（沒選過）' : `沒選過${esc(quoted(r.label.replace(/　〔.*〕$/, '')))}`;
     else if (r.kind === 'battle') what = /^勝利/.test(r.label) ? '戰鬥勝利那段' : /^落敗/.test(r.label) ? '戰鬥落敗那段' : '另一種戰鬥結果';
-    else if (r.kind === 'dice') what = esc(r.label.replace(/^(.*)（(<|<=|>=|>|=)(\d+)）$/, (m, t, op, v) => `「${t}」（🎲${op.replace('>=', '≥').replace('<=', '≤')}${v}）`));
+    else if (r.kind === 'dice') what = esc(r.label.replace(/^(.*)（(<|<=|>=|>|=)(\d+)）$/, (m, t, op, v) => `${/^「.*」$/.test(t) ? t : `「${t}」`}（🎲${op.replace('>=', '≥').replace('<=', '≤')}${v}）`));
     else if (r.kind === 'position') what = '隨機抽到的另一種結果';
     else {
       // 條件分支：「以上皆非」改寫成「不是…」，其餘條件（含旗標）轉白話
