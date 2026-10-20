@@ -1037,7 +1037,7 @@ body.show-time .stime { display: inline; }
     finally { phraseDepth--; }
   }
   // 遊戲目前做不到的旗標（和 build_graph.py 的 NEVER_FLAGS 一致）：條件裡「或 X」一定不成立的選項、「且 X」一定成立的部分不寫
-  const NEVER_FLAGS = {G11001: 0, G11007: 0, G11008: 0, E12002: 0, Demo: 0, Prologue: 0};
+  const NEVER_FLAGS = {G11001: 0, G11007: 0, G11008: 0, Demo: 0, Prologue: 0};
   function splitTop(t, sep) {
     const out = [];
     let depth = 0, cur = '';
