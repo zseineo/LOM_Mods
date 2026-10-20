@@ -2154,14 +2154,17 @@ body.show-time .stime { display: inline; }
       || !!((u.routes || []).length && u.routes.every(r => r.some(x => (x.path || []).some(l => DEMO_LABEL.test(l)))));
     const all = G.unread.filter(u => u.read < 1 && (!st || (st === 'none' ? fresh(u) : !fresh(u))) && relevant(u));
     const list = all.filter(u => !isDemo(u)), demoList = all.filter(isDemo);
-    const unreadLines = list.reduce((a, u) => a + Math.round((diffOn() ? u.linesAll || u.lines : u.lines) * (1 - u.read)), 0);
+    // 選了角色：總句數只算她的句子（她說的、旁白提到她的）；其他照整段算
+    const herMode = who && who !== NONE;
+    const unreadLines = herMode ? list.reduce((a, u) => a + herUnread(u, who), 0)
+      : list.reduce((a, u) => a + Math.round((diffOn() ? u.linesAll || u.lines : u.lines) * (1 - u.read)), 0);
     let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落（以重建頁面時的「已讀」紀錄計算）。
       只因性情、道德、處世、修養、學問或技能／天賦而換台詞（不是選項造成、走向相同）的地方算「差分」，預設看過其中一種就算讀過，上方勾「列入差分」才每種都算；
       讀了一部分的段落，會列出沒讀到的台詞在哪個分支、要怎麼走才看得到（選哪個選項、符合什麼條件、擲骰、戰鬥勝負）——這是從劇本推出來的，不是存檔記下的原因。玩過的事件裡整段沒走到的標「◇ 分支」。選了角色時：整段沒讀的，她有出場（說話、立繪、傳說）或旁白提到她就列；讀了一部分的，要有「她說的台詞」或「旁白提到她的句子」還沒讀才列；「其他」是沒有這些角色的。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
     const fchip = (attr, v, cur, label) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${label}</button>`;
     html += currentEventHtml();
     html += `<div class="libtools"><div class="fchips"><span>狀態</span>${[['', '全部'], ['none', '未讀'], ['part', '部分已讀']].map(([v, l]) => fchip('ur-st', v, st, l)).join('')}</div>`
-      + `<span class="tag" style="color:var(--muted)">${list.length} 段，約 ${unreadLines} 句沒讀過${demoList.length ? `（另有 ${demoList.length} 段只在試玩版出現，列在最後）` : ''}</span></div>`
+      + `<span class="tag" style="color:var(--muted)">${list.length} 段，${herMode ? `${esc(who)}的句子約 ${unreadLines} 句` : `約 ${unreadLines} 句`}沒讀過${demoList.length ? `（另有 ${demoList.length} 段只在試玩版出現，列在最後）` : ''}</span></div>`
       + `<div class="libtools"><div class="fchips"><span>登場角色</span>${fchip('ur-who', '', who, '全部')}${heroines.map(h => fchip('ur-who', h, who, iconImg(h) + esc(h))).join('')}${fchip('ur-who', NONE, who, '其他')}</div></div>`;
     // 依所屬事件分組，事件依時間排序；不屬於任務事件的歸到最後
     const groups = new Map();
