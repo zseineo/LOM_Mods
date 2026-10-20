@@ -11,8 +11,8 @@
 ## 安裝
 
 1. **先裝 BepInEx 6**（只要裝一次）
-   下載 [BepInEx-Unity.Mono-win-x64-6.0.0-be.692](https://builds.bepinex.dev/projects/bepinex_be/692/BepInEx-Unity.Mono-win-x64-6.0.0-be.692%2B851521c.zip)，
-   解壓縮到遊戲資料夾（有 `Mortal.exe` 的那層），開一次遊戲再關掉。
+   到 [BepInEx 建置列表](https://builds.bepinex.dev/projects/bepinex_be) 找 **#692**，下載 `BepInEx-Unity.Mono-win-x64-6.0.0-be.692+851521c.zip`
+   （Mod 是用這版測的；GitHub 上的 6.0.0-pre.2 沒測過），解壓縮到遊戲資料夾（有 `Mortal.exe` 的那層），開一次遊戲再關掉。
    遊戲是 64 位元，請用 **win-x64** 版；x86 版會完全沒反應。
 2. 到 [Releases](https://github.com/zseineo/LOM_Mods/releases) 下載要的 Mod 壓縮檔，同樣**解壓縮到遊戲資料夾**，檔案會自動放進 `BepInEx\plugins\`。
 3. 開遊戲。設定檔在第一次開遊戲後產生於 `BepInEx\config\`。
