@@ -23,6 +23,13 @@ echo "== 在地化文字（繁中）"
 python -I "$ROOT/tools/extract_loc.py" "$GAME" "$NEW/loc_tc" "${1:-ChineseTraditional}"
 echo "loc_tc: $(ls "$NEW/loc_tc" | wc -l) 個"
 
+echo "== 遊戲版本（PlayerSettings.bundleVersion，遊戲畫面上顯示的版本號）"
+python -I -c "
+import sys, UnityPy
+env = UnityPy.load(sys.argv[1])
+print(next(o.read_typetree()['bundleVersion'] for o in env.objects if o.type.name == 'PlayerSettings'))" "$GAME/Mortal_Data/globalgamemanagers" > "$NEW/game_version.txt"
+cat "$NEW/game_version.txt"
+
 echo "== 遊戲設定物件"
 python -I "$ROOT/tools/dump_so.py" "$GAME" "$NEW/so2.json" \
   "GameStat,FlagData,GameTimeData,RelationshipStat,PlayerTalentData,Book,Misc,SpecialItem,LibraryItemData,MissionData,MissionCheckData,MissionManagerData,SubMissionsData,StatGroupVariable,ConditionResultData,UpgradeItemData,ConditionResultConfig,DiceResultData,DiceResultConfig,PositionResultData,PositionResultConfig,SwitchResultData,SwitchResultConfig,PositionEventData,StoryMappingItem" | grep -v "^top classes"

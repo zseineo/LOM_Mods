@@ -29,7 +29,8 @@
 html, body { margin: 0; height: 100%; }
 body { background: var(--bg); color: var(--ink); font: 14px/1.5 "Microsoft JhengHei UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif; display: flex; flex-direction: column; }
 header { padding: 10px 16px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; background: var(--panel); }
-header h1 { font-size: 17px; margin: 0; letter-spacing: .05em; }
+header h1 { font-size: 17px; margin: 0; letter-spacing: .05em; cursor: pointer; }
+header h1.on { color: var(--accent); }
 header .stats { color: var(--muted); font-size: 12px; }
 header label { display: inline-flex; gap: 5px; align-items: center; font-size: 13px; cursor: pointer; user-select: none; }
 header input[type=search] { padding: 5px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); min-width: 220px; }
@@ -220,8 +221,8 @@ body.show-time .stime { display: inline; }
 </head>
 <body class="spoil">
 <header>
-  <h1>算命仙</h1>
-  <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabHelp">說明</button><button id="tabMore" title="展開更多分頁">▸</button><button id="tabChart" class="extra">流程圖</button><button id="tabCheat" class="extra">作弊</button></span>
+  <h1 id="brand" title="說明與版本">算命仙</h1>
+  <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabMore" title="展開更多分頁">▸</button><button id="tabChart" class="extra">流程圖</button><button id="tabCheat" class="extra">作弊</button></span>
   <span class="stats" id="stats"></span>
   <span class="live" id="live">離線預覽</span>
   <input type="search" id="q" placeholder="搜尋事件、選項、腳本、旗標…">
@@ -422,6 +423,7 @@ body.show-time .stime { display: inline; }
     if (currentView === 'romance') renderRomance(true);
     else if (currentView === 'targets') renderTargets(true);
     else if (currentView === 'places') renderPlaces(true);
+    else if (currentView === 'help') renderHelp(true);
     else drawNowLine();
   }
   function drawNowLine() {
@@ -769,6 +771,7 @@ body.show-time .stime { display: inline; }
   // 細節面板
   let selected = null;
   function select(id, scroll, focus) {
+    if (id !== selected) navPush({view: currentView, ev: id});
     selected = id;
     const e = byId.get(id);
     nodes.forEach(n => n.classList.remove('sel', 'rel'));
@@ -2373,7 +2376,7 @@ body.show-time .stime { display: inline; }
     const herMode = who && who !== NONE;
     const unreadLines = herMode ? list.reduce((a, u) => a + herUnread(u, who), 0)
       : list.reduce((a, u) => a + Math.round((diffOn() ? u.linesAll || u.lines : u.lines) * (1 - u.read)), 0);
-    let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落。未讀怎麼算、標記的意思見「說明」分頁。點標題看劇情，點事件跳到流程圖。</div>`;
+    let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落。未讀怎麼算、標記的意思：點左上角「算命仙」看說明。點標題看劇情，點事件跳到流程圖。</div>`;
     const fchip = (attr, v, cur, label) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${label}</button>`;
     html += currentEventHtml();
     html += `<div class="libtools"><div class="fchips"><span>狀態</span>${[['', '全部'], ['none', '未讀'], ['part', '部分已讀']].map(([v, l]) => fchip('ur-st', v, st, l)).join('')}</div>`
@@ -2663,16 +2666,37 @@ body.show-time .stime { display: inline; }
     else if (el.dataset.flag) showFlag(el.dataset.flag, ev);
     else el.classList.add('reveal');
   });
-  const TAB_IDS = {unread: 'tabUnread', places: 'tabPlaces', romance: 'tabRomance', targets: 'tabTargets', help: 'tabHelp', chart: 'tabChart', cheat: 'tabCheat'};
+  const TAB_IDS = {unread: 'tabUnread', places: 'tabPlaces', romance: 'tabRomance', targets: 'tabTargets', chart: 'tabChart', cheat: 'tabCheat'};
   // 流程圖、作弊平常摺疊在「▸」裡，點開才顯示；正在看的話一直顯示
   function setMoreTabs(open) {
     document.body.classList.toggle('moretabs', open);
     document.getElementById('tabMore').textContent = open ? '◂' : '▸';
   }
   document.getElementById('tabMore').onclick = () => setMoreTabs(!document.body.classList.contains('moretabs'));
+  document.getElementById('brand').onclick = () => setView('help');
+  // ---- 瀏覽器上一頁／下一頁：切換分頁、選事件都記一筆（連同捲動位置），按上一頁回到前一個畫面 ----
+  let navRestoring = true;
+  function navPush(st) {
+    if (navRestoring) return;
+    history.replaceState({...history.state, top: romance.scrollTop, dtop: detail.scrollTop}, '');
+    history.pushState(st, '', `#view=${st.view}${st.ev ? '&ev=' + encodeURIComponent(st.ev) : ''}`);
+  }
+  window.addEventListener('popstate', e => {
+    const st = e.state;
+    if (!st) return;
+    navRestoring = true;
+    try {
+      if (st.view !== currentView) setView(st.view);
+      if (st.ev && st.ev !== selected && byId.has(st.ev)) select(st.ev, false);
+      if (st.top != null) romance.scrollTop = st.top;
+      if (st.dtop != null) detail.scrollTop = st.dtop;
+    } finally { navRestoring = false; }
+  });
   function setView(v) {
     document.body.classList.toggle('view-romance', v !== 'chart');
     for (const [view, id] of Object.entries(TAB_IDS)) document.getElementById(id).classList.toggle('on', view === v);
+    document.getElementById('brand').classList.toggle('on', v === 'help');
+    if (v !== currentView) navPush({view: v, ev: selected || null});
     if (v === 'chart' || v === 'cheat') setMoreTabs(true);
     document.getElementById('hiddenToggle').style.display = 'none';
     currentView = v;
@@ -2683,9 +2707,20 @@ body.show-time .stime { display: inline; }
     if (v === 'cheat') renderCheat();
     if (v === 'help') renderHelp();
   }
-  // ---------- 說明 ----------
-  function renderHelp() {
-    romance.innerHTML = `<div class="hcard"><h2>這個 Mod 能做什麼</h2><ul class="guide">
+  // ---------- 說明（點左上角「算命仙」）----------
+  let helpSig = null;
+  function renderHelp(keep) {
+    const B = G.build || {}, now = LIVE && LIVE.live ? LIVE.gameVersion : null;
+    const sig = `${now}|${LIVE && LIVE.modVersion}`;
+    if (keep && sig === helpSig) return;
+    helpSig = sig;
+    const top = romance.scrollTop;
+    romance.innerHTML = `<div class="hcard"><h2>版本</h2><ul class="guide">
+      <li>頁面資料：遊戲 ${esc(B.gameVersion || '（沒有記錄）')}，${esc(B.built || '')} 建立</li>
+      <li>目前遊戲：${now ? esc(now) : LIVE && LIVE.live ? '已連上，但這版 Mod 沒有回報版本' : '沒連上遊戲（從遊戲裡按 F7 開才看得到）'}${LIVE && LIVE.modVersion ? `　·　Mod ${esc(LIVE.modVersion)}` : ''}</li>
+      ${now && B.gameVersion && now !== B.gameVersion ? '<li><span class="bad">目前的遊戲版本和頁面資料不同：遊戲更新後條件可能有改，這份頁面可能不準。</span></li>' : ''}
+    </ul></div>
+    <div class="hcard"><h2>這個 Mod 能做什麼</h2><ul class="guide">
       <li><b>F6 時光機</b>：每一旬第一個能存檔的時間點自動存一份，按 F6 開格子視窗，點時間點就能讀回去。不占遊戲存檔欄位，也不會被 Steam 雲端同步。</li>
       <li><b>關鍵節點</b>：葉家兄妹、留學、破廟、江陵、大師兄下山、小師妹招親、大雪山、武林大會、決策這些事件前，另外存一份「養成回合開始、行動次數全滿」的存檔。</li>
       <li><b>存檔路線</b>：可以從目前時間分岔出新路線，各路線的存檔互不覆蓋。</li>
@@ -2701,6 +2736,7 @@ body.show-time .stime { display: inline; }
       <li>🏆 整段要成就：這段台詞要有某個成就（風雲史）才看得到；🏆 成就追加台詞：不用成就也看得到這段，有成就會多幾句。</li>
       <li>${MAYBE_TAG}：劇本裡找不到把旗標設成需要的值的地方（遊戲程式也可能會設，所以只是可能）。確定做不到的（未實裝的結緣、試玩版）直接不列。</li>
     </ul></div>`;
+    if (keep) romance.scrollTop = top;
   }
   // ---------- 作弊：開關存在 Mod 的設定檔 ----------
   const CHEATS = [
@@ -2812,6 +2848,9 @@ body.show-time .stime { display: inline; }
   if (/view=unread/.test(location.hash)) setView('unread');
   const m = location.hash.match(/ev=([^&]+)/);
   if (m) { const id = decodeURIComponent(m[1]).toLowerCase(); if (byId.has(id)) revealEvent(id); }
+  // 開頁面時的畫面當成第一筆，之後的操作才記
+  history.replaceState({view: currentView, ev: selected || null}, '');
+  navRestoring = false;
 })();
 </script>
 </body>

@@ -335,6 +335,8 @@ internal sealed class GuideServer
         bool inGame = sceneController != null && sceneController.CurrentScene != GameBridge.TitleScene;
         StringBuilder sb = new StringBuilder(64 * 1024);
         sb.Append("{\"live\":true,\"inGame\":").Append(inGame ? "true" : "false");
+        // 版本：網頁說明裡和頁面資料建立時的遊戲版本比對
+        sb.Append(",\"gameVersion\":").Append(Json.Str(Application.version)).Append(",\"modVersion\":").Append(Json.Str(Plugin.VERSION));
         // 講經堂圖鑑（跨存檔共用）：死法、汗青書、結局 CG 已取得的項目
         LibrarySystem library = LibrarySystem.Instance;
         if (library != null)

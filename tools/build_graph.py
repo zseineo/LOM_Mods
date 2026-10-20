@@ -3,6 +3,7 @@
 用法：python -I build_graph.py <so2.json> <lua_dir> <loc_dir> <decomp_dir> <universe.json|-> <out.json>
 """
 import collections
+import datetime
 import json
 import os
 import re
@@ -2946,6 +2947,10 @@ out = {
     "flagNotes": {o["m_Name"]: o["_devNote"].strip() for o in by_name["FlagData"].values()
                   if (o.get("_devNote") or "").strip() and not re.match(r"^旗標暫存\d*$", o["_devNote"].strip())},
     "stats": {"scripts": len(scripts), "events": len(events), "readKeys": len(read_keys)},
+    # 頁面資料是哪個遊戲版本、什麼時候建的（refresh_data.sh 抽資料時記下遊戲版本）
+    "build": {"gameVersion": (open(os.path.join(os.path.dirname(so_path), "game_version.txt"), encoding="utf-8").read().strip()
+                              if os.path.exists(os.path.join(os.path.dirname(so_path), "game_version.txt")) else ""),
+              "built": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")},
     # 決鬥關卡打贏／打輸時寫入的旗標值（網頁把劇本裡找不到設定位置的暫存旗標翻成「戰鬥勝利／落敗」）
     "battleFlags": battle_flag_values,
     "scriptVia": script_via,

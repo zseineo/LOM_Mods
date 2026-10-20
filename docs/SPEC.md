@@ -102,11 +102,12 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 | 地點事件 | 各養成地點的候選事件、權重、條件；連上遊戲顯示目前機率（權重 ÷ 總權重，2026-10-20 版遊戲的抽法），可強制觸發 |
 | 結緣條件 | 各女主角結緣步驟（手寫 `tools/guides.json` 的 romance）＋自動追溯；結局傳奇文本不顯示（其他條件分頁也是） |
 | 其他條件 | 其他目標（`build_graph.py` 的 `TARGETS`；`brief` 只列條件／步驟，不附詳細追溯） |
-| 說明 | Mod 功能簡介、✓／✗ 的意思（各分頁不再重複寫）、五塊錢未讀怎麼算與標記 |
+| 說明（點左上角「算命仙」，不是分頁） | 版本（頁面資料的遊戲版本與建立時間 vs 目前遊戲版本、Mod 版本，不同時警告）、Mod 功能簡介、✓／✗ 的意思、五塊錢未讀怎麼算與標記 |
 | ▸ 流程圖 | 預設分段的直式時間軸（見下）；「全部（大圖）」是原本的橫向大圖。點事件看觸發條件、劇情分支 |
 | ▸ 作弊 | 見第 4 節 |
 
 上方開關：「防雷」（未讀內容模糊）、「列入差分」、「顯示腳本推算時間」；篩選器狀態記在瀏覽器 localStorage。
+切換分頁、選事件會記進瀏覽器歷史（含捲動位置），可用上一頁／下一頁。遊戲版本：`refresh_data.sh` 從 PlayerSettings.bundleVersion 記到 `data/game_version.txt`；Mod 的 `/api/state` 回報 `gameVersion`（Application.version）、`modVersion`。
 汗青書、死法（生死簿）分頁已拿掉，改看 smilin.net wiki。
 
 ### 寫法規則（使用者要求）
