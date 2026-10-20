@@ -4,7 +4,7 @@
 
 - 遊戲：活俠傳（Legend of Mortal），Unity 2020.3 Mono，**64 位元**（2026-10-15 更新後）
 - 載入器：BepInEx 6.0.0-be.692 win-x64（遊戲目錄的 `winhttp.dll`）
-- 原始碼：`C:\Users\zsein\Documents\LOM_Mods`（私人 GitHub：zseineo/LOM_Mods）
+- 原始碼：`C:\Users\zsein\Documents\LOM_Mods`（GitHub：zseineo/LOM_Mods，公開；測試版發在 Releases，每個 Mod 一個 tag：`<Mod>-v<版本>`）
 
 | Mod | 資料夾 | 版本 | 用途 |
 |---|---|---|---|
