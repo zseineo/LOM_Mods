@@ -1033,8 +1033,55 @@ body.show-time .stime { display: inline; }
     try { return tidy(String(text).replace(/旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) (-?\d+)/g, (m, f, op, v) => flagPhrase(f, op, v, ctx, near))); }
     finally { phraseDepth--; }
   }
+  // 遊戲目前做不到的旗標（和 build_graph.py 的 NEVER_FLAGS 一致）：條件裡「或 X」一定不成立的選項、「且 X」一定成立的部分不寫
+  const NEVER_FLAGS = {G11001: 0, G11007: 0, G11008: 0, E12002: 0, Demo: 0, Prologue: 0};
+  function splitTop(t, sep) {
+    const out = [];
+    let depth = 0, cur = '';
+    for (let i = 0; i < t.length; i++) {
+      const ch = t[i];
+      if (ch === '（' || ch === '(') depth++;
+      else if (ch === '）' || ch === ')') depth--;
+      if (depth === 0 && t.startsWith(sep, i)) { out.push(cur); cur = ''; i += sep.length - 1; continue; }
+      cur += ch;
+    }
+    return out.concat(cur);
+  }
+  function stripOuter(t) {
+    while (/^[（(]/.test(t)) {
+      let depth = 0, i = 0;
+      for (; i < t.length; i++) { if ('（('.includes(t[i])) depth++; else if ('）)'.includes(t[i])) depth--; if (!depth) break; }
+      if (i !== t.length - 1) break;
+      t = t.slice(1, -1).trim();
+    }
+    return t;
+  }
+  function pruneNever(text) {
+    const t = stripOuter(text.trim());
+    const wrap = x => / (且|或) /.test(x) ? `（${x}）` : x;
+    for (const [sep, keepVal, skipVal] of [[' 或 ', true, false], [' 且 ', false, true]]) {
+      const parts = splitTop(t, sep);
+      if (parts.length < 2) continue;
+      const rs = parts.map(pruneNever);
+      if (rs.some(r => r.val === keepVal)) return {text: t, val: keepVal};
+      const left = rs.filter(r => r.val !== skipVal);
+      if (!left.length) return {text: t, val: skipVal};
+      return left.length === 1 ? left[0] : {text: left.map(r => wrap(r.text)).join(sep), val: null};
+    }
+    const m = t.match(/^旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) (-?\d+)$/);
+    return {text: t, val: m && m[1] in NEVER_FLAGS ? sat(NEVER_FLAGS[m[1]], m[2], Number(m[3])) : null};
+  }
+  // 一定成立的分支標籤（「沒和小菊結緣」「以上皆非（不是：已和上官螢結緣）」）：路線裡不用寫
+  function labelAlways(label) {
+    const t = label.replace(/^(勝利|落敗|符合|不符合)：/, '');
+    if (/　〔/.test(t)) return false;
+    const neg = t.match(/^以上皆非（不是：(.*)）$/);
+    return neg ? neg[1].split('；').every(c => pruneNever(c).val === false) : pruneNever(t).val === true;
+  }
   function plainCondHtml(text, ctx, near) {
     text = String(text).trim().replace(/^（(.*)）$/, '$1');
+    const pruned = pruneNever(text);
+    if (pruned.val === null) text = pruned.text;
     if (text.startsWith('以上皆非')) return '其他情況';
     // 多個旗標加總：結緣旗標加總就是「已結緣人數」，設施旗標加總是「已建設施數」
     text = text.replace(/旗標 G1100\d(?:（[^）]*）)?(?: \+ 旗標 G1100\d(?:（[^）]*）)?)+/g, '已結緣人數')
@@ -1276,7 +1323,6 @@ body.show-time .stime { display: inline; }
       const locked = e.scripts.filter(sc => (G.scripts[sc] || {}).achieveLock).length;
       html += `<div class="when">🏆 ${e.achieveLock ? '這個事件要先取得成就（風雲史）才會出現' : locked ? '有些段落整段要先取得成就（風雲史）才會出現' : '有成就（風雲史）才會多出一些台詞，不用成就也看得到這個事件'}：${e.achieve.map(a => `「${esc(a)}」`).join('、')}</div>`;
     }
-    if (e.demo) html += `<div class="when">※ 要「序章旗標」= 1，只有試玩版會設；正式版不會出現。</div>`;
     if (e.via && !/^hub/.test(e.part || '')) html += `<h3>從這裡觸發</h3><div class="cond">${routesBlock(e.via, e, '觸發方式')}</div>`;
     if (e.activate) html += `<h3>要先啟動</h3><div class="cond">${routesBlock(e.activate, e, '在前面的劇情裡')}</div>`;
     const from = e._from.filter(id => !byId.get(id).quiet), next = e._triggers.filter(id => !byId.get(id).quiet);
@@ -1877,7 +1923,7 @@ body.show-time .stime { display: inline; }
   // ---------- 五塊錢：還沒讀完的場景 ----------
   const REASON_KIND = {choice: '選項', switch: '條件', cond: '條件', dice: '擲骰', battle: '戰鬥', position: '隨機', variant: '差分'};
   function reasonHtml(r, ctx, s) {
-    const path = (r.path || []).map(l => pathHtml([l], ctx, s)).filter(Boolean);
+    const path = (r.path || []).filter(l => !labelAlways(l)).map(l => pathHtml([l], ctx, s)).filter(Boolean);
     const where = path.length ? `<span class="need">（在 ${path.join(' → ')} 之後）</span>` : '';
     let what;
     if (r.kind === 'choice') what = /^choice_option/.test(r.label) ? '另一個選項（沒選過）' : `沒選過${esc(quoted(r.label.replace(/　〔.*〕$/, '')))}`;
@@ -1978,6 +2024,7 @@ body.show-time .stime { display: inline; }
     const seen = [], out = [];
     for (const u of units) {
       if (u.whole) { out.push(u); continue; }
+      if (labelAlways(u.label)) continue;
       const text = pathHtml([u.label], ctx, u.x.from).replace(/<[^>]+>/g, '');
       const echo = text.match(/^[✓✗]?先前選「(.+?)」(（🎲[^）]*）)?$/);
       if (echo && seen.some(t => t.includes(`選「${echo[1]}」`))) continue;
@@ -2148,12 +2195,7 @@ body.show-time .stime { display: inline; }
     // 整段未讀：她有出場（說話、立繪、傳說）或旁白提到她就算；讀了一部分：要有她的句子沒讀
     const relevant = u => !who || (who === NONE ? !namesOf(u).some(shownName) : u.read === 0 ? u.heroines.includes(who) || herUnread(u, who) > 0 : herUnread(u, who) > 0);
     const fresh = u => u.read === 0 && !isBranch(u);
-    // 試玩版：整個事件要序章旗標，或這段每條路線都要「試玩版」
-    const DEMO_LABEL = /旗標 (Demo|Prologue) = 1(?!\d)/;
-    const isDemo = u => !!(u.ev && (byId.get(u.ev.toLowerCase()) || {}).demo)
-      || !!((u.routes || []).length && u.routes.every(r => r.some(x => (x.path || []).some(l => DEMO_LABEL.test(l)))));
-    const all = G.unread.filter(u => u.read < 1 && (!st || (st === 'none' ? fresh(u) : !fresh(u))) && relevant(u));
-    const list = all.filter(u => !isDemo(u)), demoList = all.filter(isDemo);
+    const list = G.unread.filter(u => u.read < 1 && (!st || (st === 'none' ? fresh(u) : !fresh(u))) && relevant(u));
     // 選了角色：總句數只算她的句子（她說的、旁白提到她的）；其他照整段算
     const herMode = who && who !== NONE;
     const unreadLines = herMode ? list.reduce((a, u) => a + herUnread(u, who), 0)
@@ -2164,13 +2206,13 @@ body.show-time .stime { display: inline; }
     const fchip = (attr, v, cur, label) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${label}</button>`;
     html += currentEventHtml();
     html += `<div class="libtools"><div class="fchips"><span>狀態</span>${[['', '全部'], ['none', '未讀'], ['part', '部分已讀']].map(([v, l]) => fchip('ur-st', v, st, l)).join('')}</div>`
-      + `<span class="tag" style="color:var(--muted)">${list.length} 段，${herMode ? `${esc(who)}的句子約 ${unreadLines} 句` : `約 ${unreadLines} 句`}沒讀過${demoList.length ? `（另有 ${demoList.length} 段只在試玩版出現，列在最後）` : ''}</span></div>`
+      + `<span class="tag" style="color:var(--muted)">${list.length} 段，${herMode ? `${esc(who)}的句子約 ${unreadLines} 句` : `約 ${unreadLines} 句`}沒讀過</span></div>`
       + `<div class="libtools"><div class="fchips"><span>登場角色</span>${fchip('ur-who', '', who, '全部')}${heroines.map(h => fchip('ur-who', h, who, iconImg(h) + esc(h))).join('')}${fchip('ur-who', NONE, who, '其他')}</div></div>`;
     // 依所屬事件分組，事件依時間排序；不屬於任務事件的歸到最後
     const groups = new Map();
     // 從留學養成選單進去的段落（例如鶴崖）不算在帶你去留學的那個事件底下，依地點另外分組
     const evKey = k => k.split('|')[0];
-    for (const u of list.concat(demoList)) {
+    for (const u of list) {
       const key = (u.ev ? u.ev.toLowerCase() : '') + (u.hubGroup ? '|' + u.hubGroup : '');
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(u);
@@ -2270,14 +2312,7 @@ body.show-time .stime { display: inline; }
       return `<details class="plcard"${rows.length <= 6 || who ? ' open' : ''}><summary style="cursor:pointer"><b>${head}</b>　<span class="need">${countText(rows)}</span></summary>`
         + (ev ? evIntro(ev) : '') + rowsHtml(rows) + '</details>';
     }
-    let demoHtml = '';
-    for (const [ck, keys] of clusters) {
-      const one = keys.length > 1 ? clusterHtml(ck, keys) : groupHtml(keys[0]);
-      if (keys.every(k => (byId.get(k) || {}).demo)) demoHtml += one; else html += one;
-    }
-    // 序章旗標只有試玩版會設：正式版看不到，收在最後
-    if (demoHtml) html += `<details class="plcard"><summary style="cursor:pointer"><b>試玩版序章才有的劇情</b>　<span class="need">${countText(demoList)}</span></summary>`
-      + `<div class="need" style="margin:2px 0 6px">這些事件要「序章旗標」= 1，只有試玩版會設；正式版不會出現，不用找。</div>${demoHtml}</details>`;
+    for (const [ck, keys] of clusters) html += keys.length > 1 ? clusterHtml(ck, keys) : groupHtml(keys[0]);
     romance.innerHTML = html;
     romance.querySelectorAll('[data-ur-st]').forEach(b => b.onclick = () => { urState = b.dataset.urSt; savePref('urState', urState); renderUnread(); });
     romance.querySelectorAll('[data-ur-who]').forEach(b => b.onclick = () => { urWho = b.dataset.urWho; savePref('urWho', urWho); renderUnread(); });

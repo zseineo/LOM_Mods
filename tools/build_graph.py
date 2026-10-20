@@ -1545,12 +1545,88 @@ def label_constraints(label):
     return out
 
 
+# 遊戲目前做不到的旗標（使用者確認）：瑞杏、上官螢、魏菊沒有實裝結緣；小菊在唐門；試玩版（序章）
+# 要它們不是 0 的條件、路線、事件、地點事件結果都不列
+NEVER_FLAGS = {"G11001": 0, "G11007": 0, "G11008": 0, "E12002": 0, "Demo": 0, "Prologue": 0}
+
+
+def split_top(text, sep):
+    """只在最外層（不在括號裡）切開"""
+    parts, depth, cur, i = [], 0, "", 0
+    while i < len(text):
+        ch = text[i]
+        if ch in "（(":
+            depth += 1
+        elif ch in "）)":
+            depth -= 1
+        if depth == 0 and text.startswith(sep, i):
+            parts.append(cur)
+            cur, i = "", i + len(sep)
+            continue
+        cur += ch
+        i += 1
+    return parts + [cur]
+
+
+def strip_outer(t):
+    while t[:1] in ("（", "("):
+        depth = 0
+        for i, ch in enumerate(t):
+            depth += ch in "（("
+            depth -= ch in "）)"
+            if depth == 0:
+                break
+        if i != len(t) - 1:
+            break
+        t = t[1:-1].strip()
+    return t
+
+
+def cond_value(text):
+    """條件在做不到的旗標下一定不成立回傳 False、一定成立 True、看不出來 None"""
+    t = strip_outer(text.strip())
+    ors = split_top(t, " 或 ")
+    if len(ors) > 1:
+        vs = [cond_value(x) for x in ors]
+        return True if True in vs else False if all(v is False for v in vs) else None
+    ands = split_top(t, " 且 ")
+    if len(ands) > 1:
+        vs = [cond_value(x) for x in ands]
+        return False if False in vs else True if all(v is True for v in vs) else None
+    m = NEED_ATOM.match(t)
+    if m and m.group(1) in NEVER_FLAGS:
+        return satisfies(NEVER_FLAGS[m.group(1)], m.group(2), int(m.group(3)))
+    return None
+
+
+def label_never(label):
+    """分支標籤一定走不到（要做不到的旗標成立）"""
+    lab = re.sub(r"^(勝利|落敗|符合|不符合|戰鬥中)：", "", label)
+    pre = re.search(r"　〔前提不是：(.*)〕$", lab)
+    need = re.search(r"　〔需：(.*)〕$", lab)
+    lab = re.sub(r"　〔.*〕$", "", lab)
+    if lab.startswith("以上皆非（不是：") and lab.endswith("）"):
+        if any(cond_value(c) is True for c in lab[8:-1].split("；")):
+            return True
+    elif re.search(r"[=≠<>≤≥]", lab) and "「" not in lab and cond_value(lab) is False:
+        return True
+    if pre and any(cond_value(c) is True for c in pre.group(1).split("；")):
+        return True
+    return bool(need and cond_value(need.group(1)) is False)
+
+
+def route_never(route):
+    return any(label_never(l) for x in route for l in x.get("path", []))
+
+
 def route_possible(route, scripts):
     """scripts 是 tuple 時是路上依序經過的腳本（從目標往回）：只有夾在兩個要求之間的腳本改了旗標，前後不同才說得通；
     是 set 時不知道順序，路上任何地方會改它就不判斷。"""
     order = list(reversed(scripts)) if isinstance(scripts, tuple) else None
     pos_of = {sc: i for i, sc in enumerate(order)} if order else {}
     allowed, last = {}, {}
+    if route_never(route):
+        return False
     for x in route:
         here = pos_of.get(x["from"])
         for label in x["path"]:
@@ -1625,7 +1701,7 @@ def event_via(e):
     """事件開頭的腳本被其他事件／養成選單接過來時，列出那些入口的路線。"""
     # 事件結束常回到留學的養成選單，選單也會被算進事件自己的腳本鏈：選單的腳本一律當成外部入口
     own = {sc for sc in e["scripts"] if not FREE_SCRIPT.match(sc)}
-    out = []
+    out, tried = [], []
     for x in [x for x in entry_paths.get(e["start"], []) if x["from"] not in own][:4]:
         owner_ev, _ = find_owner(x["from"])
         last = [{"from": x["from"], "path": x["path"]}] if x["path"] else []
@@ -1633,8 +1709,11 @@ def event_via(e):
             steps = [{k: v for k, v in y.items() if k != "into"} for y in r] + last
             if owner_ev and not (steps and steps[0].get("hub")):
                 steps = [{"from": x["from"], "path": [], "ev": owner_ev}] + steps
+            tried.append(steps)
             if route_possible(steps, r.seen if getattr(r, "seen", None) else (set(event_by_id_lower[owner_ev.lower()]["scripts"]) if owner_ev else set()) | {y["from"] for y in steps}):
                 out.append(steps)
+    if tried and all(route_never(r) for r in tried) and not e["active"]:
+        NEVER_ENTRY.add(e["id"])
     return simplify_routes([r for r in out if r])[:3]
 
 
@@ -1654,9 +1733,12 @@ for _name, _info in script_info.items():
     index_missions(_name, _info["items"], [])
 
 
+NEVER_ENTRY = set()
+
+
 def event_activate(e):
     """事件要先被別段劇情啟動（Mission）：列出啟動它的路線。"""
-    out = []
+    out, tried = [], []
     for x in mission_points.get((e["mission"], e["key"]), [])[:4]:
         owner_ev, _ = find_owner(x["from"])
         last = [{"from": x["from"], "path": x["path"]}] if x["path"] else []
@@ -1664,8 +1746,11 @@ def event_activate(e):
             steps = [{k: v for k, v in y.items() if k != "into"} for y in r] + last
             if owner_ev and owner_ev != e["id"] and not (steps and steps[0].get("hub")):
                 steps = [{"from": x["from"], "path": [], "ev": owner_ev}] + steps
+            tried.append(steps)
             if route_possible(steps, r.seen if getattr(r, "seen", None) else (set(event_by_id_lower[owner_ev.lower()]["scripts"]) if owner_ev else set()) | {y["from"] for y in steps}):
                 out.append(steps)
+    if tried and all(route_never(r) for r in tried):
+        NEVER_ENTRY.add(e["id"])
     return simplify_routes([r for r in out if any(y["path"] for y in r)])[:3]
 
 
@@ -1955,9 +2040,6 @@ EVENT_NOTES = {
 for e in events:
     if e["id"] in EVENT_NOTES:
         e["note"] = EVENT_NOTES[e["id"]]
-    # 序章旗標只在試玩版（Demo = 1）設成 1：要它 = 1 的事件正式版不會出現
-    if any(re.search(r"旗標 Prologue = 1(?!\d)", c) for c in e["conds"]):
-        e["demo"] = True
 
 # ---------- 圖鑑：汗青書／結局 CG／死法 ----------
 # 單一腳本的地點：看它自己的背景圖，分不出來就用所屬事件的地點
@@ -2446,6 +2528,8 @@ if read_keys:
                 "place": script_place(name, ev), "title": first_line(name) or (
                     re.sub(r"<[^>]+>|\{[^}]*\}", "", loc.get("Story/" + script_first_say[name], "")).replace("\n", "") if script_first_say.get(name) else "")}
         routes = entry_routes(name, ev)
+        if routes and all(route_never(r) for r in routes):
+            item["never"] = True
         # 網頁只列 3 條，其餘只記有沒有
         item["routes"] = [[{k: v for k, v in x.items() if k != "into"} for x in r] for r in routes[:3]]
         item["moreRoutes"] = len(routes) > 3
@@ -2456,9 +2540,14 @@ if read_keys:
         if r > 0:
             reasons = []
             unread_reasons(block, vars_, [], reasons)
+            reasons = [x for x in reasons if not label_never(x["label"]) and not any(label_never(l) for l in x.get("path", []))]
             item["reasons"] = reasons[:12]
         unread.append(item)
 
+# 地點事件：開啟條件一定不成立的結果不列
+for pos in positions:
+    for ly in pos["layers"]:
+        ly["candidates"] = [c for c in ly["candidates"] if cond_value(c.get("cond") or "") is not False]
 for pos in positions:
     for ly in pos["layers"]:
         for c in ly["candidates"]:
@@ -2678,6 +2767,20 @@ for e in events:
                 ts.append(t)
     if ts:
         e["time"] = {"type": "range", "from": min(ts, key=TKEY), "to": {"y": 4, "m": 3, "s": 3}, "open": True, "after": True}
+
+# 做不到的事件：網頁當成 quiet 不顯示；屬於它的段落不列未讀。接續段落的前一段全都做不到，它也做不到
+for e in events:
+    if e["id"] in NEVER_ENTRY or any(cond_value(c) is False for c in e["conds"]):
+        e["never"] = e["quiet"] = True
+_changed = True
+while _changed:
+    _changed = False
+    for e in events:
+        src = [event_by_id.get(x) for x in e.get("partFrom") or []]
+        if e.get("part") and src and all(x and x.get("never") for x in src) and not e.get("never"):
+            e["never"] = e["quiet"] = _changed = True
+never_ev = {e["id"] for e in events if e.get("never")}
+unread = [u for u in unread if not u.get("never") and u["ev"] not in never_ev]
 
 # 事件名稱改用 smilin.net wiki 的事件名（tools/match_wiki.py 配對、tools/wiki_names.json 可手動修正）；
 # 原本的開發備註留在 devDesc。同一個 wiki 事件對到好幾個事件時，後面加上原本的名稱區分
