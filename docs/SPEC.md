@@ -107,6 +107,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 ### 寫法規則（使用者要求）
 
 - 參考 smilin.net wiki 的短寫法：`處世<60`、`小師妹好感≥60`、`🚩「收留小梅」`（旗標用開發備註）、`選「X」（🎲≥50）`、`接續「X」`、`第2年3月下旬起`、`持有「X」`、`心上人是虞小梅`。
+- 手寫的條件（`build_graph.py` 的 `TARGETS`、`tools/guides.json`）也照這些寫法；旗標代號、腳本名只放滑鼠提示（guides 的 `flags`）。
 - 不寫「需要」等贅字；條件前面的 ✓／✗ 是**目前存檔**是否符合，不是「要／不要」。
 - 旗標編號收成 ⓘ 小圖示（點開看設定位置）；內文不出現腳本名、旗標編號。
 - 旗標浮動視窗每列寫「在哪個事件／地點行動」＋該段裡要選的選項或條件；怎麼進到那段太長，點開看。
@@ -253,6 +254,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 
 ```
 遊戲更新 → bash tools/refresh_data.sh   # 重抽 Lua、在地化、設定物件、戰鬥、反編譯到 data/（舊的改名 data_old_<時間>；data/wiki_events 快取會沿用）
+更新後    → python -I tools/diff_graph.py data_old_<時間>/graph.json data/graph.json  # 事件條件、劇本分歧、手寫條件用到的旗標有變的，逐項對照 TARGETS／guides.json 改寫
 改規則    → bash tools/rebuild_guide.sh  # build_graph.py → data/graph.json → render_preview.py → 安裝到遊戲
 改 Mod    → cd TimeMachine && dotnet build -c Release，複製 bin/Release/LOM_TimeMachine.dll 到 BepInEx/plugins/LOM_TimeMachine/
 ```
