@@ -1582,41 +1582,71 @@ def strip_outer(t):
     return t
 
 
-def cond_value(text):
-    """條件在做不到的旗標下一定不成立回傳 False、一定成立 True、看不出來 None"""
+NEVER_VALUES = {f: {v} for f, v in NEVER_FLAGS.items()}
+
+
+def cond_value(text, table=NEVER_VALUES):
+    """table：旗標 → 可能出現的值。條件一定不成立回傳 False、一定成立 True、看不出來 None"""
     t = strip_outer(text.strip())
     ors = split_top(t, " 或 ")
     if len(ors) > 1:
-        vs = [cond_value(x) for x in ors]
+        vs = [cond_value(x, table) for x in ors]
         return True if True in vs else False if all(v is False for v in vs) else None
     ands = split_top(t, " 且 ")
     if len(ands) > 1:
-        vs = [cond_value(x) for x in ands]
+        vs = [cond_value(x, table) for x in ands]
         return False if False in vs else True if all(v is True for v in vs) else None
-    m = NEED_ATOM.match(t)
-    if m and m.group(1) in NEVER_FLAGS:
-        return satisfies(NEVER_FLAGS[m.group(1)], m.group(2), int(m.group(3)))
+    m = NEED_ATOM.match(re.sub(r"（[^）]*）(?= (=|≠|<|≤|>|≥) )", "", t))
+    if m and m.group(1) in table:
+        hits = {satisfies(x, m.group(2), int(m.group(3))) for x in table[m.group(1)]}
+        return True if hits == {True} else False if hits == {False} else None
     return None
 
 
-def label_never(label):
+def label_never(label, table=NEVER_VALUES):
     """分支標籤一定走不到（要做不到的旗標成立）"""
     lab = re.sub(r"^(勝利|落敗|符合|不符合|戰鬥中)：", "", label)
     pre = re.search(r"　〔前提不是：(.*)〕$", lab)
     need = re.search(r"　〔需：(.*)〕$", lab)
     lab = re.sub(r"　〔.*〕$", "", lab)
     if lab.startswith("以上皆非（不是：") and lab.endswith("）"):
-        if any(cond_value(c) is True for c in lab[8:-1].split("；")):
+        if any(cond_value(c, table) is True for c in lab[8:-1].split("；")):
             return True
-    elif re.search(r"[=≠<>≤≥]", lab) and "「" not in lab and cond_value(lab) is False:
+    elif re.search(r"[=≠<>≤≥]", lab) and "「" not in lab and cond_value(lab, table) is False:
         return True
-    if pre and any(cond_value(c) is True for c in pre.group(1).split("；")):
+    if pre and any(cond_value(c, table) is True for c in pre.group(1).split("；")):
         return True
-    return bool(need and cond_value(need.group(1)) is False)
+    return bool(need and cond_value(need.group(1), table) is False)
 
 
-def route_never(route):
-    return any(label_never(l) for x in route for l in x.get("path", []))
+def route_never(route, table=NEVER_VALUES):
+    return any(label_never(l, table) for x in route for l in x.get("path", []))
+
+
+# 劇本裡找不到能設成所需值的旗標：只看 Lua 的 SetFlag（預設都是 0）。
+# 有 AddFlag 累加的、暫存旗標、決鬥／戰役裡會改的、小遊戲與商店（遊戲程式改）不算；網頁標「可能無法達成」
+_lua_sets, _lua_adds = collections.defaultdict(set), set()
+for _n in os.listdir(lua_dir):
+    if _n.endswith(".txt"):
+        _t = open(os.path.join(lua_dir, _n), encoding="utf-8", errors="replace").read()
+        for _m in re.finditer(r'SetFlag\("([^"]+)", (-?\d+)\)', _t):
+            _lua_sets[_m.group(1)].add(int(_m.group(2)))
+        _lua_adds.update(re.findall(r'AddFlag\("([^"]+)"', _t))
+_combat_text = (json.dumps(battle_dump, ensure_ascii=False) if battle_path and os.path.exists(battle_path) else "") + json.dumps(
+    [o for _t, o in combat_objs.values()], ensure_ascii=False)
+MAYBE_VALUES = {f: {0} | _lua_sets.get(f, set()) for f in by_name.get("FlagData", {})
+                if f not in NEVER_FLAGS and f not in _lua_adds and not TEMP_FLAG_RE.match(f) and f != "NewGamePlus"
+                and not re.match(r"^(Pinball_|Shop_|Score_|TalkOption)", f) and f"FlagData:{f}@" not in _combat_text and f not in BATTLE_RESULT_FLAGS}
+
+
+def maybe_never_reason(text):
+    """條件裡劇本設不出來的旗標要求（給網頁說明用）"""
+    out = []
+    for m in re.finditer(r"旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) (-?\d+)", text):
+        f = m.group(1)
+        if f in MAYBE_VALUES and not any(satisfies(x, m.group(2), int(m.group(3))) for x in MAYBE_VALUES[f]):
+            out.append(f"旗標 {f} {m.group(2)} {m.group(3)}")
+    return out
 
 
 def route_possible(route, scripts):
@@ -2530,6 +2560,8 @@ if read_keys:
         routes = entry_routes(name, ev)
         if routes and all(route_never(r) for r in routes):
             item["never"] = True
+        elif routes and all(route_never(r, MAYBE_VALUES) for r in routes):
+            item["maybeNever"] = sorted({a for r in routes for x in r for l in x.get("path", []) if label_never(l, MAYBE_VALUES) for a in maybe_never_reason(l)})
         # 網頁只列 3 條，其餘只記有沒有
         item["routes"] = [[{k: v for k, v in x.items() if k != "into"} for x in r] for r in routes[:3]]
         item["moreRoutes"] = len(routes) > 3
@@ -2768,6 +2800,22 @@ for e in events:
     if ts:
         e["time"] = {"type": "range", "from": min(ts, key=TKEY), "to": {"y": 4, "m": 3, "s": 3}, "open": True, "after": True}
 
+FACILITY_NAMES = {}
+
+
+def _scan_facility(items):
+    for it in items or []:
+        if it["t"] == "branch":
+            for br in it["branches"]:
+                m = re.match(r"^贖回地產：(.+?)　〔需：（旗標 (Facility_\d+) = 0", br["label"])
+                if m:
+                    FACILITY_NAMES[m.group(2)] = m.group(1)
+                _scan_facility(br["items"])
+
+
+for _info in script_info.values():
+    _scan_facility(_info.get("items"))
+
 # 做不到的事件：網頁當成 quiet 不顯示；屬於它的段落不列未讀。接續段落的前一段全都做不到，它也做不到
 for e in events:
     if e["id"] in NEVER_ENTRY or any(cond_value(c) is False for c in e["conds"]):
@@ -2780,6 +2828,12 @@ while _changed:
         if e.get("part") and src and all(x and x.get("never") for x in src) and not e.get("never"):
             e["never"] = e["quiet"] = _changed = True
 never_ev = {e["id"] for e in events if e.get("never")}
+# 可能做不到的事件：觸發條件裡要的旗標值劇本設不出來
+for e in events:
+    if not e.get("never"):
+        bad = sorted({a for c in e["conds"] if cond_value(c, MAYBE_VALUES) is False for a in maybe_never_reason(c)})
+        if bad:
+            e["maybeNever"] = bad
 unread = [u for u in unread if not u.get("never") and u["ev"] not in never_ev]
 
 # 事件名稱改用 smilin.net wiki 的事件名（tools/match_wiki.py 配對、tools/wiki_names.json 可手動修正）；
@@ -2857,6 +2911,10 @@ out = {
     # 網頁連上遊戲時判斷條件用：條件文字裡的名稱 → 存檔鍵名
     # 任務時間是在哪個事件裡記下的、記成多久之後
     "missionTimes": {k: [{"ev": find_owner(sc)[0], "s": sc, "off": off} for sc, off in v] for k, v in mission_time_set.items()},
+    # 劇本設得出來的旗標值（只列 0／SetFlag 的值有限的旗標）：網頁用來標「可能無法達成」
+    "maybeValues": {f: sorted(v) for f, v in MAYBE_VALUES.items()},
+    # 設施旗標 → 名稱（月會「贖回地產：X」的條件 Facility_00N = 0）
+    "facilityNames": FACILITY_NAMES,
     "liveKeys": {"stat": parse_enum_strings("GameStatType"), "rel": parse_enum_strings("RelationshipStatType")},
 }
 json.dump(out, open(out_path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))

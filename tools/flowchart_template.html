@@ -187,6 +187,8 @@ body.moretabs .tabs .extra { display: inline-block; }
 .subhead { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
 details.more summary { cursor: pointer; }
 .cur { color: var(--muted); font-size: 11.5px; }
+.maybe { color: var(--part); font-size: 11.5px; margin-left: 3px; }
+.rtag.maybe { border-color: var(--part); }
 .golink { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
 .golink:hover { color: var(--accent); }
 .script > .sname { justify-content: flex-start; gap: 4px; }
@@ -850,7 +852,8 @@ body.show-time .stime { display: inline; }
     const how = choice ? (ev && /^戰鬥/.test(choice) ? `「${evShort(ev)}」${choice}` : choice) : fallback;
     // 在哪個事件裡選的：時間＋事件名（選項本身已經帶事件名就不重複）
     const name = ev && !how.includes(`「${evShort(ev)}」`) ? `「${evShort(ev)}」` : '';
-    const where = (t ? tstr(t) : '') + name;
+    const time = t && !(ev && NAME_COUNT.get(evShort(ev)) >= 3) ? tstr(t) : '';
+    const where = time ? time + name : name ? '在' + name : '';
     return {how, where};
   }
   function originList(list) {
@@ -1078,6 +1081,7 @@ body.show-time .stime { display: inline; }
     const neg = t.match(/^以上皆非（不是：(.*)）$/);
     return neg ? neg[1].split('；').every(c => pruneNever(c).val === false) : pruneNever(t).val === true;
   }
+  const MAYBE_TAG = '<span class="maybe" title="劇本裡找不到把這個旗標設成需要的值的地方；遊戲程式也可能會設，所以只是可能">⚠可能無法達成</span>';
   function plainCondHtml(text, ctx, near) {
     text = String(text).trim().replace(/^（(.*)）$/, '$1');
     const pruned = pruneNever(text);
@@ -1085,7 +1089,12 @@ body.show-time .stime { display: inline; }
     if (text.startsWith('以上皆非')) return '其他情況';
     // 多個旗標加總：結緣旗標加總就是「已結緣人數」，設施旗標加總是「已建設施數」
     text = text.replace(/旗標 G1100\d(?:（[^）]*）)?(?: \+ 旗標 G1100\d(?:（[^）]*）)?)+/g, '已結緣人數')
-      .replace(/旗標 Facility_\d+(?: \+ 旗標 Facility_\d+)*(?: \+ 旗標 Facil…)?/g, '已建設施數');
+      .replace(/旗標 Facility_\d+(?: \+ 旗標 Facility_\d+)+(?: \+ 旗標 Facil…)?/g, '已建設施數')
+      // 單一設施（Facility_003 = 0）：是哪一個地產
+      .replace(/旗標 (Facility_\d+) (=|≠|<|≤|>|≥) (\d+)(?![0-9])/g, (m, f, op, v) => {
+        const n = (G.facilityNames || {})[f];
+        return !n ? m : isYes(op, +v) || (op === '=' && v === '1') ? `已贖回「${n}」` : isNo(op, +v) ? `還沒贖回「${n}」` : m;
+      });
     text = itemSums(text);
     // 其他旗標加總（「天道」「餓鬼道」…六道遇過幾個）
     text = text.replace(/旗標 [A-Za-z0-9_]+(?:（[^）]*）)?(?: \+ 旗標 [A-Za-z0-9_]+(?:（[^）]*）)?)+/g, m => {
@@ -1129,9 +1138,15 @@ body.show-time .stime { display: inline; }
       // 加總運算裡的單一旗標不是獨立條件，不換成白話
       for (const m of piece.matchAll(/(?<!\+ )旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) (-?\d+)/g)) {
         html += esc(tidy(piece.slice(last, m.index)));
-        const cur = live && (isMulti(m[1]) || bondOf(m[1])) ? liveValue('flag', m[1]) : null;
+        const phrase = tidy(flagPhrase(m[1], m[2], m[3], ctx, near));
+        // 目前的值：寫法裡有數值、結緣、或備註列了各數值意思時才寫（「沒有🚩X」不用再寫「目前 0」）
+        const showCur = isMulti(m[1]) && (/[=≠<>≤≥]-?\d/.test(phrase) || noteOptions(m[1]).opts.size) || bondOf(m[1]);
+        const cur = live && showCur ? liveValue('flag', m[1]) : null;
+        // 劇本裡設不出這個值：標「可能無法達成」（遊戲程式也可能會改，所以只是可能）
+        const vals = (G.maybeValues || {})[m[1]];
+        const maybe = vals && !vals.some(x => sat(x, m[2], Number(m[3]))) && !/實際上不會成立/.test(flagPhrase(m[1], m[2], m[3], ctx, near));
         const curName = cur == null ? null : valueName(m[1], cur);
-        html += `<span class="flag" data-flag="${esc(m[1])}" data-op="${esc(m[2])}" data-val="${esc(m[3])}">${esc(tidy(flagPhrase(m[1], m[2], m[3], ctx, near)))}</span>${cur != null ? `<span class="cur">（目前${curName === cur ? ' ' + cur : '：' + curName}）</span>` : ''}`;
+        html += `<span class="flag" data-flag="${esc(m[1])}" data-op="${esc(m[2])}" data-val="${esc(m[3])}">${esc(tidy(flagPhrase(m[1], m[2], m[3], ctx, near)))}</span>${cur != null ? `<span class="cur">（目前${curName === cur ? ' ' + cur : '：' + curName}）</span>` : ''}${maybe ? MAYBE_TAG : ''}`;
         last = m.index + m[0].length;
       }
       return mark + html + esc(tidy(piece.slice(last)));
@@ -1148,6 +1163,12 @@ body.show-time .stime { display: inline; }
       .replace(/秘笈等級·(\S+?) (=|≠|<|≤|>|≥) (\d+)/g, (m, n, op, v) => `「${n}」${{'=': `練到 ${v} 級`, '≠': `不是 ${v} 級`, '<': `不到 ${v} 級`, '≤': `${v} 級以下`, '>': `超過 ${v} 級`, '≥': `練到 ${v} 級以上`}[op]}`)
       .replace(/\(([^()\s+×~,]+)\)/g, '$1')
       .replace(/隨機\(0~100\) ≤ 好感·(\S+)/g, '機率＝$1好感%')
+      // 隨機(0~N) 和固定數字比：換成大約的機率
+      .replace(/隨機\(0~(\d+)\) ?(≤|<|≥|>) ?(\d+)(?![0-9])/g, (m, n, op, k) => {
+        const N = +n + 1, K = +k;
+        const hit = {'≤': K + 1, '<': K, '≥': N - K, '>': N - K - 1}[op];
+        return `機率約 ${Math.round(Math.max(0, Math.min(N, hit)) / N * 100)}%`;
+      })
       // 「max(好感·A, 好感·B…) = 好感·B」：B 的好感在這幾人裡最高
       .replace(/max\(([^)]*)\) (=|≠) 好感·(\S+)/g, (m, list, op, who) => {
         const names = list.split(/,\s*/).map(x => x.replace(/^好感·/, '')).join('、');
@@ -1319,6 +1340,7 @@ body.show-time .stime { display: inline; }
     html += '<h3>觸發條件</h3>' + (e.part ? `<div class="cond">接續 ${partFromHtml(e)}</div>` : e.conds.length ? e.conds.map(c => `<div class="cond">${plainCondHtml(c, e)}</div>`).join('') : '<div class="empty">時間到就觸發</div>');
     // 自由行動選單：每個留學事件結束都會回來，不用列從哪裡進
     if (e.note) html += `<div class="when">※ ${esc(e.note)}</div>`;
+    if (e.maybeNever) html += `<div class="when">⚠ 可能無法達成：觸發條件要的旗標值，劇本裡找不到設定的地方（遊戲程式也可能會設）。</div>`;
     if (e.achieve) {
       const locked = e.scripts.filter(sc => (G.scripts[sc] || {}).achieveLock).length;
       html += `<div class="when">🏆 ${e.achieveLock ? '這個事件要先取得成就（風雲史）才會出現' : locked ? '有些段落整段要先取得成就（風雲史）才會出現' : '有成就（風雲史）才會多出一些台詞，不用成就也看得到這個事件'}：${e.achieve.map(a => `「${esc(a)}」`).join('、')}</div>`;
@@ -2099,6 +2121,9 @@ body.show-time .stime { display: inline; }
       const steps = routes[0].map((_, i) => {
         const col = routes.map(r => r[i]);
         if (col.some(x => x.done && !x.hub && !x.ev)) { skipped++; return []; }
+        // 這一步的選法剛好是「X」和「以上皆非（不是：X）」：怎樣都會過，不用寫
+        const keys = new Set(col.map(x => (x.path || []).join('|')));
+        if (keys.size === 2) { const [a, b] = [...keys]; if (b === `以上皆非（不是：${a}）` || a === `以上皆非（不是：${b}）`) return []; }
         return [...new Set(col.map(x => stepHtml(x, ctx)).filter(Boolean))];
       }).filter(x => x.length);
       if (steps.length) return `<div class="need">${lab(skipped ? `（已走過 ${skipped} 步）` : '')}</div>`
@@ -2308,6 +2333,7 @@ body.show-time .stime { display: inline; }
       const head = hubGroup ? `${esc(hubGroup)}　<span class="need">（留學期間的養成地點）</span>${hubGroup.startsWith('崆峒') ? '<span class="rtag">限定：留學：崆峒</span>' : hubGroup.startsWith('青城') ? '<span class="rtag">限定：留學：青城</span>' : ''}`
         : ev ? `${esc(whenText(ev))}　<span class="chip link" data-goto="${esc(key)}">${esc(evShort(ev))}${ev.desc ? '' : '…'}</span>`
           + (SHOW_LEGEND && ev.desc && ev.title ? `<span class="need${ev._read ? '' : ' unreadtxt'}" style="font-weight:400">　${esc(ev.title.replace(/^「|」$/g, '').slice(0, 26))}…</span>` : '') + routeTag(ev)
+          + (ev.maybeNever ? `<span class="rtag maybe" title="觸發條件要的旗標值劇本裡設不出來">⚠可能無法達成</span>` : '')
         : '日常、地點行動、閒聊（不屬於任務事件）';
       return `<details class="plcard"${rows.length <= 6 || who ? ' open' : ''}><summary style="cursor:pointer"><b>${head}</b>　<span class="need">${countText(rows)}</span></summary>`
         + (ev ? evIntro(ev) : '') + rowsHtml(rows) + '</details>';
