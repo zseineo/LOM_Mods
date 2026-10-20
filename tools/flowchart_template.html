@@ -2717,7 +2717,8 @@ body.show-time .stime { display: inline; }
     const top = romance.scrollTop;
     romance.innerHTML = `<div class="hcard"><h2>版本</h2><ul class="guide">
       <li>頁面資料：遊戲 ${esc(B.gameVersion || '（沒有記錄）')}，${esc(B.built || '')} 建立</li>
-      <li>目前遊戲：${now ? esc(now) : LIVE && LIVE.live ? '已連上，但這版 Mod 沒有回報版本' : '沒連上遊戲（從遊戲裡按 F7 開才看得到）'}${LIVE && LIVE.modVersion ? `　·　Mod ${esc(LIVE.modVersion)}` : ''}</li>
+      <li>目前遊戲：${now ? esc(now) : LIVE && LIVE.live ? '已連上，但這版 Mod 沒有回報版本' : '沒連上遊戲（從遊戲裡按 F7 開才看得到）'}</li>
+      ${LIVE && LIVE.modVersion ? `<li>Mod：${esc(LIVE.modVersion)}</li>` : ''}
       ${now && B.gameVersion && now !== B.gameVersion ? '<li><span class="bad">目前的遊戲版本和頁面資料不同：遊戲更新後條件可能有改，這份頁面可能不準。</span></li>' : ''}
     </ul></div>
     <div class="hcard"><h2>這個 Mod 能做什麼</h2><ul class="guide">
