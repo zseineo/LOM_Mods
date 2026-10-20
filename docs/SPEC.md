@@ -8,7 +8,7 @@
 
 | Mod | 資料夾 | 版本 | 用途 |
 |---|---|---|---|
-| LOM TimeMachine | `TimeMachine/` | 0.8.0 | 時光機存檔（F6）＋「五塊錢」網頁（F7）＋事件紀錄＋作弊 |
+| LOM TimeMachine | `TimeMachine/` | 0.8.0 | 時光機存檔（F6）＋「算命仙」網頁（F7）＋事件紀錄＋作弊 |
 | LOM CombatSpeed | `CombatSpeed/` | 0.1.0 | 戰鬥加速倍率（設定 `General.SpeedMultiplier`，預設 x6） |
 | LOM DialogTweaks | `DialogTweaks/` | 0.1.0 | 滾輪下一句（`General.WheelNext`）、F8 自動跳過已讀（`AutoSkip.*`） |
 
@@ -26,7 +26,7 @@
 | General.QuickLoad | false | 雙擊時間點直接讀取、讀取不再確認 |
 | General.ToggleKey | F6 | 開關時光機視窗（視窗上方可直接改，會檢查和遊戲／其他插件衝突） |
 | General.EventLog | true | 事件紀錄（見第 3 節） |
-| Guide.Enabled | true | 啟用五塊錢網頁 |
+| Guide.Enabled | true | 啟用算命仙網頁 |
 | Guide.Port | 8642 | 網頁連接埠（http://localhost:8642/） |
 | Guide.OpenKey | F7 | 用瀏覽器開網頁 |
 | Cheat.ShowAllDecisions | false | 見第 4 節作弊 |
@@ -68,7 +68,10 @@
 
 ---
 
-## 2. TimeMachine：「五塊錢」網頁（F7）
+## 2. TimeMachine：「算命仙」網頁（F7）
+
+網頁名稱是「算命仙」（使用者決定：提醒內容可能不準）；未讀分頁仍叫「五塊錢」（玩家梗：少玩劇情＝少玩五塊錢）。
+傳奇（劇情摘要）與結局文本不放進網頁（測試版起）：`render_preview.py` 輸出時拿掉 `legend`、結局文字，graph.json 仍保留給分析用。
 
 Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/guide/index.html`（由 `tools/rebuild_guide.sh` 產生）。
 重建後網頁按 **F5** 就會更新，不用重開遊戲或 F7。改 Mod（.cs）才要重編、重開遊戲。
@@ -162,7 +165,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 ### 事件名稱
 
 優先用 smilin.net wiki「主支線簡易表格」的事件名（`tools/match_wiki.py` 依選項文字＋時間自動配對，結果在 `tools/wiki_names.json`；
-配錯的直接改那個檔、加 `"manual": true`，重跑時會保留）。事件細節會附 wiki 連結和遊戲內名稱。沒對上的照舊用開發者備註或傳說第一句。
+配錯的直接改那個檔、加 `"manual": true`，重跑時會保留）。事件細節會附 wiki 連結和遊戲內名稱。沒對上的照舊用開發者備註或第一句台詞（和傳奇同一段文字的旁白不用）。
 
 ### 事件備註
 
