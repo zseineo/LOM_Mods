@@ -221,7 +221,7 @@ body.show-time .stime { display: inline; }
 <body class="spoil">
 <header>
   <h1>五塊錢</h1>
-  <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabMore" title="展開更多分頁">▸</button><button id="tabChart" class="extra">流程圖</button><button id="tabCheat" class="extra">作弊</button></span>
+  <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabHelp">說明</button><button id="tabMore" title="展開更多分頁">▸</button><button id="tabChart" class="extra">流程圖</button><button id="tabCheat" class="extra">作弊</button></span>
   <span class="stats" id="stats"></span>
   <span class="live" id="live">離線預覽</span>
   <input type="search" id="q" placeholder="搜尋事件、選項、腳本、旗標…">
@@ -1717,7 +1717,7 @@ body.show-time .stime { display: inline; }
   function guideHtml(guide) {
     if (!guide) return '';
     let html = guide.intro ? `<div class="rintro">${esc(guide.intro)}</div>` : '';
-    return html + `<ol class="guide">${guideItems(guide.items)}</ol>${LIVE && LIVE.inGame ? '<div class="when">✓／✗ 是你目前存檔的值；有些旗標在事件之後會被改掉，過了那個時間點的 ✗ 不一定代表當時沒達成。</div>' : ''}`;
+    return html + `<ol class="guide">${guideItems(guide.items)}</ol>`;
   }
   // 重畫時保留展開狀態：用「上層摺疊的標題＞自己的標題＃第幾個同名」對應，畫面多一張卡也不會錯位
   function detKey(d, seen) {
@@ -2281,9 +2281,7 @@ body.show-time .stime { display: inline; }
     const herMode = who && who !== NONE;
     const unreadLines = herMode ? list.reduce((a, u) => a + herUnread(u, who), 0)
       : list.reduce((a, u) => a + Math.round((diffOn() ? u.linesAll || u.lines : u.lines) * (1 - u.read)), 0);
-    let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落（以重建頁面時的「已讀」紀錄計算）。
-      只因性情、道德、處世、修養、學問或技能／天賦而換台詞（不是選項造成、走向相同）的地方算「差分」，預設看過其中一種就算讀過，上方勾「列入差分」才每種都算；
-      讀了一部分的段落，會列出沒讀到的台詞在哪個分支、要怎麼走才看得到（選哪個選項、符合什麼條件、擲骰、戰鬥勝負）——這是從劇本推出來的，不是存檔記下的原因。玩過的事件裡整段沒走到的標「◇ 分支」。選了角色時：整段沒讀的，她有出場（說話、立繪、傳說）或旁白提到她就列；讀了一部分的，要有「她說的台詞」或「旁白提到她的句子」還沒讀才列；「其他」是沒有這些角色的。整段沒進去過的，列出怎麼進去。點標題看劇情，點事件跳到流程圖。</div>`;
+    let html = `<div class="rintro">有台詞、但還沒讀完的劇情段落。未讀怎麼算、標記的意思見「說明」分頁。點標題看劇情，點事件跳到流程圖。</div>`;
     const fchip = (attr, v, cur, label) => `<button data-${attr}="${esc(v)}"${v === cur ? ' class="on"' : ''}>${label}</button>`;
     html += currentEventHtml();
     html += `<div class="libtools"><div class="fchips"><span>狀態</span>${[['', '全部'], ['none', '未讀'], ['part', '部分已讀']].map(([v, l]) => fchip('ur-st', v, st, l)).join('')}</div>`
@@ -2573,7 +2571,7 @@ body.show-time .stime { display: inline; }
     else if (el.dataset.flag) showFlag(el.dataset.flag, ev);
     else el.classList.add('reveal');
   });
-  const TAB_IDS = {unread: 'tabUnread', places: 'tabPlaces', romance: 'tabRomance', targets: 'tabTargets', chart: 'tabChart', cheat: 'tabCheat'};
+  const TAB_IDS = {unread: 'tabUnread', places: 'tabPlaces', romance: 'tabRomance', targets: 'tabTargets', help: 'tabHelp', chart: 'tabChart', cheat: 'tabCheat'};
   // 流程圖、作弊平常摺疊在「▸」裡，點開才顯示；正在看的話一直顯示
   function setMoreTabs(open) {
     document.body.classList.toggle('moretabs', open);
@@ -2591,6 +2589,26 @@ body.show-time .stime { display: inline; }
     if (v === 'places') renderPlaces();
     if (v === 'unread') renderUnread();
     if (v === 'cheat') renderCheat();
+    if (v === 'help') renderHelp();
+  }
+  // ---------- 說明 ----------
+  function renderHelp() {
+    romance.innerHTML = `<div class="hcard"><h2>這個 Mod 能做什麼</h2><ul class="guide">
+      <li><b>F6 時光機</b>：每一旬第一個能存檔的時間點自動存一份，按 F6 開格子視窗，點時間點就能讀回去。不占遊戲存檔欄位，也不會被 Steam 雲端同步。</li>
+      <li><b>關鍵節點</b>：葉家兄妹、留學、破廟、江陵、大師兄下山、小師妹招親、大雪山、武林大會、決策這些事件前，另外存一份「養成回合開始、行動次數全滿」的存檔。</li>
+      <li><b>存檔路線</b>：可以從目前時間分岔出新路線，各路線的存檔互不覆蓋。</li>
+      <li><b>F7 這個網頁</b>：五塊錢（還沒讀完的劇情）、地點事件、結緣條件、其他條件；「▸」裡還有流程圖、作弊。從遊戲裡按 F7 開才會連上遊戲，顯示目前存檔的狀態；流程圖點月份可以讀那個月的時光機存檔。</li>
+    </ul></div>
+    <div class="hcard"><h2>✓／✗</h2><div class="rintro">✓／✗ 是你目前存檔的值；有些旗標在事件之後會被改掉，過了那個時間點的 ✗ 不一定代表當時沒達成。</div></div>
+    <div class="hcard"><h2>五塊錢的未讀怎麼算</h2><ul class="guide">
+      <li>列出有台詞、但還沒讀完的劇情段落。連上遊戲時，已讀狀態會跟著遊戲即時更新。</li>
+      <li><b>差分</b>：只因性情、道德、處世、修養、學問或技能／天賦而換台詞（不是選項造成、走向相同）的地方，預設看過其中一種就算讀過；上方勾「列入差分」才每種都算。</li>
+      <li>讀了一部分的段落，會列出沒讀到的台詞在哪個分支、要怎麼走才看得到（選哪個選項、符合什麼條件、擲骰、戰鬥勝負）。這是從劇本推出來的，不是存檔記下的原因。整段沒進去過的，列出怎麼進去。</li>
+      <li>標記：「○ 未讀」整段沒讀過；「◐ N%」讀了 N%；「◇ 分支」玩過的事件裡整段沒走到的分支。</li>
+      <li><b>選了角色</b>：整段沒讀的，她有出場（說話、立繪、傳說）或旁白提到她就列；讀了一部分的，要有她說的台詞或旁白提到她的句子還沒讀才列；「其他」是沒有這些角色的。上方的句數只算她的句子。</li>
+      <li>🏆 整段要成就：這段台詞要有某個成就（風雲史）才看得到；🏆 成就追加台詞：不用成就也看得到這段，有成就會多幾句。</li>
+      <li>${MAYBE_TAG}：劇本裡找不到把旗標設成需要的值的地方（遊戲程式也可能會設，所以只是可能）。確定做不到的（未實裝的結緣、試玩版）直接不列。</li>
+    </ul></div>`;
   }
   // ---------- 作弊：開關存在 Mod 的設定檔 ----------
   const CHEATS = [
@@ -2690,6 +2708,7 @@ body.show-time .stime { display: inline; }
   if (/view=libcg/.test(location.hash)) setView('romance');
   if (/view=chart/.test(location.hash)) setView('chart');
   if (/view=cheat/.test(location.hash)) setView('cheat');
+  if (/view=help/.test(location.hash)) setView('help');
   // 預設打開五塊錢
   if (!/view=|ev=/.test(location.hash)) setView('unread');
   if (/view=places/.test(location.hash)) setView('places');
