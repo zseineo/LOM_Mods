@@ -1867,7 +1867,7 @@ body.show-time .stime { display: inline; }
     const prob = new Map();
     let lo = 1;
     for (const x of picks) {
-      const hi = lo + x.rate;
+      const hi = lo + x.rate - 1;
       prob.set(x.id, total ? Math.max(0, Math.min(hi, total) - lo + 1) / total : 0);
       lo = hi + 1;
     }
