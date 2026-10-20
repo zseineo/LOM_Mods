@@ -27,7 +27,7 @@
 | General.ToggleKey | F6 | 開關時光機視窗（視窗上方可直接改，會檢查和遊戲／其他插件衝突） |
 | General.EventLog | true | 事件紀錄（見第 3 節） |
 | Guide.Enabled | true | 啟用算命仙網頁 |
-| Guide.Port | 8642 | 網頁連接埠（http://localhost:8642/） |
+| Guide.Port | 8642 | 網頁連接埠（http://127.0.0.1:8642/）；被佔用就往後試到 +9，都不行時 F7 在時光機視窗顯示原因、不開瀏覽器 |
 | Guide.OpenKey | F7 | 用瀏覽器開網頁 |
 | Cheat.ShowAllDecisions | false | 見第 4 節作弊 |
 
@@ -79,6 +79,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 ### API（GuideServer.cs）
 
 遊戲資料一律在主執行緒（`Tick()`）讀取，HTTP 執行緒只回傳快照。中文參數自己從 `Url.Query` 解碼。
+只聽 127.0.0.1（不寫 localhost：Mono 解析失敗會改聽所有介面）。Host 不是 `127.0.0.1:<port>` 的請求、Origin 不是本網頁的 POST 一律 403（擋其他網站偷送讀檔／作弊請求、DNS rebinding）。
 
 | 路徑 | 說明 |
 |---|---|

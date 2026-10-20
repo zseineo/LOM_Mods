@@ -86,6 +86,16 @@ internal sealed class TimeMachineWindow
         }
     }
 
+    // 打開視窗並顯示一段訊息（例如 F7 網頁沒辦法啟動）
+    internal void ShowMessage(string message)
+    {
+        if (!_open)
+        {
+            Open();
+        }
+        _message = message;
+    }
+
     private void Open()
     {
         _message = null;

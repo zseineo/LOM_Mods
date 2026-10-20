@@ -63,7 +63,14 @@ public class Plugin : BaseUnityPlugin
         }
         if (!capturing && _guide != null && keyboard != null && keyboard[GuideKey.Value].wasPressedThisFrame)
         {
-            Application.OpenURL(_guide.Url);
+            if (_guide.StartError != null)
+            {
+                _window.ShowMessage(_guide.StartError);
+            }
+            else
+            {
+                Application.OpenURL(_guide.Url);
+            }
         }
         _window.Update();
         _guide?.Tick();

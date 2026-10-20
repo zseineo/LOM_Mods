@@ -19,7 +19,7 @@ namespace LOM.TimeMachine;
 // HTTP 在背景執行緒處理；遊戲狀態只在主執行緒讀取（Tick），背景執行緒只拿快取好的 JSON。
 internal sealed class GuideServer
 {
-    private readonly int _port;
+    private volatile int _port;
     private readonly string _pageDir;
     private HttpListener _listener;
     private Thread _thread;
@@ -41,7 +41,10 @@ internal sealed class GuideServer
     private volatile string[] _readKeys = new string[0];
     private volatile string _relsJson = "[]";
 
-    internal string Url => $"http://localhost:{_port}/";
+    // 直接寫 127.0.0.1：Mono 的 HttpListener 解析不到 localhost 時會改聽所有網路介面
+    internal string Url => $"http://127.0.0.1:{_port}/";
+    // 啟動失敗的原因（F7 時在遊戲裡顯示，不開瀏覽器）；成功是 null
+    internal string StartError { get; private set; }
 
     internal GuideServer(int port, string pageDir)
     {
@@ -49,21 +52,31 @@ internal sealed class GuideServer
         _pageDir = pageDir;
     }
 
+    // 設定的連接埠被佔用就往後試，最多 10 個
     internal void Start()
     {
-        try
+        int basePort = _port;
+        for (int port = basePort; port < basePort + 10; port++)
         {
-            _listener = new HttpListener();
-            _listener.Prefixes.Add(Url);
-            _listener.Start();
-            _thread = new Thread(Loop) { IsBackground = true, Name = "TimeMachineGuide" };
-            _thread.Start();
-            Plugin.Log.LogInfo($"[Guide] 網頁服務啟動：{Url}");
+            try
+            {
+                _port = port;
+                HttpListener listener = new HttpListener();
+                listener.Prefixes.Add(Url);
+                listener.Start();
+                _listener = listener;
+                _thread = new Thread(Loop) { IsBackground = true, Name = "TimeMachineGuide" };
+                _thread.Start();
+                Plugin.Log.LogInfo($"[Guide] 網頁服務啟動：{Url}");
+                return;
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogWarning($"[Guide] 連接埠 {port} 無法使用：{e.Message}");
+            }
         }
-        catch (Exception e)
-        {
-            Plugin.Log.LogError($"[Guide] 網頁服務啟動失敗：{e.Message}");
-        }
+        StartError = $"算命仙網頁沒辦法啟動：連接埠 {basePort}～{basePort + 9} 都被其他程式佔用。請在 BepInEx\\config 的設定檔改 Guide.Port 後重開遊戲。";
+        Plugin.Log.LogError("[Guide] " + StartError);
     }
 
     internal void Stop()
@@ -153,6 +166,15 @@ internal sealed class GuideServer
 
     private void Handle(HttpListenerContext context)
     {
+        // 只接受直接開本機網址的請求：擋 DNS rebinding（Host 不是本機）和其他網站偷送的 POST（Origin 不是這個網頁）
+        string origin = context.Request.Headers["Origin"];
+        if (context.Request.Headers["Host"] != $"127.0.0.1:{_port}"
+            || (context.Request.HttpMethod == "POST" && origin != null && origin != $"http://127.0.0.1:{_port}"))
+        {
+            context.Response.StatusCode = 403;
+            context.Response.Close();
+            return;
+        }
         string path = context.Request.Url.AbsolutePath;
         Interlocked.Exchange(ref _lastRequestTicks, DateTime.UtcNow.Ticks);
         switch (path)
