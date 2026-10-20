@@ -1171,7 +1171,8 @@ body.show-time .stime { display: inline; }
         const cur = live && showCur ? liveValue('flag', m[1]) : null;
         // 劇本裡設不出這個值：標「可能無法達成」（遊戲程式也可能會改，所以只是可能）
         const vals = (G.maybeValues || {})[m[1]];
-        const maybe = vals && !vals.some(x => sat(x, m[2], Number(m[3]))) && !/實際上不會成立/.test(flagPhrase(m[1], m[2], m[3], ctx, near));
+        // 暫存旗標找不到設定的地方（要從特定的前段劇情進來）也標
+        const maybe = (vals && !vals.some(x => sat(x, m[2], Number(m[3]))) && !/實際上不會成立/.test(phrase)) || /要從特定的前段劇情進來/.test(phrase);
         const curName = cur == null ? null : valueName(m[1], cur);
         html += `<span class="flag" data-flag="${esc(m[1])}" data-op="${esc(m[2])}" data-val="${esc(m[3])}">${esc(tidy(flagPhrase(m[1], m[2], m[3], ctx, near)))}</span>${cur != null ? `<span class="cur">（目前${curName === cur ? ' ' + cur : '：' + curName}）</span>` : ''}${maybe ? MAYBE_TAG : ''}`;
         last = m.index + m[0].length;
