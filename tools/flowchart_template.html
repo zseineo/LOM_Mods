@@ -59,7 +59,34 @@ main { flex: 1; display: flex; min-height: 0; }
 #arcview .ahead { margin: 8px 0 4px; font-size: 16px; } #arcview .ahead span { color: var(--muted); font-size: 13px; font-weight: 400; }
 body.arcmode #canvas { display: none; }
 #canvas { position: relative; }
-#detail { width: 510px; max-width: 52vw; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 14px 16px 40px; }
+#detail { width: var(--dw, 50vw); max-width: 80vw; min-width: 360px; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 14px 16px 40px; }
+/* 右側欄寬度：拖拉中間的分隔線，或按 ½／¾ */
+#splitter { width: 6px; cursor: col-resize; background: transparent; flex: 0 0 6px; margin-right: -6px; z-index: 5; }
+#splitter:hover, #splitter.drag { background: rgba(233,135,91,.35); }
+/* 劇情流程圖 */
+.ftools { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 2px 0 8px; font-size: 12px; }
+.ftools button { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 12px; padding: 0 10px; cursor: pointer; font: inherit; }
+.ftools button.on { color: var(--text); border-color: var(--accent); }
+.ftools .sp { margin-left: auto; color: var(--muted); }
+.fwrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: rgba(0,0,0,.12); }
+.flow { position: relative; }
+.flow svg { position: absolute; left: 0; top: 0; pointer-events: none; }
+.flow .fe { fill: none; stroke: #5d5664; stroke-width: 1.3; }
+.flow .fe.hl { stroke: var(--accent); stroke-width: 2.2; }
+.fn { position: absolute; height: 24px; line-height: 22px; padding: 0 8px; background: var(--card, #2a2630); border: 1px solid var(--line); border-radius: 6px; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.fn:hover { border-color: #8a8290; }
+.fn small { color: var(--muted); margin-left: 6px; font-size: 11.5px; }
+.fn.root { background: #3a2a22; border-color: var(--accent); font-weight: 700; }
+.fn.br { background: #262229; }
+.fn.chain { background: #2c2636; border-color: #7a6290; }
+.fn.ext { border-style: dashed; border-color: #6a7a9a; color: #b9c6e2; }
+.fn.ref { border-style: dotted; color: var(--muted); }
+.fn.end { border-color: #8a4a4a; color: #e0a0a0; }
+.fn.sel { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(233,135,91,.3); }
+.fn.fdim { opacity: .35; }
+.fn.hl { border-color: var(--accent); }
+.fdrawer { margin-top: 8px; border: 1px solid var(--accent); border-radius: 8px; padding: 8px 10px; background: rgba(233,135,91,.05); }
+.fdrawer .fpath { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 .timehead { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
 .yearcell, .monthcell { position: absolute; font-size: 12px; text-align: center; white-space: nowrap; }
 .yearcell { top: 0; height: 20px; color: var(--year); font-weight: 700; border-left: 1px solid var(--line); text-align: left; padding-left: 6px; }
@@ -243,6 +270,7 @@ body.show-time .stime { display: inline; }
 <main>
   <div id="chart"><div id="arcbar"></div><div id="arcview"></div><div id="canvas"><svg id="links"></svg></div></div>
   <div id="romance"></div>
+  <div id="splitter" title="拖拉調整寬度；雙擊在 1/2 和 3/4 間切換"></div>
   <aside id="detail"><p class="empty">點選左側事件查看觸發條件、選項分支與結果。<br>點月份標題：遊戲內版本會讀取該月的時光機存檔。</p></aside>
 </main>
 <div id="flagpop"></div>
@@ -1520,6 +1548,167 @@ body.show-time .stime { display: inline; }
     }
     return html;
   }
+  // ---------- 劇情流程圖：只畫段落和會改變走向的分歧，由左往右；點節點在下方看那一段的細節 ----------
+  // 會改變走向：分支裡（含更深層）有接到別段、場景切換（死亡、回標題）或結局；只換台詞的選項留在節點細節裡
+  const hasFlow = items => (items || []).some(x => ['next', 'scene', 'ending'].includes(x.t) || (x.t === 'branch' && x.branches.some(b => hasFlow(b.items))));
+  let flowState = null;
+  function flowModel(e) {
+    const hub = /^hub/.test(e.part || ''), nodes = [], placed = new Map();
+    const mk = (kind, props) => { const n = {id: nodes.length, kind, kids: [], ...props}; nodes.push(n); return n; };
+    // 段落名稱：有戰鬥寫對手；有只換台詞的選項寫第一個選項；否則「劇情」
+    const segShort = s => {
+      const x = G.scripts[s] || {}, bt = (x.items || []).find(it => it.t === 'battle');
+      if (bt) return `⚔ ${bt.enemy || (bt.mode === 'Battle' ? '戰役' : '戰鬥')}`;
+      const ch = (x.items || []).find(it => it.t === 'branch' && it.kind === 'choice');
+      if (ch) return ch.branches.slice(0, 2).map(b => quoted(b.label.replace(/　〔.*〕$/, ''))).join('／').slice(0, 28);
+      return x.lines ? '劇情' : '過場';
+    };
+    // 有幾個地方接到這段：兩處以上的（合流）不併進前面的分支，自己一格
+    const inCount = new Map();
+    const walkNext = (items, f) => (items || []).forEach(it => { if (it.t === 'next') f(it.s.toLowerCase()); else if (it.t === 'branch') it.branches.forEach(b => walkNext(b.items, f)); });
+    for (const s of e.scripts) walkNext((G.scripts[s] || {}).items, t => { if (t !== s) inCount.set(t, (inCount.get(t) || 0) + 1); });
+    // 一段劇情裡的節點：會改變走向的分歧、接到的段落、結局
+    function itemsKids(items, s, depth) {
+      const out = [], seenNext = new Set();
+      if (depth > 16 || nodes.length > 400) { if ((items || []).length) out.push(mk('ref', {label: '⋯（太深，切到文字版看）'})); return out; }
+      for (const it of items || []) {
+        if (it.t === 'branch' && hasFlow(it.branches.flatMap(b => b.items))) {
+          const chain = chainOf(it);
+          const cur = chain && LIVE && LIVE.inGame ? liveValue('flag', chain) : null;
+          const holder = chain ? mk('chain', {label: `依 🚩「${esc(noteHead(chain) || flagTitle(chain) || chain)}」${cur != null ? `（目前 ${esc(valueName(chain, cur))}）` : ''}`, s}) : null;
+          it.branches.forEach((b, j) => {
+            if (/^(exit\+|~x)/.test(b.label)) return;
+            const {r, left} = branchRead(s, it, j, e);
+            const full = chain ? chainLabel(chain, it.kind, b.label, e, s) : branchLabel(it.kind, b.label, e, s);
+            // 圖上的選項只寫名稱，條件（需…）放到下面的細節
+            const need = /　〔需：/.test(b.label);
+            const label = it.kind === 'choice' && !chain ? `${esc(quoted(b.label.replace(/　〔.*〕$/, '')).replace(/^「|」$/g, ''))}${need ? '<small>有條件</small>' : ''}` : full;
+            const n = mk('br', {label, full, r, left, s, it, j});
+            n.kids = itemsKids(b.items, s, depth + 1);
+            (holder ? holder.kids : out).push(n);
+          });
+          if (holder) out.push(holder);
+        } else if (it.t === 'next') {
+          const t = it.s.toLowerCase();
+          if (seenNext.has(t)) continue;
+          seenNext.add(t);
+          if (e.scripts.includes(t)) out.push(...segNodes(t, depth + 1));
+          else { const owner = scriptOwner.get(t); if (owner && byId.has(owner)) out.push(mk('ext', {ev: owner, label: `→ ${esc(evShort(byId.get(owner)))}`})); }
+        } else if (it.t === 'scene' && it.s === 'GameOver') out.push(mk('end', {label: '✖ 死亡'}));
+        else if (it.t === 'scene' && it.s === 'Title') out.push(mk('end', {label: '★ 回標題（遊戲結束）'}));
+        else if (it.t === 'ending') out.push(mk('end', {label: '★ 結局'}));
+      }
+      return out;
+    }
+    // 一段劇情：沒台詞、沒戰鬥、沒有只換台詞的選項的過場段落不畫，直接接它後面的
+    function segNodes(s, depth) {
+      if (s === e.start && depth > 0) return hub ? [] : [mk('ref', {label: '↩ 回到開頭', target: s})];
+      if (placed.has(s)) { const p = placed.get(s); return [mk('ref', {label: `↗ ${p.short}`, target: s})]; }
+      const info = G.scripts[s];
+      if (!info) return [];
+      const inline = info.items.filter(it => it.t === 'branch' && !hasFlow(it.branches.flatMap(b => b.items))).length;
+      const battle = info.items.some(it => it.t === 'battle');
+      if (!info.lines && !inline && !battle && depth > 0) { placed.set(s, {short: '前面的分歧'}); return itemsKids(info.items, s, depth); }
+      const n = mk('seg', {s, short: segShort(s), r: info.read, left: info.lines && info.read != null ? Math.round(info.lines * (1 - info.read)) : 0, inline});
+      placed.set(s, n);
+      n.kids = itemsKids(info.items, s, depth);
+      return [n];
+    }
+    const root = mk('seg', {s: e.start, short: hub ? '選單' : '開頭', root: true, r: (G.scripts[e.start] || {}).read, inline: 0});
+    placed.set(e.start, root);
+    root.kids = itemsKids((G.scripts[e.start] || {}).items, e.start, 0);
+    // 分支後面只接一段劇情：兩格併成一格（分支名稱＋那段的戰鬥、選項數、讀了多少）
+    const merge = n => {
+      n.kids.forEach(merge);
+      if (n.kind === 'br' && n.kids.length === 1 && n.kids[0].kind === 'seg' && !n.kids[0].root && (inCount.get(n.kids[0].s) || 0) <= 1) {
+        const k = n.kids[0];
+        Object.assign(n, {seg: k.s, short: k.short, kids: k.kids, r: k.r, left: k.left, inline: k.inline});
+        k.mergedInto = n;
+      }
+    };
+    // 從開頭追不到的段落（旅途、戰鬥後接續）另起一棵
+    const extra = e.scripts.filter(s => !placed.has(s) && (G.scripts[s] || {}).lines).flatMap(s => placed.has(s) ? [] : segNodes(s, 1));
+    [root, ...extra].forEach(merge);
+    return {root, extra, nodes, hub};
+  }
+  function flowHtml(e) {
+    const m = flowModel(e);
+    // 排版：每個葉子一列，父節點放在第一個和最後一個子節點中間；每層一欄
+    const ROW = 30, trees = [m.root, ...m.extra];
+    let row = 0, maxD = 0;
+    const lay = (n, d) => {
+      n.d = d; maxD = Math.max(maxD, d);
+      if (!n.kids.length) { n.row = row++; return; }
+      n.kids.forEach(k => lay(k, d + 1));
+      const a = n.kids[0].row, b = n.kids[n.kids.length - 1].row;
+      n.row = b - a > 6 ? a : (a + b) / 2;
+    };
+    trees.forEach((t, i) => { if (i) row += 0.6; lay(t, 0); });
+    const avail = Math.max(360, detail.clientWidth - 60);
+    const COL = Math.max(170, Math.min(300, Math.floor(avail / (maxD + 1))));
+    const W = COL * (maxD + 1), H = row * ROW + 6;
+    // 標亮：沒讀完的（含下面）、接到別的事件的
+    const done = n => n.done ?? (n.done = (n.r == null || n.r >= 0.999) && n.kids.every(done));
+    m.nodes.forEach(done);
+    const mode = PREFS.flowHl || '';
+    let svg = '', divs = '';
+    const xy = n => [n.d * COL + 8, n.row * ROW + 4];
+    const walk = n => n.kids.forEach(k => {
+      const [x1, y1] = xy(n), [x2, y2] = xy(k);
+      const a = x1 + COL - 24, b = y1 + 12, c = x2, dd = y2 + 12, mx = (a + c) / 2;
+      const hl = mode === 'unread' ? !k.done : mode === 'ext' ? k.kind === 'ext' : false;
+      svg += `<path class="fe${hl ? ' hl' : ''}" d="M${a},${b} C${mx},${b} ${mx},${dd} ${c},${dd}"/>`;
+      walk(k);
+    });
+    trees.forEach(walk);
+    const plain = h => { const t = document.createElement('div'); t.innerHTML = h; return t.textContent; };
+    const nodeOf = s => { const k = m.nodes.find(x => (x.kind === 'seg' && x.s === s) || x.seg === s); return k && k.mergedInto ? k.mergedInto : k; };
+    const extra = n => `${n.seg && n.short !== '劇情' && n.short !== '過場' ? `<small>${esc(n.short)}</small>` : ''}${n.inline ? `<small>選項×${n.inline}</small>` : ''}`;
+    for (const n of m.nodes) {
+      if (n.d == null) continue;
+      const [x, y] = xy(n);
+      if (n.kind === 'ref' && n.target) { const t = nodeOf(n.target); if (t && t !== n) n.label = `↗ ${esc(plain(t.kind === 'seg' ? t.short : t.label).slice(0, 24))}`; }
+      const label = n.kind === 'seg' ? `${n.short}${extra(n)}` : `${n.label}${n.kind === 'br' ? extra(n) : ''}`;
+      const left = n.r != null && n.r < 0.999 ? `<small>${readLeft(n.r, n.left)}</small>` : '';
+      const cls = [n.kind === 'seg' ? (n.root ? 'root' : '') : n.kind, mode === 'unread' && n.done ? 'fdim' : '', mode === 'ext' && n.kind !== 'ext' ? 'fdim' : ''].filter(Boolean).join(' ');
+      divs += `<div class="fn ${cls}" data-fn="${n.id}" style="left:${x}px;top:${y}px;width:${COL - 24}px" title="${esc(plain(n.full || label))}">${readMark(n.r)}${label}${left}</div>`;
+    }
+    flowState = {e, m};
+    const hlBtn = (v, t) => `<button data-fhl="${v}" class="${mode === v ? 'on' : ''}">${t}</button>`;
+    return `<div class="ftools"><b>標亮</b>${hlBtn('', '全部')}${hlBtn('unread', '只看沒讀完')}${hlBtn('ext', '接到別的事件')}`
+      + `<span class="sp">${m.hub ? '每一列看完都 ↩ 回到選單（不畫回頭的線）' : '虛線框＝接到別的事件　·　↗＝前面畫過的段落'}</span></div>`
+      + `<div class="fwrap"><div class="flow" style="width:${W}px;height:${H}px"><svg width="${W}" height="${H}">${svg}</svg>${divs}</div></div>`
+      + `<div class="fdrawer" id="fdrawer"><span class="empty">點流程圖上的格子，這裡會顯示那一段的選項、條件和怎麼進來。</span></div>`;
+  }
+  // 點節點：下方顯示路徑（怎麼走到這格）和那一段的細節
+  function flowSelect(id) {
+    if (!flowState) return;
+    const {e, m} = flowState, n = m.nodes[id];
+    if (!n) return;
+    if (n.kind === 'ext') { revealEvent(n.ev); return; }
+    if (n.kind === 'ref' && n.target) {
+      let t = m.nodes.find(x => ((x.kind === 'seg' && x.s === n.target) || x.seg === n.target));
+      if (t && t.mergedInto) t = t.mergedInto;
+      if (t && t.d != null) { flowSelect(t.id); detail.querySelector(`[data-fn="${t.id}"]`)?.scrollIntoView({block: 'center', inline: 'center'}); }
+      return;
+    }
+    detail.querySelectorAll('.fn.sel').forEach(x => x.classList.remove('sel'));
+    detail.querySelector(`[data-fn="${id}"]`)?.classList.add('sel');
+    const parent = new Map();
+    m.nodes.forEach(p => p.kids.forEach(k => parent.set(k.id, p)));
+    const path = [];
+    for (let p = parent.get(n.id); p; p = parent.get(p.id)) if (p.kind !== 'seg' || p.root) path.unshift(p.kind === 'seg' ? p.short : p.full || p.label);
+    let body = '';
+    const segOf = n.kind === 'seg' ? n.s : n.seg;
+    if (n.kind === 'br') {
+      const b = n.it.branches[n.j];
+      body = `<div class="olabel">${readMark(n.r)}${n.full}<span class="pct">${readLeft(n.r, n.left)}</span></div>` + plainItems(b.items.filter(x => !(x.t === 'branch' && hasFlow(x.branches.flatMap(c => c.items)))), 1, e, n.s);
+    } else if (n.kind !== 'seg') body = `<div>${n.label}</div>`;
+    if (segOf) body += scriptHtml(segOf, e) || '';
+    if (!body) body = '<div class="empty">只有台詞，沒有選項或分歧。</div>';
+    const ur = segOf && hasUnread(segOf) ? `　<span class="golink" data-ur="${esc(segOf)}">到五塊錢看沒讀到的台詞 ›</span>` : '';
+    document.getElementById('fdrawer').innerHTML = `<div class="fpath">${path.length ? '怎麼走到這裡：' + path.join(' → ') : '開頭'}${ur}</div>${body}`;
+  }
   // 對手：打過的直接顯示，沒打過的在防雷模式下模糊
   function enemyHtml(enemy, fought) {
     if (!enemy) return '';
@@ -1559,15 +1748,26 @@ body.show-time .stime { display: inline; }
       const others = e.scripts.filter(s => s !== focus.s);
       if (others.length) html += `<details><summary class="bkind" style="cursor:pointer">⋯ 這個事件的其他段落</summary>${others.map(s => scriptHtml(s, e)).join('')}</details>`;
     } else {
-      html += '<h3>劇情</h3>';
-      if (/^hub/.test(e.part || '')) html += '<div class="hubnote">這是<b>每旬重複的選單</b>：選一個地點，看完回到選單（「↩ 回到選單」）。地點前的 ✓／◐／○ 是讀過多少。</div>';
-      html += eventTree(e) || '<div class="empty">只有過場對話，沒有選項或分歧。</div>';
+      // 劇情：流程圖（預設）／文字版（原本逐段列）切換，記在瀏覽器
+      const text = PREFS.plotView === 'text';
+      html += `<h3>劇情　<span class="ftools" style="display:inline-flex;margin:0;letter-spacing:0"><button data-pv="flow" class="${text ? '' : 'on'}">流程圖</button><button data-pv="text" class="${text ? 'on' : ''}">文字</button>`
+        + `<span style="color:var(--muted);font-weight:400;margin-left:8px">寬度</span><button data-dw="0.5">½</button><button data-dw="0.75">¾</button></span></h3>`;
+      if (/^hub/.test(e.part || '') && text) html += '<div class="hubnote">這是<b>每旬重複的選單</b>：選一個地點，看完回到選單（「↩ 回到選單」）。地點前的 ✓／◐／○ 是讀過多少。</div>';
+      html += text ? (eventTree(e) || '<div class="empty">只有過場對話，沒有選項或分歧。</div>') : flowHtml(e);
     }
-    html += `<div class="note">只列出：選項、擲骰、戰鬥勝敗、會改變劇情走向的條件。有底線的條件可以點開看它在哪裡決定。</div>`;
+    if (!(PREFS.plotView !== 'text' && !focus)) html += `<div class="note">只列出：選項、擲骰、戰鬥勝敗、會改變劇情走向的條件。有底線的條件可以點開看它在哪裡決定。</div>`;
     detail.innerHTML = html;
   }
 
   detail.addEventListener('click', ev => {
+    const fn = ev.target.closest('[data-fn]');
+    if (fn && !ev.target.closest('[data-flag]')) { flowSelect(+fn.dataset.fn); return; }
+    const pv = ev.target.closest('[data-pv]');
+    if (pv) { savePref('plotView', pv.dataset.pv); if (selected) renderDetail(byId.get(selected)); return; }
+    const fhl = ev.target.closest('[data-fhl]');
+    if (fhl) { savePref('flowHl', fhl.dataset.fhl); if (selected) renderDetail(byId.get(selected)); return; }
+    const dw = ev.target.closest('[data-dw]');
+    if (dw) { setDetailWidth(window.innerWidth * Number(dw.dataset.dw)); if (selected) renderDetail(byId.get(selected)); return; }
     const ur = ev.target.closest('[data-ur],[data-ur-ev]');
     if (ur) { gotoUnread(ur.dataset.ur, ur.dataset.urEv); return; }
     const go = ev.target.closest('[data-goto]');
@@ -2688,6 +2888,21 @@ body.show-time .stime { display: inline; }
     if (!owner) { showScript(s); return; }
     setView('chart');
     revealEvent(owner);
+    // 流程圖模式：選中那一格（併進分支的段落找那個分支），下方顯示細節
+    if (flowState && PREFS.plotView !== 'text') {
+      let n = flowState.m.nodes.find(x => x.d != null && ((x.kind === 'seg' && x.s === s) || x.seg === s));
+      if (!n) { const k = flowState.m.nodes.find(x => x.kind === 'seg' && x.s === s && x.mergedInto); n = k && k.mergedInto; }
+      if (n) {
+        flowSelect(n.id);
+        const el = detail.querySelector(`[data-fn="${n.id}"]`);
+        el?.scrollIntoView({block: 'center', inline: 'center'});
+        el?.classList.add('flash');
+        setTimeout(() => el?.classList.remove('flash'), 1500);
+        return;
+      }
+      showScript(s);
+      return;
+    }
     const seg = document.getElementById('seg-' + s);
     if (!seg) { showScript(s); return; }
     for (let p = seg.parentElement; p; p = p.parentElement) if (p.tagName === 'DETAILS') p.open = true;
@@ -2762,6 +2977,21 @@ body.show-time .stime { display: inline; }
   }
   document.getElementById('tabMore').onclick = () => setMoreTabs(!document.body.classList.contains('moretabs'));
   document.getElementById('brand').onclick = () => setView('help');
+  // ---- 右側欄寬度：拖拉分隔線（雙擊在 1/2、3/4 間切換），記在瀏覽器 ----
+  function setDetailWidth(px) {
+    px = Math.max(360, Math.min(window.innerWidth * 0.8, px));
+    document.documentElement.style.setProperty('--dw', px + 'px');
+    savePref('detailW', px / window.innerWidth);
+  }
+  if (PREFS.detailW) document.documentElement.style.setProperty('--dw', PREFS.detailW * 100 + 'vw');
+  {
+    const sp = document.getElementById('splitter');
+    let drag = false;
+    sp.addEventListener('mousedown', ev => { drag = true; sp.classList.add('drag'); ev.preventDefault(); });
+    window.addEventListener('mousemove', ev => { if (drag) setDetailWidth(window.innerWidth - ev.clientX); });
+    window.addEventListener('mouseup', () => { if (!drag) return; drag = false; sp.classList.remove('drag'); if (selected && PREFS.plotView !== 'text') renderDetail(byId.get(selected)); });
+    sp.addEventListener('dblclick', () => { setDetailWidth(window.innerWidth * ((PREFS.detailW || 0.5) > 0.6 ? 0.5 : 0.75)); if (selected) renderDetail(byId.get(selected)); });
+  }
   // ---- 瀏覽器上一頁／下一頁：切換分頁、選事件都記一筆（連同捲動位置），按上一頁回到前一個畫面 ----
   let navRestoring = true;
   function navPush(st) {
