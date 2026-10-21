@@ -101,6 +101,12 @@ body.arcmode #canvas { display: none; }
 .opt { margin: 5px 0; }
 .opt > .olabel { font-weight: 700; font-size: 13px; }
 .opt > .olabel .pct { font-weight: 400; font-size: 11px; color: var(--muted); margin-left: 6px; }
+.rmk { display: inline-block; width: 1.3em; font-weight: 400; }
+.rmk.ok { color: #5fbf86; } .rmk.part { color: #e2b04a; } .rmk.no { color: var(--muted); }
+.script.tiny { padding: 2px 10px; border-style: dashed; }
+.script.tiny .sname { margin: 0; }
+.hubnote { font-size: 12.5px; background: rgba(233,135,91,.08); border-left: 3px solid var(--accent); padding: 5px 10px; border-radius: 4px; margin: 4px 0 8px; }
+.hubneed { font-size: 12.5px; color: var(--muted); margin: 2px 0 6px; }
 .out { font-size: 12px; color: var(--muted); }
 .out b { color: var(--ink); font-weight: 600; }
 .spoil .unreadtxt { filter: blur(5px); cursor: pointer; transition: filter .15s; }
@@ -1388,16 +1394,17 @@ body.show-time .stime { display: inline; }
   }
   const inEvent = (it, ctx) => it.t === 'next' && ctx && ctx.scripts.includes(it.s.toLowerCase());
   // 「→ 接到 #N」：編號等整棵樹畫完才知道，先放記號最後再換
-  const segRef = s => `<div class="tref">→ 接到 \u0000${s}\u0000</div>`;
+  const segRef = (s, ctx) => ctx && ctx.start === s
+    ? `<div class="tref">↩ 回到${/^hub/.test(ctx.part || '') ? '選單' : '開頭'} \u0000${s}\u0000</div>` : `<div class="tref">→ 接到 \u0000${s}\u0000</div>`;
   // 接到下一段：只有一個入口的縮排畫在這裡；多個入口（劇情合流）的放回最外層，這裡只放連結
   function treeChild(s, ctx, st) {
-    if (st.num.has(s) || (st.inCount.get(s) || 0) > 1) { if (!st.num.has(s)) st.root.push(s); return segRef(s); }
+    if (st.num.has(s) || (st.inCount.get(s) || 0) > 1) { if (!st.num.has(s)) st.root.push(s); return segRef(s, ctx); }
     return treeHtml(s, ctx, st);
   }
   // 五塊錢有列這段（還有沒讀到的台詞）
   const hasUnread = s => G.unread.some(u => u.s === s && u.read < 1);
   function treeHtml(s, ctx, st) {
-    if (st.num.has(s)) return segRef(s);
+    if (st.num.has(s)) return segRef(s, ctx);
     const info = G.scripts[s];
     if (!info) return '';
     st.num.set(s, st.num.size + 1);
@@ -1405,8 +1412,10 @@ body.show-time .stime { display: inline; }
     const body = legendBlock(info.legend, hide) + plainItems(info.items, 0, ctx, s, st);
     const ur = hasUnread(s) ? ` golink" data-ur="${esc(s)}" title="到五塊錢看沒讀到的台詞` : '';
     const pct = info.read == null ? '' : `<span class="pct${ur}">${Math.round(info.read * 100)}% 已讀${ur ? ' ›' : ''}</span>`;
-    let html = `<div class="script" id="seg-${esc(s)}"><div class="sname"><b>#${st.num.get(s)}</b>${pct}${stime(s)}</div>${body || `<div class="empty${ur}">過場對話</div>`}</div>`;
-    for (const it of info.items) if (inEvent(it, ctx)) html += treeChild(it.s.toLowerCase(), ctx, st);
+    // 只有過場對話的段落縮成一行；同一段接到同一個目標只寫一次
+    let html = body ? `<div class="script" id="seg-${esc(s)}"><div class="sname"><b>#${st.num.get(s)}</b>${pct}${stime(s)}</div>${body}</div>`
+      : `<div class="script tiny" id="seg-${esc(s)}"><div class="sname"><b>#${st.num.get(s)}</b><span class="empty${ur}">過場</span>　${pct}${stime(s)}</div></div>`;
+    for (const t of new Set(info.items.filter(it => inEvent(it, ctx)).map(it => it.s.toLowerCase()))) html += treeChild(t, ctx, st);
     return html;
   }
   function eventTree(e) {
@@ -1426,21 +1435,87 @@ body.show-time .stime { display: inline; }
     }
     return html.replace(/\u0000([^\u0000]+)\u0000/g, (m, s) => st.num.has(s) ? `<span class="chip link" data-seg="${esc(s)}">#${st.num.get(s)}</span>` : esc(s));
   }
+  // 分支讀了多少：連上遊戲用即時已讀（分支對到五塊錢的分支樹：ri＝分歧的前序編號、第 j 個分支），否則用重建當下的
+  function rtFlat(u) {
+    if (!u._flat) { u._flat = []; const vis = n => (n.sub || []).forEach(s => { u._flat.push(s); s.br.forEach(vis); }); vis(u.rt); }
+    return u._flat;
+  }
+  function branchRead(s, it, j, ctx) {
+    const b0 = it.branches[j];
+    const u = LIVE_READ.size && it.ri != null ? unreadIndexOf(s) : null;
+    const b = u && (rtFlat(u)[it.ri] || {br: []}).br[j];
+    const ks = b ? [...new Set(effKeys(b, u.kp, diffOn()))] : [];
+    // 分支本身沒台詞、接到別段（選單選地點）：看接下去那幾段讀了多少
+    if (!ks.length) {
+      // 沒台詞的段落（只有分歧）再往下找，最多 3 層；不回頭算事件開頭（選單）
+      const seen = new Set(ctx ? [ctx.start] : []), got = [];
+      const nexts = items => { const out = []; (items || []).forEach(x => { if (x.t === 'next') out.push(x.s.toLowerCase()); else if (x.t === 'branch') x.branches.forEach(c => out.push(...nexts(c.items))); }); return out; };
+      const collect = (ts, d) => ts.forEach(t => {
+        if (seen.has(t)) return;
+        seen.add(t);
+        const x = G.scripts[t];
+        if (!x || (ctx && !ctx.scripts.includes(t))) return;
+        if (x.lines && x.read != null) got.push(x);
+        else if (d < 3) collect(nexts(x.items), d + 1);
+      });
+      collect(nexts(b0.items), 0);
+      if (got.length) {
+        const all = got.reduce((a, x) => a + x.lines, 0), done = got.reduce((a, x) => a + x.lines * x.read, 0);
+        return {r: done / all, left: Math.round(all - done)};
+      }
+      return {r: b ? null : b0.read};
+    }
+    const left = ks.filter(k => !LIVE_READ.has(u.kp + k)).length;
+    return {r: 1 - left / ks.length, left};
+  }
+  // ✓ 讀完、◐ 讀過一部分、○ 沒讀過；後面寫百分比、還剩幾句
+  const readMark = r => r == null ? '' : r >= 0.999 ? '<span class="rmk ok">✓</span>' : r > 0 ? '<span class="rmk part">◐</span>' : '<span class="rmk no">○</span>';
+  const readLeft = (r, left) => r == null || r >= 0.999 ? '' : `${r > 0 ? Math.round(r * 100) + '%' : ''}${left ? `${r > 0 ? '・' : ''}剩 ${left} 句` : r > 0 ? '' : '沒讀過'}`;
+  // 同一個旗標往下判斷的「否則若…」（鐵拳巷看造訪次數）：抬頭寫一次「依 🚩X」，每個分支只寫值和其他條件
+  const CHAIN_ATOM = /^旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) (-?\d+)$/;
+  // 第一個條件是同一個旗標的分支有 3 個以上、而且佔一半以上才算
+  const chainFirst = label => { label = label.replace(/　〔.*〕$/, ''); return label.split(' 或 ').length === 1 ? label.split(' 且 ')[0].match(CHAIN_ATOM) : null; };
+  function chainOf(it) {
+    if (!['switch', 'cond'].includes(it.kind)) return null;
+    const cnt = new Map();
+    let total = 0;
+    for (const b of it.branches) {
+      if (/^(以上皆非|其他)/.test(b.label)) continue;
+      total++;
+      const m = chainFirst(b.label);
+      if (m) cnt.set(m[1], (cnt.get(m[1]) || 0) + 1);
+    }
+    const [f, n] = [...cnt.entries()].sort((a, b) => b[1] - a[1])[0] || [];
+    return n >= 3 && n * 2 >= total ? f : null;
+  }
+  function chainLabel(chain, kind, rawLabel, ctx, near) {
+    const label = rawLabel.replace(/　〔.*〕$/, '');
+    if (/^(以上皆非|其他)/.test(label)) return '其他';
+    const m = chainFirst(rawLabel);
+    if (!m || m[1] !== chain) return branchLabel(kind, rawLabel, ctx, near).replace(/^否則若 /, '若 ');
+    const rest = label.split(' 且 ').slice(1);
+    const v = String(valueName(m[1], m[3]));
+    return `<b>${esc(m[2] === '=' && v !== m[3] ? v : m[2] + m[3])}</b>${rest.length ? `<span class="need">　另需 ${plainCondHtml(rest.join(' 且 '), ctx, near)}</span>` : ''}`;
+  }
   function plainItems(items, depth, ctx, near, st) {
     let html = plainOutcomes(items.filter(it => it.t !== 'branch'), ctx);
     for (const it of items) {
       if (it.t !== 'branch') continue;
-      const head = {choice: '選項', dice: '擲骰', battle: '戰鬥結果'}[it.kind] || '';
+      const chain = chainOf(it);
+      const cur = chain && LIVE && LIVE.inGame ? liveValue('flag', chain) : null;
+      const head = chain ? `依 <span class="flag" data-flag="${esc(chain)}">🚩「${esc(noteHead(chain) || flagTitle(chain) || chain)}」</span>${cur != null ? `（目前 ${esc(valueName(chain, cur))}）` : ''}判斷，由上往下先符合的先走`
+        : {choice: '選項', dice: '擲骰', battle: '戰鬥結果'}[it.kind] || '';
       let inner = '', any = false;
-      for (const b of it.branches) {
-        if (/^(exit\+|~x)/.test(b.label)) continue;
-        const pct = b.read == null ? '' : `${Math.round(b.read * 100)}% 已讀`;
-        const hide = unread(b.read) ? ' unreadtxt' : '';
-        const kids = st ? b.items.filter(x => inEvent(x, ctx)).map(x => treeChild(x.s.toLowerCase(), ctx, st)).join('') : '';
+      it.branches.forEach((b, j) => {
+        if (/^(exit\+|~x)/.test(b.label)) return;
+        const {r, left} = branchRead(near, it, j, ctx);
+        const hide = unread(r) ? ' unreadtxt' : '';
+        const kids = st ? [...new Set(b.items.filter(x => inEvent(x, ctx)).map(x => x.s.toLowerCase()))].map(s => treeChild(s, ctx, st)).join('') : '';
         const body = legendBlock(b.legend, hide) + (depth < 6 ? plainItems(b.items, depth + 1, ctx, near, st) : '') + (kids ? `<div class="tkids">${kids}</div>` : '');
         if (body) any = true;
-        inner += `<div class="opt"><div class="olabel${it.kind === 'choice' ? hide : ''}">${branchLabel(it.kind, b.label, ctx, near)}<span class="pct">${pct}</span></div>${body}</div>`;
-      }
+        const label = chain ? chainLabel(chain, it.kind, b.label, ctx, near) : branchLabel(it.kind, b.label, ctx, near);
+        inner += `<div class="opt"><div class="olabel${it.kind === 'choice' ? hide : ''}">${readMark(r)}${label}<span class="pct">${readLeft(r, left)}</span></div>${body}</div>`;
+      });
       if (inner && (any || it.kind === 'choice')) html += `<div class="branch">${head ? `<div class="bkind">${head}</div>` : ''}${inner}</div>`;
     }
     return html;
@@ -1485,6 +1560,7 @@ body.show-time .stime { display: inline; }
       if (others.length) html += `<details><summary class="bkind" style="cursor:pointer">⋯ 這個事件的其他段落</summary>${others.map(s => scriptHtml(s, e)).join('')}</details>`;
     } else {
       html += '<h3>劇情</h3>';
+      if (/^hub/.test(e.part || '')) html += '<div class="hubnote">這是<b>每旬重複的選單</b>：選一個地點，看完回到選單（「↩ 回到選單」）。地點前的 ✓／◐／○ 是讀過多少。</div>';
       html += eventTree(e) || '<div class="empty">只有過場對話，沒有選項或分歧。</div>';
     }
     html += `<div class="note">只列出：選項、擲骰、戰鬥勝敗、會改變劇情走向的條件。有底線的條件可以點開看它在哪裡決定。</div>`;
@@ -1944,6 +2020,10 @@ body.show-time .stime { display: inline; }
   }
   // 已讀狀態：和五塊錢同一套算法（性格／技能台詞差分看過一種就算讀過），連同事件後續的子段落一起看
   let unreadIndex = null;
+  function unreadIndexOf(s) {
+    if (!unreadIndex) { unreadIndex = new Map(); for (const u of G.unread) unreadIndex.set(u.s, u); }
+    return unreadIndex.get(s);
+  }
   function readBadge(script, raw) {
     if (raw == null || (!G.stats.readKeys && !LIVE_READ.size)) return '';
     if (!unreadIndex) {
@@ -2423,7 +2503,7 @@ body.show-time .stime { display: inline; }
           // 讀了一部分：先寫怎麼進到這段（同事件開頭就進得來的不寫；只剩「看當下條件」的不寫）
           // 只列最短的一條，免得蓋過下面的「怎麼看到」
           const enter = (u.routes || []).map(r => [r, routeText(r, ctx)]).filter(x => x[1] && !x[1].includes('路線上的選擇都走過了')).sort((a, b) => a[1].length - b[1].length);
-          if (enter.length && !u.hubGroup) html += `<div class="need">怎麼進來${enter.length > 1 || u.moreRoutes ? '（最短的一條）' : ''}：${enter[0][1]}</div>`;
+          if (enter.length) html += `<div class="need">怎麼進來${enter.length > 1 || u.moreRoutes ? '（最短的一條）' : ''}：${enter[0][1]}</div>`;
           const mine = who ? reasonsOf(u).filter(r => hits(r.heroines || [])) : [];
           // 寫出來一樣的原因（不同暫存旗標翻成同一句）合成一行、句數相加
           const merged = new Map();
@@ -2479,13 +2559,15 @@ body.show-time .stime { display: inline; }
       const rows = groups.get(key);
       const hubGroup = key.split('|')[1];
       const ev = hubGroup ? null : byId.get(key);
-      const head = hubGroup ? `${esc(hubGroup)}　<span class="need">（留學期間的養成地點）</span>${hubGroup.startsWith('崆峒') ? '<span class="rtag">限定：留學：崆峒</span>' : hubGroup.startsWith('青城') ? '<span class="rtag">限定：留學：青城</span>' : ''}`
+      const [hubWhen, hubPlace] = (hubGroup || '').split('・');
+      const hubNeed = hubGroup && (rows.find(u => u.hubNeed) || {}).hubNeed;
+      const head = hubGroup ? `${esc(hubPlace)}　<span class="need">（${esc(hubWhen.replace(/期間$/, ''))}的養成地點）</span>${hubGroup.startsWith('崆峒') ? '<span class="rtag">限定：留學：崆峒</span>' : hubGroup.startsWith('青城') ? '<span class="rtag">限定：留學：青城</span>' : ''}`
         : ev ? `${esc(whenText(ev))}　<span class="chip link" data-goto="${esc(key)}">${esc(evShort(ev))}${ev.desc ? '' : '…'}</span>`
           + (SHOW_LEGEND && ev.desc && ev.title ? `<span class="need${ev._read ? '' : ' unreadtxt'}" style="font-weight:400">　${esc(ev.title.replace(/^「|」$/g, '').slice(0, 26))}…</span>` : '') + routeTag(ev)
           + (ev.maybeNever ? `<span class="rtag maybe" title="觸發條件要的旗標值劇本裡設不出來">⚠可能無法達成</span>` : '')
         : '日常、地點行動、閒聊（不屬於任務事件）';
       return `<details class="plcard"${rows.length <= 6 || who ? ' open' : ''}><summary style="cursor:pointer"><b>${head}</b>　<span class="need">${countText(rows)}</span></summary>`
-        + (ev ? evIntro(ev) : '') + rowsHtml(rows) + '</details>';
+        + (ev ? evIntro(ev) : '') + (hubNeed ? `<div class="hubneed">選單上出現的條件：${plainCondHtml(hubNeed.replace(/^（(.*)）$/, '$1'), null)}</div>` : '') + rowsHtml(rows) + '</details>';
     }
     for (const [ck, keys] of clusters) html += keys.length > 1 ? clusterHtml(ck, keys) : groupHtml(keys[0]);
     romance.innerHTML = html;
@@ -2585,7 +2667,13 @@ body.show-time .stime { display: inline; }
     for (const r of routes) {
       for (let i = r.length - 1; i >= 0; i--) {
         const x = r[i];
-        if (x.hub) return `${base}・${x.hub}去「${x.path[0]}」`;
+        if (x.hub) {
+          // 地點＋事件名稱（開發備註）；沒有名稱就用地點後面的判斷
+          const next = r.slice(i + 1).find(y => !y.ev && (y.path || []).length);
+          const tail = u.hubName || (next ? plainCondText(next.path.join(' 且 '), ctx, next.from).slice(0, 24) : '進入時');
+          const c = r.slice(i + 2).map(y => lastChoice(y.path || [])).filter(Boolean).pop();
+          return `${x.path[0]}・${tail}${c ? `・${c.replace(/（需 .*）$/, '')}之後` : ''}`;
+        }
         if (x.ev) continue;
         const c = lastChoice(x.path || []);
         if (c) return `${base}・${c.replace(/（需 .*）$/, '')}之後`;

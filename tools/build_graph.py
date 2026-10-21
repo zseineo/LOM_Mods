@@ -573,8 +573,10 @@ def never_shown(label):
     return bool(m) and m.group(1) not in by_name["ConditionResultData"]
 
 
-def summarize(block, vars_, depth=0):
-    """把區塊壓成 UI 用的樹：選項一定保留；條件/擲骰分支只在走向不同時保留。"""
+def summarize(block, vars_, depth=0, seq=None):
+    """把區塊壓成 UI 用的樹：選項一定保留；條件/擲骰分支只在走向不同時保留。
+    ri：這個分歧在整支劇本裡的前序編號，和五塊錢分支樹（reason_tree）的順序一樣，網頁用來即時算每個分支讀了多少"""
+    seq = seq if seq is not None else [0]
     items = []
     texts, stories = [], []
     for it in block:
@@ -584,6 +586,8 @@ def summarize(block, vars_, depth=0):
         elif t == "story":
             stories.append(it["k"])
         elif t == "if":
+            ri = seq[0]
+            seq[0] += 1
             kind, name, labels, battles = resolve_if(it, vars_)
             sigs = {outcome_sig(br["block"]) for br in it["branches"]}
             significant = kind in ("choice", "battle") or (len(sigs) > 1 and kind != "position")
@@ -595,17 +599,17 @@ def summarize(block, vars_, depth=0):
                 branches = []
                 # 選項文字不算已讀：遊戲的已讀紀錄（ReadStoryData）從來不記選項
                 for br, (label, key) in pairs:
-                    sub = summarize(br["block"], vars_, depth + 1)
+                    sub = summarize(br["block"], vars_, depth + 1, seq)
                     sub_texts = sub.pop("_texts")
                     branches.append({"label": label, "read": read_ratio(sub_texts), **sub})
                     texts.extend(sub_texts)
-                node = {"t": "branch", "kind": kind, "name": name, "branches": branches}
+                node = {"t": "branch", "kind": kind, "name": name, "branches": branches, "ri": ri}
                 if battles:
                     node["battles"] = battles
                 items.append(node)
             else:
                 for br, (label, key) in pairs:
-                    sub = summarize(br["block"], vars_, depth + 1)
+                    sub = summarize(br["block"], vars_, depth + 1, seq)
                     texts.extend(sub.pop("_texts"))
                     stories.extend(sub.get("legend_keys", []))
                     for x in sub["items"]:
@@ -1494,9 +1498,14 @@ def entry_routes(script, ev):
         for x in parents:
             hub = FREE_HUB.match(x["from"])
             if hub:
-                # 養成選單的地點：只寫「某某期間去哪裡」，地點本身的開啟條件放在「其他條件」
-                place = re.sub(r"　〔需：.*〕$", "", x["path"][-1]) if x["path"] else ""
-                routes.append((([{"from": x["from"], "into": cur, "path": [place], "hub": HUB_NAME.get(hub.group(1), "留學期間")}] + acc[::-1]) if place else acc[::-1], seen))
+                # 養成選單的地點：只寫「某某期間去哪裡」；選單選項後面還有判斷（大試後第一次去鶴崖）的另成一步
+                pick = next((l for l in x["path"] if not re.search(r"[=≠<>≤≥]|^以上皆非|^其他", re.sub(r"　〔.*〕$", "", l))), x["path"][-1] if x["path"] else "")
+                place = re.sub(r"　〔需：.*〕$", "", pick)
+                need = re.search(r"　〔需：(.*)〕$", pick)
+                # 「以上皆非」那支是一般情況（特殊情況另有自己的段落），不另寫成一步
+                rest = [l for l in x["path"] if l != pick and not l.startswith("以上皆非")]
+                head = {"from": x["from"], "into": cur, "path": [place], "hub": HUB_NAME.get(hub.group(1), "留學期間"), **({"need": need.group(1)} if need else {})}
+                routes.append((([head] + ([{"from": x["from"], "into": cur, "path": rest}] if rest else []) + acc[::-1]) if place else acc[::-1], seen))
                 continue
             walk(x["from"], acc + ([{"from": x["from"], "into": cur, "path": x["path"]}] if x["path"] else []), seen + (x["from"],))
 
@@ -2596,6 +2605,17 @@ for name, (block, vars_) in scripts.items():
     if hubs and all(r and r[0].get("hub") for r in routes) and len(hubs) == 1:
         hub, place = next(iter(hubs))
         item["hubGroup"] = f"{hub}・{place}"
+        if routes[0][0].get("need"):
+            item["hubNeed"] = routes[0][0]["need"]
+        # 段落名稱：路上「旗標 X = 0」而進到的那段把 X 設成非 0（只發生一次的事件旗標），用 X 的開發備註
+        #（「觸發 鶴崖事件 又一個被騙」→ 又一個被騙）
+        for x in routes[0][1:]:
+            sets = {it["f"] for it in script_info.get(x["into"], {}).get("items", []) if it["t"] == "flag" and it["v"] != 0}
+            once = [f for l in x.get("path", []) for f in re.findall(r"旗標 ([A-Za-z0-9_]+) = 0(?![\d])", l) if f in sets and FLAG_NOTE.get(f)]
+            if once:
+                note = FLAG_NOTE[once[0]].strip().split("\n")[0]
+                item["hubName"] = re.sub(r"^觸發\s*(\S+事件\s+)?", "", note).strip()
+                break
     if r > 0:
         reasons = []
         unread_reasons(block, vars_, [], reasons)
