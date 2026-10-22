@@ -36,7 +36,7 @@ header label { display: inline-flex; gap: 5px; align-items: center; font-size: 1
 header input[type=search] { padding: 5px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); min-width: 220px; }
 .legend { display: flex; gap: 10px; font-size: 12px; color: var(--muted); }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
-main { flex: 1; display: flex; min-height: 0; }
+main { flex: 1; display: flex; min-height: 0; position: relative; }
 #chart { flex: 1; overflow: auto; position: relative; }
 #arcbar { position: sticky; top: 0; left: 0; z-index: 6; background: var(--bg); padding: 8px 12px 6px; border-bottom: 1px solid var(--line); }
 #arcbar .fchips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 2px 0; }
@@ -59,17 +59,18 @@ main { flex: 1; display: flex; min-height: 0; }
 #arcview .ahead { margin: 8px 0 4px; font-size: 16px; } #arcview .ahead span { color: var(--muted); font-size: 13px; font-weight: 400; }
 body.arcmode #canvas { display: none; }
 #canvas { position: relative; }
-#detail { width: var(--dw, 50vw); max-width: 80vw; min-width: 360px; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 14px 16px 40px; }
+/* 右側欄蓋在頁面上（不擠左邊的排版） */
+#detail { position: absolute; top: 0; right: 0; bottom: 0; z-index: 8; width: clamp(360px, var(--dw, 50vw), 80vw); box-sizing: border-box; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 14px 16px 40px; box-shadow: -8px 0 24px rgba(0,0,0,.35); }
 /* 右側欄寬度：拖拉中間的分隔線，或按 ½／¾ */
-#splitter { width: 6px; cursor: col-resize; background: transparent; flex: 0 0 6px; margin-right: -6px; z-index: 5; }
+#splitter { position: absolute; top: 0; bottom: 0; right: calc(clamp(360px, var(--dw, 50vw), 80vw) - 3px); width: 6px; cursor: col-resize; background: transparent; z-index: 9; }
 #splitter:hover, #splitter.drag { background: rgba(233,135,91,.35); }
 /* 右側欄開合：點事件才展開，✕／Esc 收起，收起後右邊緣「◂」再打開 */
 body.dclosed #detail, body.dclosed #splitter { display: none; }
 #detail > h2:first-child { padding-right: 30px; }
-#dclose { position: fixed; right: 14px; z-index: 6; display: none; background: var(--panel); border: 1px solid var(--line); color: var(--muted); border-radius: 6px; width: 26px; height: 26px; cursor: pointer; font: inherit; }
+#dclose { position: fixed; right: 14px; z-index: 10; display: none; background: var(--panel); border: 1px solid var(--line); color: var(--muted); border-radius: 6px; width: 26px; height: 26px; cursor: pointer; font: inherit; }
 #dclose:hover, #dopen:hover { color: var(--accent); border-color: var(--accent); }
 body:not(.dclosed) #dclose { display: block; }
-#dopen { position: fixed; right: 0; top: 45%; z-index: 6; display: none; background: var(--panel); border: 1px solid var(--line); border-right: 0; color: var(--muted); border-radius: 6px 0 0 6px; padding: 10px 4px; cursor: pointer; font: inherit; writing-mode: vertical-rl; }
+#dopen { position: fixed; right: 0; top: 45%; z-index: 10; display: none; background: var(--panel); border: 1px solid var(--line); border-right: 0; color: var(--muted); border-radius: 6px 0 0 6px; padding: 10px 4px; cursor: pointer; font: inherit; writing-mode: vertical-rl; }
 body.dclosed.dhas #dopen { display: block; }
 /* 劇情流程圖 */
 .ftools { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 2px 0 8px; font-size: 12px; }
@@ -93,7 +94,8 @@ body.dclosed.dhas #dopen { display: block; }
 .fn.sel { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(233,135,91,.3); }
 .fn.fdim { opacity: .35; }
 .fn.hl { border-color: var(--accent); }
-.fdrawer { margin-top: 8px; border: 1px solid var(--accent); border-radius: 8px; padding: 8px 10px; background: rgba(233,135,91,.05); }
+/* 點流程圖格子的說明：固定在右側欄下緣，捲動時也看得到 */
+.fdrawer { position: sticky; bottom: 0; z-index: 2; max-height: 42vh; overflow: auto; margin-top: 8px; border: 1px solid var(--accent); border-radius: 8px; padding: 8px 10px; background: linear-gradient(rgba(233,135,91,.05), rgba(233,135,91,.05)), var(--panel); box-shadow: 0 -6px 16px rgba(0,0,0,.3); }
 .fdrawer .fpath { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 .timehead { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
 .yearcell, .monthcell { position: absolute; font-size: 12px; text-align: center; white-space: nowrap; }
@@ -253,7 +255,7 @@ body.show-time .stime { display: inline; }
 #flagpop { position: fixed; z-index: 20; max-width: 380px; overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; box-shadow: 0 6px 20px rgba(0,0,0,.25); font-size: 12px; display: none; }
 #flagpop .row { margin: 3px 0; cursor: pointer; }
 #flagpop .row:hover { color: var(--accent); }
-@media (max-width: 760px) { main { flex-direction: column; } #detail { width: auto; max-width: none; height: 45vh; border-left: 0; border-top: 1px solid var(--line); } }
+@media (max-width: 760px) { main { flex-direction: column; } #detail { top: auto; left: 0; width: auto; height: 45vh; border-left: 0; border-top: 1px solid var(--line); } #splitter { display: none; } }
 </style>
 </head>
 <body class="spoil dclosed">
