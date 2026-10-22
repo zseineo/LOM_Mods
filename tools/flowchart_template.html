@@ -771,7 +771,7 @@ body.show-time .stime { display: inline; }
     svg.setAttribute('width', width); svg.setAttribute('height', height);
     applyFilter();
     drawNowLine();
-    if (selected) select(selected, false);
+    if (selected) select(selected, false, undefined, true);
   }
 
   // 結緣線：事件出現在某位女主的結緣步驟裡，或觸發條件看她的好感，就歸到她那一組
@@ -841,8 +841,9 @@ body.show-time .stime { display: inline; }
   }
 
   // 細節面板
-  let selected = null;
-  function select(id, scroll, focus) {
+  let selected = null, detailStale = false;
+  // quiet：重排、篩選後的重畫，右側欄收起時不要打開它
+  function select(id, scroll, focus, quiet) {
     if (id !== selected) navPush({view: currentView, ev: id});
     selected = id;
     const e = byId.get(id);
@@ -852,7 +853,8 @@ body.show-time .stime { display: inline; }
     nodes.get(id)?.classList.add('sel');
     document.querySelectorAll('#arcview .acard').forEach(c => c.classList.toggle('sel', c.dataset.arcEv === id));
     drawLinks(e);
-    renderDetail(e, focus);
+    if (quiet && document.body.classList.contains('dclosed')) detailStale = true;
+    else renderDetail(e, focus);
     if (scroll) detail.scrollTop = 0;
   }
   function center(n) { return [n.offsetLeft + n.offsetWidth / 2, n.offsetTop + 13]; }
@@ -1778,6 +1780,7 @@ body.show-time .stime { display: inline; }
   }
   function renderDetail(e, focus) {
     openDetail();
+    detailStale = false;
     const t = e.time;
     let when = T("不限時間");
     if (t && t.type === 'at' && valid(t.from)) when = tstr(t.from);
@@ -3079,14 +3082,28 @@ body.show-time .stime { display: inline; }
     sp.addEventListener('dblclick', () => { setDetailWidth(window.innerWidth * ((PREFS.detailW || 0.5) > 0.6 ? 0.5 : 0.75)); if (selected) renderDetail(byId.get(selected)); });
   }
   // ---- 右側欄開合：要寫內容進去的地方先打開（流程圖要量寬度）；✕／Esc 收起 ----
+  let openTick = 0;
   function openDetail(open = true) {
     document.body.classList.toggle('dclosed', !open);
     if (!open) return;
+    openTick++;
     document.body.classList.add('dhas');
     document.getElementById('dclose').style.top = detail.getBoundingClientRect().top + 8 + 'px';
   }
   document.getElementById('dclose').onclick = () => openDetail(false);
-  document.getElementById('dopen').onclick = () => openDetail();
+  // 收起時有重排過（篩選）：打開時照現在的寬度重畫
+  document.getElementById('dopen').onclick = () => { openDetail(); if (detailStale && selected) renderDetail(byId.get(selected)); };
+  // 點右側欄以外的地方就收起；這次點擊本身打開了右側欄（點事件、段落、月份）就不收
+  // 按下時判斷位置：右側欄裡的點擊可能會重畫內容，放開時目標已經不在畫面上
+  let downOutside = false, downTick = 0;
+  document.addEventListener('mousedown', ev => {
+    const keep = ['detail', 'flagpop', 'dclose', 'dopen', 'splitter'].map(id => document.getElementById(id));
+    downOutside = !ev.composedPath().some(el => keep.includes(el));
+    downTick = openTick;
+  }, true);
+  document.addEventListener('click', ev => {
+    if (downOutside && openTick === downTick && !document.body.classList.contains('dclosed')) openDetail(false);
+  });
   document.addEventListener('keydown', ev => {
     if (ev.key === 'Escape' && !document.body.classList.contains('dclosed') && !/^(INPUT|SELECT|TEXTAREA)$/.test(ev.target.tagName)) openDetail(false);
   });
