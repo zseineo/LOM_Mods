@@ -31,6 +31,17 @@ for x in g["library"].values():
 data = json.dumps(g, ensure_ascii=False).replace("</", "<\\/")
 guides_obj = json.load(open(guides_path, encoding="utf-8"))
 guides = json.dumps(guides_obj, ensure_ascii=False).replace("</", "<\\/")
-html = open(template, encoding="utf-8").read().replace("__DATA__", data).replace("__GUIDES__", guides)
+# 多語言對照（i18n/strings.json）：只放有改寫或有翻譯的字，沒有的網頁直接用原文
+strings_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "i18n", "strings.json")
+i18n = {}
+if os.path.exists(strings_path):
+    for key, e in json.load(open(strings_path, encoding="utf-8"))["strings"].items():
+        if e.get("unused") or (e.get("group") == "mod" and not e.get("also")):
+            continue
+        langs = {lang: e[lang] for lang in ("zh-TW", "ja", "ko") if e.get(lang)}
+        if langs:
+            i18n[key] = langs
+i18n_json = json.dumps(i18n, ensure_ascii=False).replace("</", "<\\/")
+html = open(template, encoding="utf-8").read().replace("__DATA__", data).replace("__GUIDES__", guides).replace("__I18N__", i18n_json)
 open(out, "w", encoding="utf-8").write(html)
 print("written", out, len(html))

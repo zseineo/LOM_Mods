@@ -399,18 +399,18 @@ internal static class Sources
     {
         if (source != null && source.StartsWith(KeyNodeAfter + "|"))
         {
-            return "關鍵節點（觸發後第一個可存檔的時間點）";
+            return L.T("關鍵節點（觸發後第一個可存檔的時間點）");
         }
         if (source != null && source.StartsWith(KeyNode))
         {
-            return "關鍵節點（觸發前最後一個養成回合開始）";
+            return L.T("關鍵節點（觸發前最後一個養成回合開始）");
         }
         switch (source)
         {
-            case FreeRound: return "養成回合開始";
-            case StoryAutoSave: return "劇情自動存檔";
-            case FreeAutoSave: return "養成自動存檔";
-            case SaveEnabled: return "劇情開放存檔";
+            case FreeRound: return L.T("養成回合開始");
+            case StoryAutoSave: return L.T("劇情自動存檔");
+            case FreeAutoSave: return L.T("養成自動存檔");
+            case SaveEnabled: return L.T("劇情開放存檔");
             default: return source;
         }
     }

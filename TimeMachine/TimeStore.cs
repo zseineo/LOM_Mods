@@ -94,15 +94,15 @@ internal static class TimeStore
         name = (name ?? "").Trim();
         if (name.Length == 0)
         {
-            return "請輸入路線名稱";
+            return L.T("請輸入路線名稱");
         }
         if (name.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0 || name == RoutesDir)
         {
-            return "名稱不能包含 \\ / : * ? \" < > | 等符號";
+            return L.T("名稱不能包含 \\ / : * ? \" < > | 等符號");
         }
         if (Routes().Contains(name))
         {
-            return "已經有同名的路線";
+            return L.T("已經有同名的路線");
         }
         string target = System.IO.Path.Combine(Root, RoutesDir, name);
         Directory.CreateDirectory(target);
@@ -139,7 +139,7 @@ internal static class TimeStore
     {
         if (name == DefaultRoute || !Routes().Contains(name))
         {
-            return "這條路線不能刪除";
+            return L.T("這條路線不能刪除");
         }
         string dir = RouteDir(name);
         Directory.Delete(dir, true);

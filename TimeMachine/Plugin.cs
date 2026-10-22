@@ -24,6 +24,7 @@ public class Plugin : BaseUnityPlugin
     internal static ConfigEntry<int> GuidePort;
     internal static ConfigEntry<Key> GuideKey;
     internal static ConfigEntry<bool> EventLogEnabled;
+    internal static ConfigEntry<string> Language;
 
     private TimeMachineWindow _window;
     private GuideServer _guide;
@@ -31,6 +32,9 @@ public class Plugin : BaseUnityPlugin
     private void Awake()
     {
         Log = Logger;
+        // 語言要在其他類別（關鍵節點名稱、視窗文字）初始化前載入
+        Language = Config.Bind("General", "Language", "zh-TW", "介面語言：zh-TW（繁中）／ja（日文）／ko（韓文）；時光機視窗和算命仙網頁共用，沒翻譯的字顯示繁中");
+        L.Load(Path.Combine(Path.GetDirectoryName(Info.Location), "strings.tsv"), Language.Value);
         AutoCapture = Config.Bind("General", "AutoCapture", true,
             "每一旬第一個可合法存檔的時間點，自動存一份時光機存檔（不占存檔欄位）。時光機視窗的「暫停自動存檔」就是把這項關掉");
         QuickLoad = Config.Bind("General", "QuickLoad", false, "快速讀取：雙擊時間點直接讀取，按「讀取」也不再確認（時光機視窗上可直接勾選）");
@@ -67,7 +71,7 @@ public class Plugin : BaseUnityPlugin
             }
             else
             {
-                Application.OpenURL(_guide.Url);
+                Application.OpenURL(_guide.Url + "?lang=" + System.Uri.EscapeDataString(Language.Value));
             }
         }
         _window.Update();

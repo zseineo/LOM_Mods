@@ -1,0 +1,9491 @@
+{
+ "_說明": "時光機＋算命仙的多語言字串表：抽字、匯出 Excel、匯回、產生 Mod 用的 strings.tsv。",
+ "strings": {
+  "（需 {0}）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 307 行",
+    "網頁 1406 行",
+    "網頁 1986 行"
+   ],
+   "vars": [
+    "p"
+   ]
+  },
+  "目前已符合": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 327 行"
+   ],
+   "vars": []
+  },
+  "目前尚未符合": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 327 行"
+   ],
+   "vars": []
+  },
+  "● 已連線：第{0}年{1}月{2}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 465 行"
+   ],
+   "vars": [
+    "LIVE.time.y",
+    "LIVE.time.m",
+    "STAGE[LIVE.time.s]"
+   ]
+  },
+  "● 已連線（標題畫面）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 468 行"
+   ],
+   "vars": []
+  },
+  "未連線": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 471 行"
+   ],
+   "vars": []
+  },
+  "目前時間": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 494 行"
+   ],
+   "vars": []
+  },
+  "上旬": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 498 行"
+   ],
+   "vars": []
+  },
+  "中旬": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 498 行"
+   ],
+   "vars": []
+  },
+  "下旬": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 498 行"
+   ],
+   "vars": []
+  },
+  "第{0}年{1}月{2}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 502 行",
+    "網頁 2659 行"
+   ],
+   "vars": [
+    "t.y",
+    "t.m",
+    "STAGE[t.s]"
+   ]
+  },
+  "{0}等 {1} 個事件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 544 行"
+   ],
+   "vars": [
+    "e.partFrom.slice(0, 3).map(id => evLink(id.toLowerCase())).join('')",
+    "e.partFrom.length"
+   ]
+  },
+  "或": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 545 行"
+   ],
+   "vars": []
+  },
+  "汗青書": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 563 行"
+   ],
+   "vars": []
+  },
+  "結緣結局": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 563 行"
+   ],
+   "vars": []
+  },
+  "死法": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 563 行"
+   ],
+   "vars": []
+  },
+  "入門": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 589 行",
+    "網頁 596 行"
+   ],
+   "vars": []
+  },
+  "南宮壽宴": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 589 行"
+   ],
+   "vars": []
+  },
+  "一直留在唐門": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 590 行"
+   ],
+   "vars": []
+  },
+  "崆峒留學": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [
+    "guide"
+   ],
+   "where": [
+    "網頁 591 行",
+    "網頁 2886 行",
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "崆峒，8月起江陵": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 591 行"
+   ],
+   "vars": []
+  },
+  "青城留學": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 592 行",
+    "網頁 2886 行"
+   ],
+   "vars": []
+  },
+  "8月上旬前在唐門，8月中旬起青城": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 592 行"
+   ],
+   "vars": []
+  },
+  "唐門內戰・臥雲崗": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 593 行"
+   ],
+   "vars": []
+  },
+  "小師妹招親": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [
+    "mod"
+   ],
+   "where": [
+    "網頁 593 行",
+    "KeyNodes.cs 41 行"
+   ],
+   "vars": []
+  },
+  "雪山・武林大會": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 594 行"
+   ],
+   "vars": []
+  },
+  "決策": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 594 行"
+   ],
+   "vars": []
+  },
+  "終局": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 594 行"
+   ],
+   "vars": []
+  },
+  "時間不定": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 596 行",
+    "網頁 601 行",
+    "網頁 608 行",
+    "網頁 642 行",
+    "網頁 2064 行"
+   ],
+   "vars": []
+  },
+  "每月{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 629 行",
+    "網頁 1748 行"
+   ],
+   "vars": [
+    "STAGE[t.stage]"
+   ]
+  },
+  "📍到「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 630 行"
+   ],
+   "vars": [
+    "e.pos"
+   ]
+  },
+  "接續前一段": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 630 行"
+   ],
+   "vars": []
+  },
+  "無對話": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 631 行",
+    "網頁 1750 行"
+   ],
+   "vars": []
+  },
+  "已讀": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 631 行",
+    "網頁 264 行"
+   ],
+   "vars": []
+  },
+  "未讀": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 631 行",
+    "網頁 2697 行",
+    "網頁 264 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"mainmark\">主線</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 633 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"fchips\"><span>段落</span>{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 641 行"
+   ],
+   "vars": [
+    "ARCS.map(a => chip('arc', a.name, arcSel, T(\"{0}<small>{1}年{2}月～</small>\", esc(a.name), a.from[0], a.from[1]))).join('')"
+   ]
+  },
+  "{0}<small>{1}年{2}月～</small>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 641 行"
+   ],
+   "vars": [
+    "esc(a.name)",
+    "a.from[0]",
+    "a.from[1]"
+   ]
+  },
+  "全部（大圖）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 642 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"fchips\"><span>角色</span>{0}{1}{2}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 643 行"
+   ],
+   "vars": [
+    "chip('cast', '', castSel, T(\"全部\"))",
+    "names.map(n => chip('cast', n, castSel, iconImg(n) + esc(n))).join('')",
+    "chip('cast', '__none', castSel, T(\"其他\"))"
+   ]
+  },
+  "全部": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 643 行",
+    "網頁 1704 行",
+    "網頁 2359 行",
+    "網頁 2697 行",
+    "網頁 2699 行"
+   ],
+   "vars": []
+  },
+  "其他": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 643 行",
+    "網頁 792 行",
+    "網頁 793 行",
+    "網頁 1547 行",
+    "網頁 2699 行"
+   ],
+   "vars": []
+  },
+  "<span>　第{0}年{1}月～第{2}年{3}月{4}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 653 行"
+   ],
+   "vars": [
+    "a.from[0]",
+    "a.from[1]",
+    "a.to[0]",
+    "a.to[1]",
+    "a.note ? ' · ' + esc(a.note) : ''"
+   ]
+  },
+  "<span>　沒有固定時間：到地點或條件符合就觸發、每月固定時間</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 653 行"
+   ],
+   "vars": []
+  },
+  "旅途／其他": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 656 行",
+    "網頁 796 行",
+    "網頁 2618 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"arow{0}{1}\"><div class=\"awhen\" data-arc-month=\"{2}-{3}\" title=\"遊戲內點這裡會讀取該月的時光機存檔\"><b>第{4}年{5}月</b>{6}</div><div class=\"acells\">{7}</div></div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 665 行"
+   ],
+   "vars": [
+    "evs.length ? '' : ' empty'",
+    "now === `${y}-${m}-${st}` ? ' now' : ''",
+    "y",
+    "m",
+    "y",
+    "m",
+    "STAGE[st]",
+    "evs.length ? byPlace(evs) : '—'"
+   ]
+  },
+  "第{0}年": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [
+    "mod"
+   ],
+   "where": [
+    "網頁 708 行",
+    "TimeMachineWindow.cs 551 行"
+   ],
+   "vars": [
+    "y"
+   ]
+  },
+  "{0}月": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [
+    "mod"
+   ],
+   "where": [
+    "網頁 712 行",
+    "TimeMachineWindow.cs 545 行"
+   ],
+   "vars": [
+    "m"
+   ]
+  },
+  "{0}年{1}月：遊戲內點這裡會讀取該月的時光機存檔": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 713 行"
+   ],
+   "vars": [
+    "y",
+    "m"
+   ]
+  },
+  "不限時間（條件滿足即觸發）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 747 行"
+   ],
+   "vars": []
+  },
+  "可觸發的時間區間": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 804 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"flag\" data-flag=\"{0}\"{1}>旗標 {2}{3}</span>{4}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 870 行"
+   ],
+   "vars": [
+    "f",
+    "attrs",
+    "f",
+    "alias",
+    "op ? ` ${op} ${val}` : ''"
+   ]
+  },
+  "<br>或 ": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 890 行"
+   ],
+   "vars": []
+  },
+  "怎麼讓{0}{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 896 行"
+   ],
+   "vars": [
+    "flagName(f.flag) ? `「${esc(flagName(f.flag))}」` : ` ${esc(f.flag)} `",
+    "f.op === 'AddFlag' ? (f.v > 0 ? '+' : '') + f.v : '= ' + f.v"
+   ]
+  },
+  "<details><summary>⋯ 展開其餘 {0} 段</summary>{1}</details>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 905 行"
+   ],
+   "vars": [
+    "paras.length",
+    "esc(paras.join('\\n'))"
+   ]
+  },
+  "要從特定的前段劇情進來": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 963 行",
+    "網頁 1168 行",
+    "網頁 1321 行"
+   ],
+   "vars": []
+  },
+  "{0}時": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 974 行"
+   ],
+   "vars": [
+    "conds.join('、')"
+   ]
+  },
+  "第 {0} 次進到這個選單時": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 977 行"
+   ],
+   "vars": [
+    "brk[1]"
+   ]
+  },
+  "經過「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 985 行"
+   ],
+   "vars": [
+    "evShort(ev)"
+   ]
+  },
+  "地點事件「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 985 行"
+   ],
+   "vars": [
+    "x.pos"
+   ]
+  },
+  "經過某段劇情": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 985 行",
+    "網頁 1091 行"
+   ],
+   "vars": []
+  },
+  "在": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 990 行"
+   ],
+   "vars": []
+  },
+  " 或 ": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 997 行",
+    "網頁 1109 行",
+    "網頁 1301 行",
+    "網頁 1931 行",
+    "網頁 2302 行"
+   ],
+   "vars": []
+  },
+  " 等 {0} 處": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 998 行"
+   ],
+   "vars": [
+    "all.length"
+   ]
+  },
+  "{0}還活著": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1010 行"
+   ],
+   "vars": [
+    "note.replace(/死亡$/, '')"
+   ]
+  },
+  "沒有🚩「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1011 行"
+   ],
+   "vars": [
+    "note"
+   ]
+  },
+  "沒結緣": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1029 行"
+   ],
+   "vars": []
+  },
+  "已結緣": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1029 行"
+   ],
+   "vars": []
+  },
+  "決裂": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1029 行"
+   ],
+   "vars": []
+  },
+  "沒和{0}結緣": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1034 行",
+    "網頁 1035 行"
+   ],
+   "vars": [
+    "w"
+   ]
+  },
+  "已和{0}結緣": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1034 行"
+   ],
+   "vars": [
+    "w"
+   ]
+  },
+  "和{0}結緣後決裂": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1034 行"
+   ],
+   "vars": [
+    "w"
+   ]
+  },
+  "和{0}結緣過": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1034 行"
+   ],
+   "vars": [
+    "w"
+   ]
+  },
+  "沒和{0}結緣（或已決裂）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1035 行"
+   ],
+   "vars": [
+    "w"
+   ]
+  },
+  "無": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1046 行"
+   ],
+   "vars": []
+  },
+  "小遊戲得分": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1050 行"
+   ],
+   "vars": []
+  },
+  "「{0}」的票數": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1053 行"
+   ],
+   "vars": [
+    "vote[1]"
+   ]
+  },
+  "記錄 {0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1053 行"
+   ],
+   "vars": [
+    "f"
+   ]
+  },
+  "{0}：無": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1059 行"
+   ],
+   "vars": [
+    "head"
+   ]
+  },
+  "{0}不是{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1062 行"
+   ],
+   "vars": [
+    "head",
+    "opts.get(String(val))"
+   ]
+  },
+  "（正式版一定成立）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1068 行",
+    "網頁 1069 行",
+    "網頁 2519 行"
+   ],
+   "vars": []
+  },
+  "試玩版序章（正式版不會出現）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1068 行"
+   ],
+   "vars": []
+  },
+  "試玩版（正式版不會出現）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1069 行"
+   ],
+   "vars": []
+  },
+  "小遊戲得分 {0} {1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1076 行"
+   ],
+   "vars": [
+    "op",
+    "val"
+   ]
+  },
+  "（{0}時累加）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1091 行"
+   ],
+   "vars": [
+    "hows[0]"
+   ]
+  },
+  "先前{0}{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1109 行"
+   ],
+   "vars": [
+    "hit.slice(0, 2).join(T(\" 或 \"))",
+    "hit.length > 2 ? T(\" 等\") : ''"
+   ]
+  },
+  " 等": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1109 行",
+    "網頁 1118 行",
+    "網頁 1122 行",
+    "網頁 1136 行",
+    "網頁 1137 行",
+    "網頁 1182 行"
+   ],
+   "vars": []
+  },
+  "戰鬥勝利": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1115 行",
+    "網頁 1146 行",
+    "網頁 1181 行",
+    "網頁 1407 行",
+    "網頁 1989 行"
+   ],
+   "vars": []
+  },
+  "戰鬥落敗": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1115 行",
+    "網頁 1147 行",
+    "網頁 1181 行",
+    "網頁 1407 行",
+    "網頁 1991 行"
+   ],
+   "vars": []
+  },
+  "戰鬥": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1115 行",
+    "網頁 1181 行",
+    "網頁 1423 行",
+    "網頁 1587 行",
+    "網頁 2409 行"
+   ],
+   "vars": []
+  },
+  "{0}都還沒選過": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1119 行"
+   ],
+   "vars": [
+    "names"
+   ]
+  },
+  "選過{0}其中之一": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1120 行"
+   ],
+   "vars": [
+    "names"
+   ]
+  },
+  "選過{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1120 行"
+   ],
+   "vars": [
+    "names"
+   ]
+  },
+  "本段選擇": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1122 行"
+   ],
+   "vars": []
+  },
+  "{0}的累計次數 {1} {2}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1123 行",
+    "網頁 1183 行"
+   ],
+   "vars": [
+    "list",
+    "op",
+    "val"
+   ]
+  },
+  "{0}{1}都還沒選過": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1136 行"
+   ],
+   "vars": [
+    "miss.slice(0, 3).map(w => CHOICE_NAME.get(w)).join('')",
+    "miss.length > 3 ? T(\" 等\") : ''"
+   ]
+  },
+  "先前沒有{0}{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1137 行"
+   ],
+   "vars": [
+    "miss.slice(0, 2).join(T(\"，也沒有\"))",
+    "miss.length > 2 ? T(\" 等\") : ''"
+   ]
+  },
+  "，也沒有": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1137 行"
+   ],
+   "vars": []
+  },
+  "（這段劇情裡一定成立）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1139 行",
+    "網頁 2519 行"
+   ],
+   "vars": []
+  },
+  "戰鬥沒有分出勝負": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1148 行"
+   ],
+   "vars": []
+  },
+  "戰鬥沒有獲勝": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1148 行"
+   ],
+   "vars": []
+  },
+  "決鬥中的結果（{0} {1}）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1151 行"
+   ],
+   "vars": [
+    "op",
+    "val"
+   ]
+  },
+  "先前{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1163 行"
+   ],
+   "vars": [
+    "originList(hit)"
+   ]
+  },
+  "先前沒有{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1165 行"
+   ],
+   "vars": [
+    "originList(miss)"
+   ]
+  },
+  "這個事件還沒發生過": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1176 行"
+   ],
+   "vars": []
+  },
+  "這個事件已經發生過": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1177 行"
+   ],
+   "vars": []
+  },
+  "已{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1186 行"
+   ],
+   "vars": [
+    "originList(hits)"
+   ]
+  },
+  "沒有{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1188 行"
+   ],
+   "vars": [
+    "originList(misses)"
+   ]
+  },
+  "（劇本中沒有地方會改它，一定成立）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1190 行"
+   ],
+   "vars": []
+  },
+  "（劇本中沒有地方會設定它，實際上不會成立）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1190 行",
+    "網頁 1321 行"
+   ],
+   "vars": []
+  },
+  "劇情記錄 {0} {1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1191 行"
+   ],
+   "vars": [
+    "op",
+    "val"
+   ]
+  },
+  "<span class=\"maybe\" title=\"劇本裡找不到把這個旗標設成需要的值的地方；遊戲程式也可能會設，所以只是可能\">⚠可能無法達成</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1246 行"
+   ],
+   "vars": []
+  },
+  "其他情況": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1262 行",
+    "網頁 1408 行",
+    "網頁 2104 行",
+    "網頁 2422 行"
+   ],
+   "vars": []
+  },
+  "已結緣人數": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1264 行"
+   ],
+   "vars": []
+  },
+  "已建設施數": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1265 行"
+   ],
+   "vars": []
+  },
+  "已贖回「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1269 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "還沒贖回「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1269 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "{0}{1}的合計": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1275 行"
+   ],
+   "vars": [
+    "nouns.slice(0, 3).join('、')",
+    "nouns.length > 3 ? T(\" 等 {0} 項\", nouns.length) : ''"
+   ]
+  },
+  " 等 {0} 項": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1275 行",
+    "網頁 1444 行"
+   ],
+   "vars": [
+    "nouns.length"
+   ]
+  },
+  "不是「$1」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1279 行"
+   ],
+   "vars": []
+  },
+  "{0}年": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1292 行"
+   ],
+   "vars": [
+    "off[0]"
+   ]
+  },
+  "{0}個月": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1292 行"
+   ],
+   "vars": [
+    "off[1]"
+   ]
+  },
+  "{0}旬": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1292 行"
+   ],
+   "vars": [
+    "off[2]"
+   ]
+  },
+  "」或「": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1293 行"
+   ],
+   "vars": []
+  },
+  "的{0}後": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1293 行"
+   ],
+   "vars": [
+    "later"
+   ]
+  },
+  "那一旬": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1293 行"
+   ],
+   "vars": []
+  },
+  "預定的時間": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1293 行"
+   ],
+   "vars": []
+  },
+  "剛好是{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1294 行"
+   ],
+   "vars": [
+    "base"
+   ]
+  },
+  "{0}起": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1294 行",
+    "網頁 1373 行"
+   ],
+   "vars": [
+    "base"
+   ]
+  },
+  "{0}之後": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1294 行",
+    "網頁 1373 行"
+   ],
+   "vars": [
+    "base"
+   ]
+  },
+  "{0}以前": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1294 行",
+    "網頁 1373 行"
+   ],
+   "vars": [
+    "base"
+   ]
+  },
+  "{0}之前": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1294 行",
+    "網頁 1373 行"
+   ],
+   "vars": [
+    "base"
+   ]
+  },
+  "用掉部分行動後": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1296 行"
+   ],
+   "vars": []
+  },
+  "目前存檔已符合": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1309 行"
+   ],
+   "vars": []
+  },
+  "目前存檔還不符合": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1309 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"cur\">（目前{0}）</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1323 行"
+   ],
+   "vars": [
+    "curName === cur ? ' ' + cur : '：' + curName"
+   ]
+  },
+  "「$1」練到 $2～$3 級": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1341 行"
+   ],
+   "vars": []
+  },
+  "已開發「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1343 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "還沒開發「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1343 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "「$1」開發等級$2$3": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1344 行"
+   ],
+   "vars": []
+  },
+  "沒練「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1345 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "練過「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1345 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "練到 {0} 級": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1346 行"
+   ],
+   "vars": [
+    "v"
+   ]
+  },
+  "不是 {0} 級": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1346 行"
+   ],
+   "vars": [
+    "v"
+   ]
+  },
+  "不到 {0} 級": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1346 行"
+   ],
+   "vars": [
+    "v"
+   ]
+  },
+  "{0} 級以下": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1346 行"
+   ],
+   "vars": [
+    "v"
+   ]
+  },
+  "超過 {0} 級": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1346 行"
+   ],
+   "vars": [
+    "v"
+   ]
+  },
+  "練到 {0} 級以上": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1346 行"
+   ],
+   "vars": [
+    "v"
+   ]
+  },
+  "機率＝$1好感%": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1348 行"
+   ],
+   "vars": []
+  },
+  "機率約 {0}%": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1353 行"
+   ],
+   "vars": [
+    "Math.round(Math.max(0, Math.min(N, hit)) / N * 100)"
+   ]
+  },
+  "{0}好感{1}{2}裡最高的": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1358 行"
+   ],
+   "vars": [
+    "who",
+    "op === '=' ? T(\"是\") : T(\"不是\")",
+    "names"
+   ]
+  },
+  "是": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1358 行"
+   ],
+   "vars": []
+  },
+  "不是": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1358 行"
+   ],
+   "vars": []
+  },
+  "$1好感$2$3": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1360 行"
+   ],
+   "vars": []
+  },
+  "🏆已取得成就「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1361 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "🏆沒取得成就「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1361 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "有天賦「{0}」或「{1}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1364 行"
+   ],
+   "vars": [
+    "a",
+    "b"
+   ]
+  },
+  "沒有天賦「{0}」也沒有「{1}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1364 行"
+   ],
+   "vars": [
+    "a",
+    "b"
+   ]
+  },
+  "有天賦「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1365 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "沒有天賦「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1365 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "天賦「{0}」{1}{2}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1365 行"
+   ],
+   "vars": [
+    "n",
+    "op",
+    "v"
+   ]
+  },
+  "天賦「$1」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1366 行"
+   ],
+   "vars": []
+  },
+  "持有「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1367 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "沒有「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1367 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "「{0}」數量{1}{2}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1367 行"
+   ],
+   "vars": [
+    "n",
+    "op",
+    "v"
+   ]
+  },
+  "沒有心上人": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1369 行"
+   ],
+   "vars": []
+  },
+  "有心上人": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1369 行"
+   ],
+   "vars": []
+  },
+  "心上人是{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1371 行"
+   ],
+   "vars": [
+    "who"
+   ]
+  },
+  "心上人不是{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1371 行"
+   ],
+   "vars": [
+    "who"
+   ]
+  },
+  "不是{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1373 行"
+   ],
+   "vars": [
+    "t"
+   ]
+  },
+  "$1好感": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1375 行"
+   ],
+   "vars": []
+  },
+  "其他結果": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1407 行"
+   ],
+   "vars": []
+  },
+  "（另一個選項）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1413 行"
+   ],
+   "vars": []
+  },
+  "選{0}{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1413 行",
+    "網頁 2003 行"
+   ],
+   "vars": [
+    "esc(quoted(label))",
+    "need"
+   ]
+  },
+  "若不是 ": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1414 行"
+   ],
+   "vars": []
+  },
+  "若 ": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1414 行",
+    "網頁 1415 行",
+    "網頁 1549 行",
+    "網頁 2422 行"
+   ],
+   "vars": []
+  },
+  "否則若 ": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1415 行",
+    "網頁 1549 行"
+   ],
+   "vars": []
+  },
+  "戰役": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1423 行",
+    "網頁 1587 行"
+   ],
+   "vars": []
+  },
+  "（打輸即死）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1423 行"
+   ],
+   "vars": []
+  },
+  "<details class=\"when {0}\"><summary>戰鬥中會發生的事（{1}）</summary><ul>{2}</ul></details>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1425 行"
+   ],
+   "vars": [
+    "after && after.read > 0 ? '' : 'unreadtxt'",
+    "it.events.length",
+    "it.events.map(x => `<li>${esc(plainCondText(x, ctx))}</li>`).join('')"
+   ]
+  },
+  "→ 接續 {0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1429 行"
+   ],
+   "vars": [
+    "evLink(owner)"
+   ]
+  },
+  "→ 回到養成": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1431 行"
+   ],
+   "vars": []
+  },
+  "→ <b>回標題（遊戲結束）</b>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1432 行"
+   ],
+   "vars": []
+  },
+  "→ <b>死亡</b>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1433 行"
+   ],
+   "vars": []
+  },
+  "→ 之後觸發 {0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1435 行"
+   ],
+   "vars": [
+    "evLink(id)"
+   ]
+  },
+  "<b>★ 結局</b>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1436 行"
+   ],
+   "vars": []
+  },
+  "時間跳到 {0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1437 行"
+   ],
+   "vars": [
+    "tstr({y: it.y, m: it.m, s: it.st})"
+   ]
+  },
+  "📌 會影響之後：{0}{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1446 行"
+   ],
+   "vars": [
+    "affects.slice(0, 2).map(evLink).join('')",
+    "affects.length > 2 ? T(\"等 {0} 個事件\", affects.length) : ''"
+   ]
+  },
+  "等 {0} 個事件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1446 行"
+   ],
+   "vars": [
+    "affects.length"
+   ]
+  },
+  "<div class=\"tref\">↩ 回到{0} \u0000{1}\u0000</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1452 行"
+   ],
+   "vars": [
+    "/^hub/.test(ctx.part || '') ? T(\"選單\") : T(\"開頭\")",
+    "s"
+   ]
+  },
+  "選單": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1452 行",
+    "網頁 1643 行"
+   ],
+   "vars": []
+  },
+  "開頭": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1452 行",
+    "網頁 1643 行",
+    "網頁 1736 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"tref\">→ 接到 \u0000{0}\u0000</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1452 行"
+   ],
+   "vars": [
+    "s"
+   ]
+  },
+  " golink\" data-ur=\"{0}\" title=\"到五塊錢看沒讀到的台詞": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1467 行"
+   ],
+   "vars": [
+    "esc(s)"
+   ]
+  },
+  "<span class=\"pct{0}\">{1}% 已讀{2}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1468 行"
+   ],
+   "vars": [
+    "ur",
+    "Math.round(info.read * 100)",
+    "ur ? ' ›' : ''"
+   ]
+  },
+  "<div class=\"script tiny\" id=\"seg-{0}\"><div class=\"sname\"><b>#{1}</b><span class=\"empty{2}\">過場</span>　{3}{4}</div></div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1471 行"
+   ],
+   "vars": [
+    "esc(s)",
+    "st.num.get(s)",
+    "ur",
+    "pct",
+    "stime(s)"
+   ]
+  },
+  "<h3>其他段落（經由旅途、戰鬥後接續等）</h3>{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1488 行"
+   ],
+   "vars": [
+    "more"
+   ]
+  },
+  "{0}剩 {1} 句": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1527 行"
+   ],
+   "vars": [
+    "r > 0 ? '・' : ''",
+    "left"
+   ]
+  },
+  "沒讀過": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1527 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"need\">　另需 {0}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1552 行"
+   ],
+   "vars": [
+    "plainCondHtml(rest.join(' 且 '), ctx, near)"
+   ]
+  },
+  "依 <span class=\"flag\" data-flag=\"{0}\">🚩「{1}」</span>{2}判斷，由上往下先符合的先走": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1560 行"
+   ],
+   "vars": [
+    "esc(chain)",
+    "esc(noteHead(chain) || flagTitle(chain) || chain)",
+    "cur != null ? T(\"（目前 {0}）\", esc(valueName(chain, cur))) : ''"
+   ]
+  },
+  "（目前 {0}）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1560 行",
+    "網頁 1604 行"
+   ],
+   "vars": [
+    "esc(valueName(chain, cur))"
+   ]
+  },
+  "選項": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1561 行",
+    "網頁 2409 行"
+   ],
+   "vars": []
+  },
+  "擲骰": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1561 行",
+    "網頁 2409 行"
+   ],
+   "vars": []
+  },
+  "戰鬥結果": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1561 行"
+   ],
+   "vars": []
+  },
+  "劇情": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [
+    "mod"
+   ],
+   "where": [
+    "網頁 1590 行",
+    "網頁 1692 行",
+    "網頁 3116 行",
+    "TimeMachineWindow.cs 778 行"
+   ],
+   "vars": []
+  },
+  "過場": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1590 行",
+    "網頁 1692 行"
+   ],
+   "vars": []
+  },
+  "⋯（太深，切到文字版看）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1599 行"
+   ],
+   "vars": []
+  },
+  "依 🚩「{0}」{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1604 行"
+   ],
+   "vars": [
+    "esc(noteHead(chain) || flagTitle(chain) || chain)",
+    "cur != null ? T(\"（目前 {0}）\", esc(valueName(chain, cur))) : ''"
+   ]
+  },
+  "<small>有條件</small>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1611 行"
+   ],
+   "vars": []
+  },
+  "✖ 死亡": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1623 行"
+   ],
+   "vars": []
+  },
+  "★ 回標題（遊戲結束）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1624 行"
+   ],
+   "vars": []
+  },
+  "★ 結局": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1625 行"
+   ],
+   "vars": []
+  },
+  "↩ 回到開頭": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1631 行"
+   ],
+   "vars": []
+  },
+  "前面的分歧": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1637 行"
+   ],
+   "vars": []
+  },
+  "<small>選項×{0}</small>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1692 行"
+   ],
+   "vars": [
+    "n.inline"
+   ]
+  },
+  "<div class=\"ftools\"><b>標亮</b>{0}{1}{2}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1704 行"
+   ],
+   "vars": [
+    "hlBtn('', T(\"全部\"))",
+    "hlBtn('unread', T(\"只看沒讀完\"))",
+    "hlBtn('ext', T(\"接到別的事件\"))"
+   ]
+  },
+  "只看沒讀完": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1704 行"
+   ],
+   "vars": []
+  },
+  "接到別的事件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1704 行"
+   ],
+   "vars": []
+  },
+  "每一列看完都 ↩ 回到選單（不畫回頭的線）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1705 行"
+   ],
+   "vars": []
+  },
+  "虛線框＝接到別的事件　·　↗＝前面畫過的段落": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1705 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"fdrawer\" id=\"fdrawer\"><span class=\"empty\">點流程圖上的格子，這裡會顯示那一段的選項、條件和怎麼進來。</span></div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1707 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"empty\">只有台詞，沒有選項或分歧。</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1734 行"
+   ],
+   "vars": []
+  },
+  "　<span class=\"golink\" data-ur=\"{0}\">到五塊錢看沒讀到的台詞 ›</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1735 行"
+   ],
+   "vars": [
+    "esc(segOf)"
+   ]
+  },
+  "怎麼走到這裡：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1736 行"
+   ],
+   "vars": []
+  },
+  "　對手：<span class=\"{0}\">{1}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1741 行"
+   ],
+   "vars": [
+    "fought ? '' : 'unreadtxt'",
+    "esc(enemy)"
+   ]
+  },
+  "不限時間": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1745 行",
+    "網頁 1893 行",
+    "網頁 1896 行",
+    "網頁 2491 行"
+   ],
+   "vars": []
+  },
+  "{0} 起{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1747 行",
+    "網頁 1895 行"
+   ],
+   "vars": [
+    "tstr(t.from)",
+    "t.after ? T(\"（條件最早在這時才湊得齊）\") : ''"
+   ]
+  },
+  "（條件最早在這時才湊得齊）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1747 行",
+    "網頁 1895 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"golink\" data-ur-ev=\"{0}\" title=\"到五塊錢看這個事件沒讀到的台詞\">{1}% 已讀 ›</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1750 行"
+   ],
+   "vars": [
+    "esc(e.id.toLowerCase())",
+    "Math.round(e._read * 100)"
+   ]
+  },
+  "{0}% 已讀": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1750 行"
+   ],
+   "vars": [
+    "Math.round(e._read * 100)"
+   ]
+  },
+  "主線": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1754 行",
+    "網頁 2065 行"
+   ],
+   "vars": []
+  },
+  "支線": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1754 行",
+    "網頁 2065 行"
+   ],
+   "vars": []
+  },
+  "（停用）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1754 行"
+   ],
+   "vars": []
+  },
+  "　·　遊戲內名稱：{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1754 行"
+   ],
+   "vars": [
+    "esc(e.devDesc)"
+   ]
+  },
+  "<span class=\"chip\">📍 到「{0}」觸發</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1755 行"
+   ],
+   "vars": [
+    "esc(e.pos)"
+   ]
+  },
+  "<span class=\"chip\">接續前一段劇情</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1755 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"chip\">時間到自動觸發</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1755 行"
+   ],
+   "vars": []
+  },
+  "<h3>觸發條件</h3>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1756 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"cond\">接續 {0}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1756 行"
+   ],
+   "vars": [
+    "partFromHtml(e)"
+   ]
+  },
+  "<div class=\"empty\">時間到就觸發</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1756 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"when\">⚠ 可能無法達成：觸發條件要的旗標值，劇本裡找不到設定的地方（遊戲程式也可能會設）。</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1759 行"
+   ],
+   "vars": []
+  },
+  "這個事件要先取得成就（風雲史）才會出現": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1762 行"
+   ],
+   "vars": []
+  },
+  "有些段落整段要先取得成就（風雲史）才會出現": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1762 行"
+   ],
+   "vars": []
+  },
+  "有成就（風雲史）才會多出一些台詞，不用成就也看得到這個事件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1762 行"
+   ],
+   "vars": []
+  },
+  "<h3>從這裡觸發</h3><div class=\"cond\">{0}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1764 行"
+   ],
+   "vars": [
+    "routesBlock(e.via, e, T(\"觸發方式\"))"
+   ]
+  },
+  "觸發方式": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1764 行"
+   ],
+   "vars": []
+  },
+  "<h3>要先啟動</h3><div class=\"cond\">{0}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1765 行"
+   ],
+   "vars": [
+    "routesBlock(e.activate, e, T(\"在前面的劇情裡\"))"
+   ]
+  },
+  "在前面的劇情裡": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1765 行"
+   ],
+   "vars": []
+  },
+  "<h3>由這些事件啟動</h3>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1767 行"
+   ],
+   "vars": []
+  },
+  "接下去的劇情": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1768 行"
+   ],
+   "vars": []
+  },
+  "之後會啟動": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1768 行"
+   ],
+   "vars": []
+  },
+  "<h3>這裡可取得</h3>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1769 行"
+   ],
+   "vars": []
+  },
+  "在這個事件裡要：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1772 行"
+   ],
+   "vars": []
+  },
+  "觸發這個事件、跑完就會設，不用選特定選項（怎麼觸發見上面）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1772 行"
+   ],
+   "vars": []
+  },
+  "<h3>決定這件事的劇情</h3>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1773 行"
+   ],
+   "vars": []
+  },
+  "<details><summary class=\"bkind\" style=\"cursor:pointer\">⋯ 這個事件的其他段落</summary>{0}</details>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1775 行"
+   ],
+   "vars": [
+    "others.map(s => scriptHtml(s, e)).join('')"
+   ]
+  },
+  "<h3>劇情　<span class=\"ftools\" style=\"display:inline-flex;margin:0;letter-spacing:0\"><button data-pv=\"flow\" class=\"{0}\">流程圖</button><button data-pv=\"text\" class=\"{1}\">文字</button>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1779 行"
+   ],
+   "vars": [
+    "text ? '' : 'on'",
+    "text ? 'on' : ''"
+   ]
+  },
+  "<span style=\"color:var(--muted);font-weight:400;margin-left:8px\">寬度</span><button data-dw=\"0.5\">½</button><button data-dw=\"0.75\">¾</button></span></h3>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1780 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"hubnote\">這是<b>每旬重複的選單</b>：選一個地點，看完回到選單（「↩ 回到選單」）。地點前的 ✓／◐／○ 是讀過多少。</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1781 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"empty\">只有過場對話，沒有選項或分歧。</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1782 行",
+    "網頁 1865 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"note\">只列出：選項、擲骰、戰鬥勝敗、會改變劇情走向的條件。有底線的條件可以點開看它在哪裡決定。</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1784 行"
+   ],
+   "vars": []
+  },
+  "旗標 ": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1819 行"
+   ],
+   "vars": []
+  },
+  "　需要 {0} {1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1819 行"
+   ],
+   "vars": [
+    "op",
+    "esc(val)"
+   ]
+  },
+  "　<b>目前 = {0}</b>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1819 行"
+   ],
+   "vars": [
+    "nowVal"
+   ]
+  },
+  "設定位置：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1820 行"
+   ],
+   "vars": []
+  },
+  "劇本中沒有直接設成符合條件的值（可能由數值累加或系統設定）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1820 行"
+   ],
+   "vars": []
+  },
+  "找不到劇本中直接設定的位置（可能由系統或數值累加）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1820 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"empty\">（另有 {0} 處設為不符合的值，已隱藏）</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1821 行"
+   ],
+   "vars": [
+    "all.length - setters.length"
+   ]
+  },
+  "，要：{0}{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1828 行"
+   ],
+   "vars": [
+    "need",
+    "more ? T(\"（怎麼進到這段點開看）\") : ''"
+   ]
+  },
+  "（怎麼進到這段點開看）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1828 行"
+   ],
+   "vars": []
+  },
+  "，要走特定分支（點開看）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1828 行"
+   ],
+   "vars": []
+  },
+  "，跑完就會設": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1828 行"
+   ],
+   "vars": []
+  },
+  "在「{0}」（{1}）中{2}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1829 行"
+   ],
+   "vars": [
+    "esc(evShort(owner))",
+    "esc(whenText(owner))",
+    "how"
+   ]
+  },
+  "在地點行動「{0}」{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1830 行"
+   ],
+   "vars": [
+    "esc(x.pos)",
+    "how"
+   ]
+  },
+  "在日常、閒聊的劇情裡{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1830 行"
+   ],
+   "vars": [
+    "how"
+   ]
+  },
+  "（累加）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1831 行"
+   ],
+   "vars": []
+  },
+  "在這段劇情裡要：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1863 行"
+   ],
+   "vars": []
+  },
+  "進到這段劇情就會設，不用選特定選項。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1863 行"
+   ],
+   "vars": []
+  },
+  "　·　<span class=\"golink\" data-ur=\"{0}\">到五塊錢看沒讀到的台詞 ›</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1864 行"
+   ],
+   "vars": [
+    "esc(s)"
+   ]
+  },
+  "<h2>劇情段落{0}</h2><div class=\"meta\">{1}{2}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1865 行"
+   ],
+   "vars": [
+    "stime(s)",
+    "owner ? T(\"屬於事件 \") + evLink(owner.id.toLowerCase()) : T(\"日常工作、閒聊或設施互動（不屬於任務事件）\")",
+    "ur"
+   ]
+  },
+  "屬於事件 ": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1865 行"
+   ],
+   "vars": []
+  },
+  "日常工作、閒聊或設施互動（不屬於任務事件）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1865 行"
+   ],
+   "vars": []
+  },
+  "第二場對魔小梅的戰鬥中，每發動一次嘴攻 +1（累積到 6 直接判勝）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1901 行"
+   ],
+   "vars": []
+  },
+  "不是「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1912 行"
+   ],
+   "vars": [
+    "a"
+   ]
+  },
+  "持有任一「{0}」系列道具": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1923 行"
+   ],
+   "vars": [
+    "pre"
+   ]
+  },
+  "持有「{0}」其中之一": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1923 行"
+   ],
+   "vars": [
+    "names.join('」「')"
+   ]
+  },
+  "持有「{0}」系列的總數": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1924 行"
+   ],
+   "vars": [
+    "pre"
+   ]
+  },
+  "持有「{0}」的總數": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1924 行"
+   ],
+   "vars": [
+    "names.join('」「')"
+   ]
+  },
+  "（且 {0}）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1979 行",
+    "網頁 2860 行"
+   ],
+   "vars": [
+    "pre"
+   ]
+  },
+  "戰鬥中": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1990 行"
+   ],
+   "vars": []
+  },
+  "選了另一個選項": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 1993 行"
+   ],
+   "vars": []
+  },
+  "選{0}（🎲{1}{2}）{3}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2000 行"
+   ],
+   "vars": [
+    "quoted(dice[1])",
+    "op",
+    "dice[3]",
+    "need"
+   ]
+  },
+  "（不用另外選）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2032 行"
+   ],
+   "vars": []
+  },
+  "<li>…等 {0} 種</li>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2032 行"
+   ],
+   "vars": [
+    "mids.length"
+   ]
+  },
+  "以下任一：<ol class=\"routes\">{0}</ol>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2033 行"
+   ],
+   "vars": [
+    "shown"
+   ]
+  },
+  "（到「{0}」觸發）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2065 行"
+   ],
+   "vars": [
+    "esc(ev.pos)"
+   ]
+  },
+  "<span class=\"chip link\" data-script=\"{0}\">那段劇情</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2065 行",
+    "網頁 2081 行",
+    "網頁 2105 行"
+   ],
+   "vars": [
+    "esc(unit.script)"
+   ]
+  },
+  "<div class=\"when\">事件觸發條件：{0}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2067 行"
+   ],
+   "vars": [
+    "unit.eventConds.map(c => plainCondHtml(c, ev)).join('；')"
+   ]
+  },
+  "經過：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2069 行"
+   ],
+   "vars": []
+  },
+  "事件中直接取得": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2069 行"
+   ],
+   "vars": []
+  },
+  "<details class=\"when\"><summary style=\"cursor:pointer\">※ 需要 {0} {1}：有 {2} 個來源，任一即可（點開看）</summary>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2071 行"
+   ],
+   "vars": [
+    "plainCondHtml(`旗標 ${n.flag} ${n.op} ${n.val}`, ev, unit.script)",
+    "flagTag(n.flag, n.op, n.val)",
+    "n.by.length"
+   ]
+  },
+  "<div class=\"pt\"><b>來源 {0}</b>{1}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2072 行"
+   ],
+   "vars": [
+    "i + 1",
+    "routeHtml(b, n.flag).replace(T(\"★ 結緣成立\"), T(\"→ 達成 {0}\", plainCondText(`旗標 ${n.flag} ${n.op} ${n.val}`, ev, unit.script)))"
+   ]
+  },
+  "★ 結緣成立": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2072 行",
+    "網頁 2112 行",
+    "網頁 2205 行"
+   ],
+   "vars": []
+  },
+  "→ 達成 {0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2072 行"
+   ],
+   "vars": [
+    "plainCondText(`旗標 ${n.flag} ${n.op} ${n.val}`, ev, unit.script)"
+   ]
+  },
+  "<details class=\"when\"><summary style=\"cursor:pointer\">※ 需要 {0} {1}：不要走到下列 {2} 處會改掉它的劇情（點開看）</summary><div>{3}</div></details>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2084 行"
+   ],
+   "vars": [
+    "plainCondHtml(`旗標 ${n.flag} = 0`, ev, unit.script)",
+    "flagTag(n.flag, '=', 0)",
+    "list.length",
+    "list.join('<br>')"
+   ]
+  },
+  "<div class=\"when\">※ {0}要維持預設 {1}（劇本中沒有會改掉它的地方）</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2085 行"
+   ],
+   "vars": [
+    "flagName(n.flag) ? `「${esc(flagName(n.flag))}」` : T(\"這個記錄\")",
+    "flagTag(n.flag, '=', 0)"
+   ]
+  },
+  "這個記錄": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2085 行"
+   ],
+   "vars": []
+  },
+  "在下列地方累加：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2100 行"
+   ],
+   "vars": []
+  },
+  "一律": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2104 行"
+   ],
+   "vars": []
+  },
+  "　進入需要：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2105 行"
+   ],
+   "vars": []
+  },
+  "劇本中沒有直接設定（戰鬥或系統中變動）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2108 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"when\">※ {0} {1}（需{2}）：{3}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2109 行"
+   ],
+   "vars": [
+    "flagName(flag) ? `「${esc(flagName(flag))}」` : T(\"累計次數\")",
+    "flagTag(flag)",
+    "esc(info.conds.join('、').replace(/ /g, ''))",
+    "text"
+   ]
+  },
+  "累計次數": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2109 行"
+   ],
+   "vars": []
+  },
+  "達成 {0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2111 行"
+   ],
+   "vars": [
+    "esc(tidy(flagPhrase(provides.flag, provides.op, String(provides.val))))"
+   ]
+  },
+  "完成這一步": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2111 行"
+   ],
+   "vars": []
+  },
+  "（多個來源，任一即可）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2112 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"anyhint\">（以下任一）</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2120 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"rintro\">遊戲用兩組旗標判斷感情線：<b>相識</b>（G1000x）、<b>結緣</b>（G1100x，結局時看這個決定是哪位女主的結緣結局）。\n      結局時依序檢查 小師妹 → 龍湘 → 夏侯蘭 → 葉雲裳 → 虞小梅 → 郁竹，<b>第一個結緣旗標 = 1 的成立</b>。\n      每位角色下方的「詳細追溯」是從遊戲資料自動推出的每一步來源；點事件會在右側顯示細節。{0}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2161 行"
+   ],
+   "vars": [
+    "hiddenCount && !showHidden ? T(\"（已隱藏 {0} 位角色）\", hiddenCount) : ''"
+   ]
+  },
+  "（已隱藏 {0} 位角色）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2161 行"
+   ],
+   "vars": [
+    "hiddenCount"
+   ]
+  },
+  "<span class=\"tag\">結緣旗標 <span class=\"flag\" data-flag=\"{0}\">{1}</span></span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2164 行"
+   ],
+   "vars": [
+    "h.bondFlag",
+    "h.bondFlag"
+   ]
+  },
+  "<div class=\"empty\">沒有對應的結緣結局（結緣結局只有小師妹、龍湘、夏侯蘭、葉雲裳、虞小梅、郁竹）。</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2166 行"
+   ],
+   "vars": []
+  },
+  "<h4>結緣條件</h4>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2168 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"empty\">劇本中沒有直接設定結緣旗標</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2170 行"
+   ],
+   "vars": []
+  },
+  "路線 {0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2171 行",
+    "網頁 2205 行"
+   ],
+   "vars": [
+    "i + 1"
+   ]
+  },
+  "結緣步驟": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2171 行"
+   ],
+   "vars": []
+  },
+  "<details class=\"autodetail\"><summary>⋯ 詳細追溯（自動產生，含每個旗標的來源）</summary>{0}</details>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2172 行",
+    "網頁 2206 行"
+   ],
+   "vars": [
+    "auto"
+   ]
+  },
+  "<div class=\"rintro\">不是結緣、但會影響結局的條件。步驟的讀法和結緣頁相同。</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2187 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"hcard\"><h2>{0}{1}<span class=\"tag\">目標 <span class=\"flag\" data-flag=\"{2}\" data-op=\"=\" data-val=\"{3}\">旗標 {4}</span> = {5}</span></h2>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2189 行"
+   ],
+   "vars": [
+    "checkMark('flag:' + t.flag + '>=' + t.val)",
+    "esc(T(t.name))",
+    "esc(t.flag)",
+    "t.val",
+    "esc(t.flag)",
+    "t.val"
+   ]
+  },
+  "<h4>條件</h4><ul class=\"guide\">{0}</ul>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2198 行"
+   ],
+   "vars": [
+    "t.conds.map(briefItem).join('')"
+   ]
+  },
+  "<h4>步驟</h4><ol class=\"guide\">{0}</ol>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2199 行"
+   ],
+   "vars": [
+    "t.steps.map(briefItem).join('')"
+   ]
+  },
+  "<h4>達成條件</h4>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2202 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"empty\">劇本中沒有直接設定</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2204 行"
+   ],
+   "vars": []
+  },
+  "達成步驟": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2205 行"
+   ],
+   "vars": []
+  },
+  "★ 達成（{0} = {1}）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2205 行"
+   ],
+   "vars": [
+    "esc(t.flag)",
+    "t.val"
+   ]
+  },
+  "<span class=\"rd r-read\" title=\"這段劇情都看過了\">已讀</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2275 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"rd r-unread\" title=\"還沒看過\">未讀</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2276 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"rd r-part\" title=\"還有約 {0} 句沒看過（怎麼看到見「五塊錢」分頁）\">部分 {1}%</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2278 行"
+   ],
+   "vars": [
+    "left",
+    "Math.round(r * 100)"
+   ]
+  },
+  "<span class=\"bad\">已發生過</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2304 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"bad\" title=\"目前不成立\">{0}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2306 行"
+   ],
+   "vars": [
+    "text"
+   ]
+  },
+  "目前可能抽到": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2326 行"
+   ],
+   "vars": []
+  },
+  "目前條件不符": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2326 行"
+   ],
+   "vars": []
+  },
+  "{0}{1} 時 {2}{3}{4}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2331 行"
+   ],
+   "vars": [
+    "on ? '<b>' : ''",
+    "plainCondHtml(b.cond)",
+    "b.rate > 0 ? '+' : ''",
+    "b.rate",
+    "on ? T(\"（目前成立）</b>\") : ''"
+   ]
+  },
+  "（目前成立）</b>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2331 行"
+   ],
+   "vars": []
+  },
+  "　<span class=\"live\">目前權重 {0}・機率 {1}%</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2333 行"
+   ],
+   "vars": [
+    "lv.rate",
+    "(lv.prob * 100).toFixed(1)"
+   ]
+  },
+  "　<span class=\"bad\">目前不會出現</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2333 行"
+   ],
+   "vars": []
+  },
+  "已鎖定：條件成立時一定抽到，播出後自動解除。點一下取消": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2338 行"
+   ],
+   "vars": []
+  },
+  "條件成立時不擲骰、直接觸發這個事件（播出後自動解除）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2338 行"
+   ],
+   "vars": []
+  },
+  "🔒 已鎖定": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2338 行"
+   ],
+   "vars": []
+  },
+  "強制": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2338 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"multi\">需同時在唐門：{0}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2340 行"
+   ],
+   "vars": [
+    "esc(inn.join('＋'))"
+   ]
+  },
+  "條件：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2341 行"
+   ],
+   "vars": []
+  },
+  "無條件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2341 行"
+   ],
+   "vars": []
+  },
+  "（只會發生一次）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2341 行"
+   ],
+   "vars": []
+  },
+  "　權重 {0}{1}{2}{3}</div></div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2342 行"
+   ],
+   "vars": [
+    "c.rate",
+    "bonus ? `（${bonus}）` : ''",
+    "live",
+    "c.title && c.note ? `<br><span class=\"${hide.trim()}\">${esc(c.title.slice(0, 60))}</span>` : ''"
+   ]
+  },
+  "<div class=\"rintro\">在各養成地點行動時（唐門、留學、錦香宮…，旅途中的隨機事件也列在最後），遊戲會從「候選事件」裡依權重抽一個（實際機率 ＝ 權重 ÷ 當下所有符合條件事件的權重總和）。\n      後山、鍛冶場、大門、外堡會先抽一次「有沒有人插進來」，再抽行動結果，兩層都列在下面。\n      預設列出角色事件和特殊事件，平常、成功、失敗這些一般結果可勾選顯示；橘色標籤是要多人同時在唐門才會出現的。\n      最前面的「已讀／部分／未讀」連上遊戲時依遊戲的已讀紀錄即時更新。\n      {0}點事件會在右側顯示劇情。{1}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2355 行"
+   ],
+   "vars": [
+    "LIVE && LIVE.inGame ? (LIVE_POS ? T(\"連上遊戲時顯示「目前權重・機率」（由遊戲本身計算，紅字是目前不成立的條件）。\") : T(\"正在向遊戲取得目前機率…（需要時光機 Mod 0.6.0 以上）\")) : ''",
+    "LIVE && LIVE.inGame ? T(\"✓／✗ 是依目前存檔的旗標與時間判斷（其他屬性條件不判斷）。\") : ''"
+   ]
+  },
+  "連上遊戲時顯示「目前權重・機率」（由遊戲本身計算，紅字是目前不成立的條件）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2355 行"
+   ],
+   "vars": []
+  },
+  "正在向遊戲取得目前機率…（需要時光機 Mod 0.6.0 以上）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2355 行"
+   ],
+   "vars": []
+  },
+  "✓／✗ 是依目前存檔的旗標與時間判斷（其他屬性條件不判斷）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2355 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"libtools\"><label><input type=\"checkbox\" id=\"plAll\"{0}>也列出一般結果（平常、成功、失敗等）</label></div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2358 行"
+   ],
+   "vars": [
+    "showAll ? ' checked' : ''"
+   ]
+  },
+  "<div class=\"libtools\"><div class=\"fchips\"><span>角色</span>{0}{1}</div></div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2359 行"
+   ],
+   "vars": [
+    "fchip('', T(\"全部\"))",
+    "[...allWho].sort().map(n => fchip(n, iconImg(n) + esc(n))).join('')"
+   ]
+  },
+  "（先抽：有人插進來）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2383 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"need\" style=\"letter-spacing:0;font-weight:400\">　選項出現條件：{0}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2386 行"
+   ],
+   "vars": [
+    "plainCondHtml(p.need)"
+   ]
+  },
+  "Mod 沒有回應（需要時光機 Mod 0.7.3 以上）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2402 行"
+   ],
+   "vars": []
+  },
+  "條件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2409 行"
+   ],
+   "vars": []
+  },
+  "隨機": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2409 行"
+   ],
+   "vars": []
+  },
+  "差分": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2409 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"need\">（在 {0} 之後）</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2412 行"
+   ],
+   "vars": [
+    "path.join(' → ')"
+   ]
+  },
+  "另一個選項（沒選過）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2414 行"
+   ],
+   "vars": []
+  },
+  "沒選過{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2414 行"
+   ],
+   "vars": [
+    "esc(quoted(r.label.replace(/ 〔.*〕$/, '')))"
+   ]
+  },
+  "戰鬥勝利那段": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2415 行"
+   ],
+   "vars": []
+  },
+  "戰鬥落敗那段": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2415 行"
+   ],
+   "vars": []
+  },
+  "另一種戰鬥結果": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2415 行"
+   ],
+   "vars": []
+  },
+  "隨機抽到的另一種結果": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2417 行"
+   ],
+   "vars": []
+  },
+  " 時的台詞": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2422 行"
+   ],
+   "vars": []
+  },
+  "<li><b>{0}</b>{1}　{2}{3}<span class=\"need\">　{4} 句</span></li>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2424 行"
+   ],
+   "vars": [
+    "REASON_KIND[r.kind] || T(\"分歧\")",
+    "r.variant && r.kind !== 'variant' ? T(\"<span class=\\\"need\\\">（差分裡）</span>\") : ''",
+    "what",
+    "where",
+    "r.lines"
+   ]
+  },
+  "分歧": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2424 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"need\">（差分裡）</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2424 行"
+   ],
+   "vars": []
+  },
+  "點進<span class=\"chip link\" data-place=\"{0}\">{1}</span>時": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2480 行"
+   ],
+   "vars": [
+    "esc(o.p.place)",
+    "esc(o.p.place)"
+   ]
+  },
+  "在地點事件<span class=\"chip link\" data-pos=\"{0}\">{1}・{2}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2481 行"
+   ],
+   "vars": [
+    "esc(o.c.script)",
+    "esc(o.p.place)",
+    "esc(o.p.action)"
+   ]
+  },
+  "在{0}中": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2491 行"
+   ],
+   "vars": [
+    "chip"
+   ]
+  },
+  "在{0}（{1}）中": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2491 行"
+   ],
+   "vars": [
+    "chip",
+    "esc(whenText(ev))"
+   ]
+  },
+  "{0}去「{1}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2494 行"
+   ],
+   "vars": [
+    "esc(x.hub)",
+    "esc(x.path[0])"
+   ]
+  },
+  "<span class=\"need\">（{0}，要看當下的條件或擲骰）</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2554 行"
+   ],
+   "vars": [
+    "T(\"路線上的選擇都走過了\")"
+   ]
+  },
+  "路線上的選擇都走過了": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2554 行",
+    "網頁 2740 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"need\" title=\"已經走過的 {0} 個步驟\">（已走過 {1} 步）</span> → ": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2555 行"
+   ],
+   "vars": [
+    "skipped",
+    "skipped"
+   ]
+  },
+  "（已走過 {0} 步）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2593 行"
+   ],
+   "vars": [
+    "skipped"
+   ]
+  },
+  "<br><span class=\"or\">或</span> ": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2594 行"
+   ],
+   "vars": []
+  },
+  "（任一條路線）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2601 行"
+   ],
+   "vars": []
+  },
+  "（最短的一條，共 {0} 條）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2604 行"
+   ],
+   "vars": [
+    "items.length"
+   ]
+  },
+  "<span title=\"已經走過的 {0} 個步驟\">（已走過 {1} 步）</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2604 行"
+   ],
+   "vars": [
+    "b.skipped",
+    "b.skipped"
+   ]
+  },
+  "<div class=\"need\">　另外要：{0}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2606 行"
+   ],
+   "vars": [
+    "b.conds.join('、')"
+   ]
+  },
+  "<details class=\"need more\"><summary>另外要符合 {0} 個條件</summary><ul>{1}</ul></details>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2607 行"
+   ],
+   "vars": [
+    "b.conds.length",
+    "b.conds.map(c => `<li>${c}</li>`).join('')"
+   ]
+  },
+  "<details class=\"need more\"><summary>其他 {0} 條路線</summary><ol class=\"routes\">{1}</ol></details>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2609 行"
+   ],
+   "vars": [
+    "rest.length",
+    "rest.map(x => `<li>${x.text}</li>`).join('')"
+   ]
+  },
+  "時間": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2615 行"
+   ],
+   "vars": []
+  },
+  "接續": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2616 行"
+   ],
+   "vars": []
+  },
+  "觸發": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2617 行"
+   ],
+   "vars": []
+  },
+  "地點": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2618 行"
+   ],
+   "vars": []
+  },
+  "到「{0}」觸發": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2618 行"
+   ],
+   "vars": [
+    "esc(ev.pos)"
+   ]
+  },
+  "在{0}，時間到自動觸發": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2618 行"
+   ],
+   "vars": [
+    "esc(ev.place)"
+   ]
+  },
+  "時間到自動觸發": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2618 行"
+   ],
+   "vars": []
+  },
+  "要先在前面的劇情裡啟動": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2621 行"
+   ],
+   "vars": []
+  },
+  "前置": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2622 行"
+   ],
+   "vars": []
+  },
+  "備註": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2624 行"
+   ],
+   "vars": []
+  },
+  "抽到{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2645 行"
+   ],
+   "vars": [
+    "o.c.script === u.s || o.c.rs === u.s ? '' : T(\"後接續\")"
+   ]
+  },
+  "後接續": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2645 行"
+   ],
+   "vars": []
+  },
+  "事件開始後沒有要經過的分歧（可能經由旅途、地點選單接過來）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2646 行"
+   ],
+   "vars": []
+  },
+  "沒有找到要經過的分歧（日常、閒聊接過來）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2646 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"need\">　（還有更多路線沒列出）</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2649 行"
+   ],
+   "vars": []
+  },
+  "沒走過的分支": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2650 行"
+   ],
+   "vars": []
+  },
+  "進入條件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2650 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"rtag\" title=\"只有走這條路線才會發生\">限定：{0}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2653 行"
+   ],
+   "vars": [
+    "esc(r)"
+   ]
+  },
+  "<span class=\"need\">養成中（沒有進行中的任務事件）</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2661 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"curev\"><b>目前</b>　{0}　{1}{2}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2662 行"
+   ],
+   "vars": [
+    "esc(t)",
+    "body",
+    "recent[0] ? T(\" <span class=\\\"need golink\\\" data-scene=\\\"{0}\\\" title=\\\"跳到這段劇情\\\" style=\\\"font-family:Consolas,monospace\\\">{1}</span>\", esc(recent[0].toLowerCase()), esc(recent[0])) : ''"
+   ]
+  },
+  "　<span class=\"need golink\" data-scene=\"{0}\" title=\"跳到這段劇情\" style=\"font-family:Consolas,monospace\">{1}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2662 行"
+   ],
+   "vars": [
+    "esc(recent[0].toLowerCase())",
+    "esc(recent[0])"
+   ]
+  },
+  "<div class=\"rintro\">有台詞、但還沒讀完的劇情段落。未讀怎麼算、標記的意思：點左上角「算命仙」看說明。點標題看劇情，點事件跳到流程圖。</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2694 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"libtools\"><div class=\"fchips\"><span>狀態</span>{0}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2697 行"
+   ],
+   "vars": [
+    "[['', T(\"全部\")], ['none', T(\"未讀\")], ['part', T(\"部分已讀\")]].map(([v, l]) => fchip('ur-st', v, st, l)).join('')"
+   ]
+  },
+  "部分已讀": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2697 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"tag\" style=\"color:var(--muted)\">{0} 段，{1}沒讀過</span></div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2698 行"
+   ],
+   "vars": [
+    "list.length",
+    "herMode ? T(\"{0}的句子約 {1} 句\", esc(who), unreadLines) : T(\"約 {0} 句\", unreadLines)"
+   ]
+  },
+  "{0}的句子約 {1} 句": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2698 行"
+   ],
+   "vars": [
+    "esc(who)",
+    "unreadLines"
+   ]
+  },
+  "約 {0} 句": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2698 行"
+   ],
+   "vars": [
+    "unreadLines"
+   ]
+  },
+  "<div class=\"libtools\"><div class=\"fchips\"><span>登場角色</span>{0}{1}{2}</div></div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2699 行"
+   ],
+   "vars": [
+    "fchip('ur-who', '', who, T(\"全部\"))",
+    "heroines.map(h => fchip('ur-who', h, who, iconImg(h) + esc(h))).join('')",
+    "fchip('ur-who', NONE, who, T(\"其他\"))"
+   ]
+  },
+  "{0} 段（{1}）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2718 行"
+   ],
+   "vars": [
+    "rows.length",
+    "[none ? T(\"未讀 {0}\", none) : '', branches ? T(\"沒走過的分支 {0}\", branches) : ''].filter(Boolean).join('、') || T(\"都讀過一部分\")"
+   ]
+  },
+  "未讀 {0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2718 行"
+   ],
+   "vars": [
+    "none"
+   ]
+  },
+  "沒走過的分支 {0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2718 行"
+   ],
+   "vars": [
+    "branches"
+   ]
+  },
+  "都讀過一部分": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2718 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"ck no\">◇</span>分支": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2725 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"ck no\">○</span>未讀": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2725 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"plev\"><span class=\"need\">{0}</span>　<span class=\"ttl\" data-scene=\"{1}\" title=\"到流程圖看這一段\">{2}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2729 行"
+   ],
+   "vars": [
+    "chip",
+    "esc(u.s)",
+    "esc(sceneName(u, ctx))"
+   ]
+  },
+  "<span class=\"need{0}\" style=\"font-weight:400\">　原：{1}{2}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2730 行"
+   ],
+   "vars": [
+    "hide",
+    "esc(u.title.slice(0, 24))",
+    "u.title.length > 24 ? '…' : ''"
+   ]
+  },
+  "<span class=\"rtag\" title=\"沒有這個成就就看不到這段\">🏆 整段要成就{0}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2733 行"
+   ],
+   "vars": [
+    "ach"
+   ]
+  },
+  "<span class=\"rtag\" title=\"不用成就也看得到這段；有成就才會多出幾句台詞\">🏆 成就追加台詞{0}</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2734 行"
+   ],
+   "vars": [
+    "ach"
+   ]
+  },
+  "<div class=\"need\">怎麼進來{0}：{1}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2741 行"
+   ],
+   "vars": [
+    "enter.length > 1 || u.moreRoutes ? T(\"（最短的一條）\") : ''",
+    "enter[0][1]"
+   ]
+  },
+  "（最短的一條）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2741 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"need\" style=\"margin-top:2px\">怎麼看到沒讀的台詞：</div><ul class=\"need\" style=\"margin:0;padding-left:18px\">{0}</ul>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2750 行"
+   ],
+   "vars": [
+    "reasons.map(r => reasonHtml(r, ctx, u.s)).join('')"
+   ]
+  },
+  "<div class=\"facts\"><span class=\"k\">觸發</span><div>{0}</div></div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2758 行"
+   ],
+   "vars": [
+    "routesBlock(ev.via, ev, '')"
+   ]
+  },
+  "同一前置的地點事件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2775 行"
+   ],
+   "vars": []
+  },
+  "個地點": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2775 行"
+   ],
+   "vars": []
+  },
+  "個事件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2775 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"places\"><span class=\"k\">地點</span>{0}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2780 行"
+   ],
+   "vars": [
+    "keys.map((k, i) => T(\"<span class=\\\"pl golink\\\" data-sub=\\\"{0}\\\">{1}<small> {2} 段</small></span>\", esc(k), esc(evs[i].pos), groups.get(k).length)).join('')"
+   ]
+  },
+  "<span class=\"pl golink\" data-sub=\"{0}\">{1}<small>　{2} 段</small></span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2780 行"
+   ],
+   "vars": [
+    "esc(k)",
+    "esc(evs[i].pos)",
+    "groups.get(k).length"
+   ]
+  },
+  "到": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2787 行"
+   ],
+   "vars": []
+  },
+  "到「{0}」　": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2787 行"
+   ],
+   "vars": [
+    "esc(e.pos)"
+   ]
+  },
+  "其{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2787 行"
+   ],
+   "vars": [
+    "T(\"一二三四五六七八九十\")[i] || i + 1"
+   ]
+  },
+  "一二三四五六七八九十": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2787 行"
+   ],
+   "vars": []
+  },
+  "{0}　<span class=\"need\">（{1}的養成地點）</span>{2}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2799 行"
+   ],
+   "vars": [
+    "esc(hubPlace)",
+    "esc(hubWhen.replace(/期間$/, ''))",
+    "hubGroup.startsWith('崆峒') ? T(\"<span class=\\\"rtag\\\">限定：留學：崆峒</span>\") : hubGroup.startsWith('青城') ? T(\"<span class=\\\"rtag\\\">限定：留學：青城</span>\") : ''"
+   ]
+  },
+  "<span class=\"rtag\">限定：留學：崆峒</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2799 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"rtag\">限定：留學：青城</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2799 行"
+   ],
+   "vars": []
+  },
+  "<span class=\"rtag maybe\" title=\"觸發條件要的旗標值劇本裡設不出來\">⚠可能無法達成</span>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2802 行"
+   ],
+   "vars": []
+  },
+  "日常、地點行動、閒聊（不屬於任務事件）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2803 行"
+   ],
+   "vars": []
+  },
+  "<div class=\"hubneed\">選單上出現的條件：{0}</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2805 行"
+   ],
+   "vars": [
+    "plainCondHtml(hubNeed.replace(/^（(.*)）$/, '$1'), null)"
+   ]
+  },
+  "師兄弟閒聊": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2885 行"
+   ],
+   "vars": []
+  },
+  "閒聊": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2885 行"
+   ],
+   "vars": []
+  },
+  "旅途事件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2885 行"
+   ],
+   "vars": []
+  },
+  "開場": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2885 行"
+   ],
+   "vars": []
+  },
+  "大門": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2886 行"
+   ],
+   "vars": []
+  },
+  "生日": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2886 行"
+   ],
+   "vars": []
+  },
+  "{0}・{1}・其他結果": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2894 行"
+   ],
+   "vars": [
+    "p.place",
+    "p.action"
+   ]
+  },
+  "日常": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2896 行"
+   ],
+   "vars": []
+  },
+  "{0}・開頭": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2900 行"
+   ],
+   "vars": [
+    "base"
+   ]
+  },
+  "進入時": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2908 行"
+   ],
+   "vars": []
+  },
+  "・{0}之後": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2910 行"
+   ],
+   "vars": [
+    "c.replace(needTail(), '')"
+   ]
+  },
+  "{0}・{1}之後": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2914 行"
+   ],
+   "vars": [
+    "base",
+    "c.replace(needTail(), '')"
+   ]
+  },
+  "{0}・後續段落": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 2917 行"
+   ],
+   "vars": [
+    "base"
+   ]
+  },
+  "版本": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3073 行"
+   ],
+   "vars": []
+  },
+  "頁面資料：遊戲 {0}，{1} 建立": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3074 行"
+   ],
+   "vars": [
+    "esc(B.gameVersion || T(\"（沒有記錄）\"))",
+    "esc(B.built || '')"
+   ]
+  },
+  "（沒有記錄）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3074 行"
+   ],
+   "vars": []
+  },
+  "目前遊戲：{0}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3075 行"
+   ],
+   "vars": [
+    "now ? esc(now) : LIVE && LIVE.live ? T(\"已連上，但這版 Mod 沒有回報版本\") : T(\"沒連上遊戲（從遊戲裡按 F7 開才看得到）\")"
+   ]
+  },
+  "已連上，但這版 Mod 沒有回報版本": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3075 行"
+   ],
+   "vars": []
+  },
+  "沒連上遊戲（從遊戲裡按 F7 開才看得到）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3075 行"
+   ],
+   "vars": []
+  },
+  "目前的遊戲版本和頁面資料不同：遊戲更新後條件可能有改，這份頁面可能不準。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3077 行"
+   ],
+   "vars": []
+  },
+  "語言": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3078 行"
+   ],
+   "vars": []
+  },
+  "從遊戲按 F7 開時，預設是時光機設定檔的 Language。還沒翻譯的字顯示繁中。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3079 行"
+   ],
+   "vars": []
+  },
+  "資料來源與授權": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3080 行"
+   ],
+   "vars": []
+  },
+  "事件名稱與部分結緣攻略整理自 {0}，依 {1} 授權使用；有修改（同名事件加註區分、攻略改寫並對照遊戲資料補上條件）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3081 行"
+   ],
+   "vars": [
+    "`<a href=\"https://smilin.net/LoM-wiki/\" target=\"_blank\" rel=\"noopener\">${T(\"smilin.net 活俠傳 wiki\")}</a>`",
+    "'<a href=\"https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh_TW\" target=\"_blank\" rel=\"noopener\">CC BY-NC-SA 4.0</a>'"
+   ]
+  },
+  "smilin.net 活俠傳 wiki": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3082 行"
+   ],
+   "vars": []
+  },
+  "條件、分支、未讀判斷是從遊戲劇本推出來的，可能不準。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3084 行"
+   ],
+   "vars": []
+  },
+  "這個 Mod 能做什麼": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3085 行"
+   ],
+   "vars": []
+  },
+  "<b>F6 時光機</b>：每一旬第一個能存檔的時間點自動存一份，按 F6 開格子視窗，點時間點就能讀回去。不占遊戲存檔欄位，也不會被 Steam 雲端同步。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3086 行"
+   ],
+   "vars": []
+  },
+  "<b>關鍵節點</b>：葉家兄妹、留學、破廟、江陵、大師兄下山、小師妹招親、大雪山、武林大會、決策這些事件前，另外存一份「養成回合開始、行動次數全滿」的存檔。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3087 行"
+   ],
+   "vars": []
+  },
+  "<b>存檔路線</b>：可以從目前時間分岔出新路線，各路線的存檔互不覆蓋。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3088 行"
+   ],
+   "vars": []
+  },
+  "<b>F7 算命仙（這個網頁）</b>：五塊錢（還沒讀完的劇情）、地點事件、結緣條件、其他條件；「▸」裡還有流程圖。從遊戲裡按 F7 開才會連上遊戲，顯示目前存檔的狀態；流程圖點月份可以讀那個月的時光機存檔。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3089 行"
+   ],
+   "vars": []
+  },
+  "✓／✗ 是你目前存檔的值；有些旗標在事件之後會被改掉，過了那個時間點的 ✗ 不一定代表當時沒達成。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3090 行"
+   ],
+   "vars": []
+  },
+  "五塊錢的未讀怎麼算": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3091 行"
+   ],
+   "vars": []
+  },
+  "列出有台詞、但還沒讀完的劇情段落。已讀紀錄是從遊戲即時讀的：要從遊戲裡按 F7 開；沒連上遊戲時全部當成未讀。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3092 行"
+   ],
+   "vars": []
+  },
+  "<b>差分</b>：只因性情、道德、處世、修養、學問或技能／天賦而換台詞（不是選項造成、走向相同）的地方，預設看過其中一種就算讀過；上方勾「列入差分」才每種都算。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3093 行"
+   ],
+   "vars": []
+  },
+  "讀了一部分的段落，會列出沒讀到的台詞在哪個分支、要怎麼走才看得到（選哪個選項、符合什麼條件、擲骰、戰鬥勝負）。這是從劇本推出來的，不是存檔記下的原因。整段沒進去過的，列出怎麼進去。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3094 行"
+   ],
+   "vars": []
+  },
+  "標記：「○ 未讀」整段沒讀過；「◐ N%」讀了 N%；「◇ 分支」玩過的事件裡整段沒走到的分支。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3095 行"
+   ],
+   "vars": []
+  },
+  "<b>選了角色</b>：整段沒讀的，她有出場（說話、立繪、傳說）或旁白提到她就列；讀了一部分的，要有她說的台詞或旁白提到她的句子還沒讀才列；「其他」是沒有這些角色的。上方的句數只算她的句子。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3096 行"
+   ],
+   "vars": []
+  },
+  "🏆 整段要成就：這段台詞要有某個成就（風雲史）才看得到；🏆 成就追加台詞：不用成就也看得到這段，有成就會多幾句。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3097 行"
+   ],
+   "vars": []
+  },
+  "{0}：劇本裡找不到把旗標設成需要的值的地方（遊戲程式也可能會設，所以只是可能）。確定做不到的（未實裝的結緣、試玩版）直接不列。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3098 行"
+   ],
+   "vars": [
+    "MAYBE_TAG"
+   ]
+  },
+  "<h2>{0}</h2><p class=\"empty\">沒有連到遊戲。用遊戲內的 F7 開啟這個頁面，就能在這裡讀取時光機存檔。</p>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3110 行"
+   ],
+   "vars": [
+    "esc(title)"
+   ]
+  },
+  "<div class=\"meta\">時光機路線：{0}（切換路線請用遊戲內 F6）</div>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3114 行"
+   ],
+   "vars": [
+    "esc(LIVE.route)"
+   ]
+  },
+  "<div class=\"tmlist\">{0}</div><p class=\"empty\">讀檔後目前未存檔的進度會遺失。</p>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3116 行"
+   ],
+   "vars": [
+    "saves.map(x => T(\"<button data-tm=\\\"{0}\\\">讀取 {1}（{2}，{3}）</button>\", esc(x.key), STAGE[x.s], x.scene === 'Free' ? T(\"養成\") : T(\"劇情\"), esc(x.saved))).join('')"
+   ]
+  },
+  "<button data-tm=\"{0}\">讀取 {1}（{2}，{3}）</button>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3116 行"
+   ],
+   "vars": [
+    "esc(x.key)",
+    "STAGE[x.s]",
+    "x.scene === 'Free' ? T(\"養成\") : T(\"劇情\")",
+    "esc(x.saved)"
+   ]
+  },
+  "養成": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [
+    "mod"
+   ],
+   "where": [
+    "網頁 3116 行",
+    "TimeMachineWindow.cs 777 行"
+   ],
+   "vars": []
+  },
+  "<p class=\"empty\">這個月沒有時光機存檔。</p>": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3117 行"
+   ],
+   "vars": []
+  },
+  "目前未存檔的進度會遺失，確定讀取？": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3123 行"
+   ],
+   "vars": []
+  },
+  "已送出讀檔，請回到遊戲。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3128 行"
+   ],
+   "vars": []
+  },
+  "處理中…": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3128 行"
+   ],
+   "vars": []
+  },
+  "{0} 個事件（主線 {1}）· 含選項 {2}{3}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3137 行"
+   ],
+   "vars": [
+    "SHOWN.length",
+    "SHOWN.filter(e => e.main).length",
+    "choiceCount",
+    "n ? T(\" · 已讀文本 {0} 句\", n) : ''"
+   ]
+  },
+  " · 已讀文本 {0} 句": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 3137 行"
+   ],
+   "vars": [
+    "n"
+   ]
+  },
+  "說明與版本": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 253 行（title）"
+   ],
+   "vars": []
+  },
+  "算命仙": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [
+    "mod"
+   ],
+   "where": [
+    "網頁 253 行",
+    "TimeMachineWindow.cs 208 行"
+   ],
+   "vars": []
+  },
+  "五塊錢": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 254 行"
+   ],
+   "vars": []
+  },
+  "地點事件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 254 行"
+   ],
+   "vars": []
+  },
+  "結緣條件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 254 行"
+   ],
+   "vars": []
+  },
+  "其他條件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 254 行"
+   ],
+   "vars": []
+  },
+  "展開更多分頁": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 254 行（title）"
+   ],
+   "vars": []
+  },
+  "流程圖": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 254 行"
+   ],
+   "vars": []
+  },
+  "離線預覽": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 256 行"
+   ],
+   "vars": []
+  },
+  "搜尋事件、選項、腳本、旗標…": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 257 行（placeholder）"
+   ],
+   "vars": []
+  },
+  "防雷（未讀內容模糊）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 258 行"
+   ],
+   "vars": []
+  },
+  "只因性情、道德、處世、修養、學問、技能等屬性而換的台詞（不是選項造成的）。不勾：看過其中一種版本就算讀過；勾：每種版本都要讀過": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 259 行（title）"
+   ],
+   "vars": []
+  },
+  "列入差分": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 259 行"
+   ],
+   "vars": []
+  },
+  "顯示腳本推算時間": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 260 行"
+   ],
+   "vars": []
+  },
+  "只看有選項的事件": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 261 行"
+   ],
+   "vars": []
+  },
+  "分組": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 262 行"
+   ],
+   "vars": []
+  },
+  "劇情地點": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 262 行"
+   ],
+   "vars": []
+  },
+  "結緣線": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 262 行"
+   ],
+   "vars": []
+  },
+  "顯示隱藏的角色": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 263 行"
+   ],
+   "vars": []
+  },
+  "部分": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 264 行"
+   ],
+   "vars": []
+  },
+  "◆ 有選項　📍 指定地點　⚑ 有條件　🏆 有要成就解鎖的劇情　🖼 結緣結局": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 264 行"
+   ],
+   "vars": []
+  },
+  "拖拉調整寬度；雙擊在 1/2 和 3/4 間切換": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 269 行（title）"
+   ],
+   "vars": []
+  },
+  "點選左側事件查看觸發條件、選項分支與結果。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 270 行"
+   ],
+   "vars": []
+  },
+  "點月份標題：遊戲內版本會讀取該月的時光機存檔。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "web",
+   "also": [],
+   "where": [
+    "網頁 270 行"
+   ],
+   "vars": []
+  },
+  "參考：smilin.net 活俠傳 wiki 結緣攻略。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：小師妹",
+    "結緣條件：龍湘",
+    "結緣條件：夏侯蘭"
+   ],
+   "vars": []
+  },
+  "第3年5月上旬 小師妹招親：收到金烏鬧事的消息後下山。心上人是小師妹、小師妹好感≥50，她才會跟你去": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：小師妹"
+   ],
+   "vars": []
+  },
+  "對決金烏要打贏：選「決鬥」直接開打；選「不講武德群而毆之」要連戰皆勝（修養中庸以上比較好打）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：小師妹"
+   ],
+   "vars": []
+  },
+  "後山觸發「天命」：選「小師妹是我的！」（🎲≥50），且小師妹好感≥60 → 拿到【小師妹的香囊】即結緣": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：小師妹"
+   ],
+   "vars": []
+  },
+  "參考：smilin.net 活俠傳 wiki 結緣攻略。 結緣要走青城留學；只想讓她活下來不結緣，看「其他條件」那張。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：葉雲裳"
+   ],
+   "vars": []
+  },
+  "第1年8月上旬～第2年1月下旬（那一旬剩 2 次行動時）：三師兄好感≥25，或累計買 3 份以上江湖快報（每月只能買一份）→ 自動觸發": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：葉雲裳"
+   ],
+   "vars": []
+  },
+  "上一步觸發後一個月內：門派名聲≥10（建議更高），點大門觸發，讓葉家兄妹住進唐門（有期限，別錯過）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：葉雲裳"
+   ],
+   "vars": []
+  },
+  "第2年2月上旬 月會：選「退席」，不要選「我想去崆峒派留學」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：葉雲裳"
+   ],
+   "vars": []
+  },
+  "第2年6月上旬：心上人是葉雲裳，選「住破廟」（葉雲裳好感≥30 時選住客棧也會被帶去破廟）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：葉雲裳"
+   ],
+   "vars": []
+  },
+  "第2年8月中旬 戰役：戰前不要選「攻打唐門」或「跑路」，也別離開山路；戰後（勝負無關）心上人是葉雲裳 → 觸發青城留學。留學期間葉雲裳好感練到≥30、武學練到 3 級": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：葉雲裳"
+   ],
+   "vars": []
+  },
+  "第2年12月上旬：葉雲裳好感≥30、技能等級≥3 → 觸發「聽說寂滅三摩地」（建議這時就把它練到 2 級）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：葉雲裳"
+   ],
+   "vars": []
+  },
+  "第3年1月上旬：心上人是葉雲裳，🎲「1～50 + 葉雲裳好感」≥80 進「葉雲裳的抵抗」→ 選「勸葉雲舟留」，和唐芳談話後拿到九轉殘篇；武學要在第3年5月上旬前練完": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：葉雲裳"
+   ],
+   "vars": []
+  },
+  "第3年5月上旬 結緣事件：心上人是葉雲裳、葉雲裳好感≥50、秘笈練完。對策連續三次選「軟性對策」→ 對決段智秀打贏 → 對決鐵冠道人撐 4 回合以上再輸掉 → 比拚內力時 🎲≥40（<40 會死）→ 幻境對手全勝 → 拿到道具即結緣": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：葉雲裳"
+   ],
+   "vars": []
+  },
+  "注意：結緣事件和小師妹招親同一時間，兩人無法同時結緣": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：葉雲裳"
+   ],
+   "vars": []
+  },
+  "第3年9月下旬～10月上旬：龍湘好感≥40 觸發事件（過程不重要）。好感可在外堡的龍湘聽講、錦香宮華音閣刷": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：龍湘"
+   ],
+   "vars": []
+  },
+  "第3年10月中旬：龍湘好感≥30，錦香宮被揭發後選「不顧旁人冷眼收留龍湘」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：龍湘"
+   ],
+   "vars": []
+  },
+  "第3年11月中旬起：心上人是龍湘，到後山挑柴隨機觸發，選「我來告訴你，用劍」→ 閒聊「初識之時」「錦香宮」→「龍湘的心事」：修養中庸以上選「說」（🎲≥60）；暴躁以下選「不了我不問了」（🎲≥80）→ 閒聊「心魔」選「我有心上人，就是妳」（要在第 5 步之前完成）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：龍湘"
+   ],
+   "vars": []
+  },
+  "第3年12月上旬（剩 1 次行動）：決策不要遣散唐門（退隱線）；後山事件不要選「湘姊，妳要不要跟我來呢？」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：龍湘"
+   ],
+   "vars": []
+  },
+  "第3年12月下旬（不成立西武林盟、頑抗到底）或第4年1月下旬（成立西武林盟）：龍湘好感≥60 → 拿到【龍湘的髮簪】即結緣（戰鬥輸給龍湘仍可結緣，只是不能和龍淵對話）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：龍湘"
+   ],
+   "vars": []
+  },
+  "依遊戲資料整理（wiki 沒有這位的攻略）。 小梅線和郁竹線互斥（看第2年10月下旬有沒有跟小梅走）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：虞小梅"
+   ],
+   "vars": []
+  },
+  "第2年2月上旬 月會：選「我想去崆峒派留學」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：虞小梅",
+    "結緣條件：郁竹"
+   ],
+   "vars": []
+  },
+  "留學期間結識小梅、小竹，虞小梅好感、郁竹好感都練到≥20": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：虞小梅"
+   ],
+   "vars": []
+  },
+  "第2年4月，或第2年5月下旬～6月下旬：鐵舖上工累計 4 次以上後，到鐵拳巷觸發「勾欄唱戲」（那一旬要剩 2 次以上行動；兩段時間擇一，只會發生一次，觸發後下一旬自動接「小竹回家」）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：虞小梅"
+   ],
+   "vars": []
+  },
+  "第2年10月 江陵大戰那晚：選「去打拳散心」（要心上人是小梅且觸發過「崆峒劇變 小梅道別」，或處世<40）；沒收留葉氏兄妹的話心相>30；虞小梅好感≥35 才會遇到女飛賊（小梅）→ 小梅現身時選「祝妳好運」以外的選項": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：虞小梅"
+   ],
+   "vars": []
+  },
+  "第3年5月上旬 招親：心上人是小梅；崆峒少年搭話時選「我得去」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：虞小梅"
+   ],
+   "vars": []
+  },
+  "對||魔小梅||的第二場：嘴攻 6 次（至少 4 次）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：虞小梅"
+   ],
+   "vars": []
+  },
+  "選「探望小梅」→ 選「當然，妳可以去任何想去的地方」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：虞小梅"
+   ],
+   "vars": []
+  },
+  "辭行時選「執意不受」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：虞小梅",
+    "結緣條件：郁竹"
+   ],
+   "vars": []
+  },
+  "第2年2月上旬 月會：月會前貢獻度≥50，選「我想去崆峒派留學」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：夏侯蘭"
+   ],
+   "vars": []
+  },
+  "第2年3月上旬 分派門派：🎲<75 進「奪魄門」；初識魏菊時若選「抱著被別派敵視的覺悟唱反調」，下一個選項不要選「我要去玄功門」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：夏侯蘭"
+   ],
+   "vars": []
+  },
+  "第2年4月上旬 支線「衣服遭竊」：選「防禦成功」（🎲>50）→ 對決峨嵋弟子三場：第一場要贏、第二場要輸或撐滿 5 回合平手、第三場勝負不拘 → 選「以師禮拜謝」拜夏侯蘭為師（解鎖奪魄森林修練，主要刷好感的地方；留學結束前建議夏侯蘭好感≥40）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：夏侯蘭"
+   ],
+   "vars": []
+  },
+  "第3年5月下旬：夏侯蘭好感≥40 觸發事件（選擇不影響結緣）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：夏侯蘭"
+   ],
+   "vars": []
+  },
+  "第3年6月上旬：心上人改為夏侯蘭，身上帶酒（強烈建議）；月會選「雪山行」和她去雪山": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：夏侯蘭"
+   ],
+   "vars": []
+  },
+  "第3年7月中旬 傳功：三次都選「抵抗」，四次擲骰至少一次擲到 99。第二次抵抗要身上有酒，第三次要心上人是夏侯蘭（不是的話夏侯蘭好感≥49）→ 之後的對決打贏 → 拿到【夏侯蘭的髮帶】即結緣": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：夏侯蘭"
+   ],
+   "vars": []
+  },
+  "依遊戲資料整理（wiki 沒有這位的攻略）。 小竹線和小梅線互斥：第2年10月下旬不能跟小梅走。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：郁竹"
+   ],
+   "vars": []
+  },
+  "留學期間結識小竹，郁竹好感≥20": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：郁竹"
+   ],
+   "vars": []
+  },
+  "第2年4月，或第2年5月下旬～6月下旬：鐵舖上工累計 4 次以上後，到鐵拳巷觸發「勾欄唱戲」（那一旬要剩 2 次以上行動；兩段時間擇一，只會發生一次，觸發後下一旬自動接「小竹回家」），最後選「好吧，說我是公子，原是誰也不信」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：郁竹"
+   ],
+   "vars": []
+  },
+  "第2年10月下旬 江陵：小梅現身的話選「祝妳好運」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：郁竹"
+   ],
+   "vars": []
+  },
+  "江陵戰役後：心上人是郁竹、郁竹好感≥40": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：郁竹"
+   ],
+   "vars": []
+  },
+  "第3年5月上旬 招親：心上人是郁竹；崆峒少年搭話時選「我得去」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：郁竹"
+   ],
+   "vars": []
+  },
+  "刺侯來報時選「妳自己下山，要仔細腳下」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：郁竹"
+   ],
+   "vars": []
+  },
+  "對||崆峒弟子眾||撐到第 8 回合，對||金烏上人||14 回合內打贏（兩場輸了都會死）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：郁竹"
+   ],
+   "vars": []
+  },
+  "選「探望小竹」→ 選「我有得選？」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "結緣條件：郁竹"
+   ],
+   "vars": []
+  },
+  "第3年1月上旬 支線「葉氏兄妹離去」：🎲「1～50 + 葉雲裳好感」≥80 進「葉雲裳的抵抗」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：葉雲裳（不結緣・存活）"
+   ],
+   "vars": []
+  },
+  "選「勸葉雲舟留」（之後那場打輸打贏都可以）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：葉雲裳（不結緣・存活）"
+   ],
+   "vars": []
+  },
+  "第3年1月下旬大師兄重傷，之後的劇情看他有沒有被治好。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：大師兄存活（醫術治好）"
+   ],
+   "vars": []
+  },
+  "不陪大師兄下山（在家與同門分工打掃那條）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：大師兄存活（醫術治好）"
+   ],
+   "vars": []
+  },
+  "醫術天賦≥5 或全毒藥點數≥250（才能用自己的醫術方案）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：大師兄存活（醫術治好）"
+   ],
+   "vars": []
+  },
+  "選「決意」運功療傷": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：大師兄存活（醫術治好）"
+   ],
+   "vars": []
+  },
+  "療傷時治療進度累積到≥2：內力≥50 +3；內力 35～50 +2；內力 25～35 +2；南宮護心訣<3 +1；有人來襲時選「收功」-1（選「不收功」不扣）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：大師兄存活（醫術治好）"
+   ],
+   "vars": []
+  },
+  "陪大師兄下山（大師兄出行那條），以下任一": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：大師兄存活（醫術治好）"
+   ],
+   "vars": []
+  },
+  "申屠龍好感≥30，且認識申屠龍、臥雲崗回程被申屠龍吸內力": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：大師兄存活（醫術治好）"
+   ],
+   "vars": []
+  },
+  "門派名聲≥50、道德≥80，且臥雲崗回程被申屠龍吸內力": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：大師兄存活（醫術治好）"
+   ],
+   "vars": []
+  },
+  "選「不論如何希望大師兄能活。」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：大師兄存活（醫術治好）"
+   ],
+   "vars": []
+  },
+  "結局有些內容要再滿足最後一項。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：遇到南溪"
+   ],
+   "vars": []
+  },
+  "葉雲裳已結緣": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：遇到南溪"
+   ],
+   "vars": []
+  },
+  "葉雲舟在唐門": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：遇到南溪"
+   ],
+   "vars": []
+  },
+  "第3年10月中旬 武林大會的客棧：選「叫一桶水洗澡」→ 選「下樓喝酒」→ 遇到南溪": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：遇到南溪"
+   ],
+   "vars": []
+  },
+  "當下處世≤40、修養≥60 → 關係更好": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：遇到南溪"
+   ],
+   "vars": []
+  },
+  "完成支線「丐幫與嵩山打架」（第1年9月中旬起到「弟子房」，機率約 35%，要假趙活在唐門）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐大鯨加入唐門"
+   ],
+   "vars": []
+  },
+  "第1年9月中旬～第2年4月下旬到「大門」觸發「初識福韞」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐大鯨加入唐門"
+   ],
+   "vars": []
+  },
+  "擲骰後三個選項任一：「我還是先不插手」、「惡霸，我來接你的招！」（和許大鯨打，輸贏都行）都會加入；「竟敢得罪我唐門的好朋友，和尚看拳！」（和福韞打）要打輸才會加入": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐大鯨加入唐門"
+   ],
+   "vars": []
+  },
+  "第4年1月「峨嵋回音」的某些分支會讓她離開。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐嬌嬌加入唐門"
+   ],
+   "vars": []
+  },
+  "主角在唐門（沒去留學）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐嬌嬌加入唐門"
+   ],
+   "vars": []
+  },
+  "唐門留學練武場次數≥2（練武場的掃除／團練）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐嬌嬌加入唐門"
+   ],
+   "vars": []
+  },
+  "第2年5月 支線「峨嵋狄傲」自動觸發：選「我就偏不信，上前領教」→ 和狄傲決鬥打贏": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐嬌嬌加入唐門"
+   ],
+   "vars": []
+  },
+  "不要選「好，成親吧」，選另外兩個（「那我就安心了，妳總不能看上我」「妳擦亮眼看看我！」）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐嬌嬌加入唐門"
+   ],
+   "vars": []
+  },
+  "葉雲裳（不結緣・存活）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：葉雲裳（不結緣・存活）"
+   ],
+   "vars": []
+  },
+  "結局時（ch8_6_3_2、ch8_1_2）看 M40055 = 1：唐芳贈殭屍散、北上求醫成功；沒有的話雲裳在途中病逝。白話：第3年1月上旬的支線裡，擲骰（1～50 + 好感·葉雲裳）≥ 80 進「葉雲裳的抵抗」→ 選「勸葉雲舟留」→ 對話選單先問「雲裳的傷情」，再選「治療方法」；而且之前沒去青城留學（M20008 ≠ 1）。選「勸葉雲裳走」或擲骰 < 80 會直接讓她離開，拿不到殭屍散。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：葉雲裳（不結緣・存活）"
+   ],
+   "vars": []
+  },
+  "大師兄存活（醫術治好）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：大師兄存活（醫術治好）"
+   ],
+   "vars": []
+  },
+  "第3年1月下旬大師兄重傷：醫術天賦 ≥ 5 或全毒藥點數 ≥ 250 才能用「自己的醫術方案」→ 選「決意」運功療傷；療傷時依內功等判定累加治療進度 M40033，≥ 2 時設 M40034 = 1（大師兄當下仍會離開，但之後的劇情會看這個旗標）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：大師兄存活（醫術治好）"
+   ],
+   "vars": []
+  },
+  "遇到南溪": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：遇到南溪"
+   ],
+   "vars": []
+  },
+  "第3年10月中旬武林大會期間的客棧：先選「叫一桶水洗澡」，再選「下樓喝酒」；此時要葉雲裳已結緣（G11002 = 1）且 E12100 = 1（而且 M60083 不是 1），才會進到遇見南溪的劇情（M60075 = 1）。若當下處世 ≤ 40 且修養 ≥ 60 會設為 2，結局段落有些內容要 M60075 ≥ 2。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：遇到南溪"
+   ],
+   "vars": []
+  },
+  "唐大鯨加入唐門": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐大鯨加入唐門"
+   ],
+   "vars": []
+  },
+  "先完成支線「乞丐與和尚」（E20004 = 1）→ 第1年9月中旬～第2年4月下旬到「大門」觸發 → 擲骰後的三個選項：「我還是先不插手」、「惡霸，我來接你的招！」（和許大鯨打一場，輸贏都行）都會讓他加入；「竟敢得罪我唐門的好朋友，和尚看拳！」（和福韞打）要打輸才會加入，打贏就不會。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐大鯨加入唐門"
+   ],
+   "vars": []
+  },
+  "唐嬌嬌加入唐門": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐嬌嬌加入唐門"
+   ],
+   "vars": []
+  },
+  "留在唐門（不去留學、主角在唐門）且練武場的掃除／團練做過 2 次以上 → 第2年5月自動觸發 → 選「我就偏不信，上前領教」→ 和狄傲決鬥打贏 → 不要選「好，成親吧」，選另外兩個（「那我就安心了，妳總不能看上我」「妳擦亮眼看看我！」）。第4年1月「峨嵋回音」的某些分支會讓她離開。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：唐嬌嬌加入唐門"
+   ],
+   "vars": []
+  },
+  "孟仙謠投奔、到崆峒": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：孟仙謠投奔、到崆峒"
+   ],
+   "vars": []
+  },
+  "走小梅線：崆峒辭行時選「執意不受」，成為崆峒掌派人": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：孟仙謠投奔、到崆峒"
+   ],
+   "vars": []
+  },
+  "小梅同行武林大會：第3年8月中旬～下旬到「伙房」邀請（劇情對話像是一定同行，但沒去邀請就不算）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：孟仙謠投奔、到崆峒"
+   ],
+   "vars": []
+  },
+  "瑞笙好感 ≥ 30": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：孟仙謠投奔、到崆峒"
+   ],
+   "vars": []
+  },
+  "孟仙謠好感 ≥ 2（第2年10月下旬和小梅同行襄陽時累積）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：孟仙謠投奔、到崆峒"
+   ],
+   "vars": []
+  },
+  "孟仙謠好感": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：孟仙謠投奔、到崆峒（可點的那段字，要出現在上一句裡）"
+   ],
+   "vars": []
+  },
+  "第3年10月武林大會（錦香宮）期間，在「武林交際」裡選「動心忍性」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：孟仙謠投奔、到崆峒"
+   ],
+   "vars": []
+  },
+  "選單出現「拜會孤雲山派」，去拜會": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：孟仙謠投奔、到崆峒"
+   ],
+   "vars": []
+  },
+  "選「靠山來了！（投奔）」（孟仙謠好感 2：🎲≥80；3 以上：🎲≥60）（沒投奔的話，下一步聽不到抱怨，最後也不會請求收容）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：孟仙謠投奔、到崆峒"
+   ],
+   "vars": []
+  },
+  "客棧選「叫一桶水洗澡」→ 選「下樓喝酒」（聽到孟仙謠的抱怨；收容請求要有這一步）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：孟仙謠投奔、到崆峒"
+   ],
+   "vars": []
+  },
+  "大會結束時孟仙謠請求收容，選「點頭答應收容」（選「我拒絕」會變成小梅賭氣）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：孟仙謠投奔、到崆峒"
+   ],
+   "vars": []
+  },
+  "崆峒探險隊成立": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：崆峒探險隊成立"
+   ],
+   "vars": []
+  },
+  "認識小梅，小梅好感≥20（第2年3月中旬「小梅邀請」認識）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：崆峒探險隊成立"
+   ],
+   "vars": []
+  },
+  "認識瑞笙，瑞笙好感≥7（留學期間：「小梅邀請」那場戰鬥撐到第 8 回合以上打贏；不留學的話第2年3月上旬「南宮來客」）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：崆峒探險隊成立"
+   ],
+   "vars": []
+  },
+  "認識南宮淺，南宮淺好感≥7（第1年10月「譚霸刀」選「上前幫忙南宮淺」或「出聲責問家丁尊卑不分」；或第2年3月下旬飛天門「拜碼頭」、鐵拳門「不速之客」）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：崆峒探險隊成立"
+   ],
+   "vars": []
+  },
+  "第2年4月上旬～5月中旬（崆峒留學期間），條件都符合時自動觸發": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：崆峒探險隊成立"
+   ],
+   "vars": []
+  },
+  "成立後養成選單會出現「崆峒探險隊的活動時間到了」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：崆峒探險隊成立"
+   ],
+   "vars": []
+  },
+  "開啟養成地點：鶴崖（崆峒）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "加入飛天門": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "沒開的話照遊戲資料也能去：身上帶著睡丹、還剩 2 次以上行動（睡丹藥方在加入玄功門、奪魄門時取得，崆峒探險隊、四師兄那邊也有）。※ 玩家回報：實際上無法達成": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "第2年3月下旬到「飛天殿」修練，觸發「拜碼頭」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "和顏疆打一場（輸贏都會往下接）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "擲骰逃脫：一般 🎲≥60；南宮淺一起參戰（曾在南宮家宴為她出頭、選「看不下去」（🎲≥50））要 🎲≥70 → 成功就在鶴崖會合並開啟": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "逃脫失敗會入獄：瑞笙參戰（南宮淺那條，或瑞笙好感≥7）的話，之後小梅劫獄時選「乖」也會開啟": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "第2年5月下旬崆峒大試後第一次去鶴崖：大試勝利 3 次以上（太出風頭）會被勸走，鶴崖關閉": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "小梅事件「舞」：第2年4月上旬～7月中旬，火閃電≥4、小梅好感≥20 時去鶴崖觸發；看完鶴崖關閉": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "火閃電": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）（可點的那段字，要出現在上一句裡）"
+   ],
+   "vars": []
+  },
+  "火閃電：第一次去鶴崖和牠打就是 1；之後在鶴崖抽到和牠對戰，打贏 +1（下一次去牠在養傷，沒事發生），或不還手撐到第 7 回合（平手）+1（五種對戰只有一種能平手）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "火閃電 1、2 以上時會先各觸發一次其他鶴崖事件（怪胎要南宮淺參戰；強鶴所難；又一個被騙要瑞笙好感≥7），都會佔掉那次": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：鶴崖（崆峒）"
+   ],
+   "vars": []
+  },
+  "開啟養成地點：奪魄森林（崆峒）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：奪魄森林（崆峒）"
+   ],
+   "vars": []
+  },
+  "崆峒留學，進奪魄門": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：奪魄森林（崆峒）"
+   ],
+   "vars": []
+  },
+  "第2年4月上旬 支線「衣服遭竊」：選「防禦成功」（🎲>50）→ 戰鬥勝利 → 戰鬥落敗 → 選「以師禮拜謝」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：開啟養成地點：奪魄森林（崆峒）"
+   ],
+   "vars": []
+  },
+  "成立西武林盟": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：成立西武林盟"
+   ],
+   "vars": []
+  },
+  "下面兩條任一成立，決議時才會出現「我們也來成立武林盟」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：成立西武林盟"
+   ],
+   "vars": []
+  },
+  "主角提出：金烏上人已死，且戰術天賦 ≥ 8，或學問 ≥ 60 且戰術天賦 ≥ 5": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：成立西武林盟"
+   ],
+   "vars": []
+  },
+  "丐幫提出：李富貴好感 ≥ 20，且丐幫好感度 ≥ 2": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：成立西武林盟"
+   ],
+   "vars": []
+  },
+  "丐幫好感度": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "guide",
+   "also": [],
+   "where": [
+    "其他條件：成立西武林盟（可點的那段字，要出現在上一句裡）"
+   ],
+   "vars": []
+  },
+  "關鍵節點（觸發後第一個可存檔的時間點）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "Capture.cs 402 行"
+   ],
+   "vars": []
+  },
+  "關鍵節點（觸發前最後一個養成回合開始）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "Capture.cs 406 行"
+   ],
+   "vars": []
+  },
+  "養成回合開始": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "Capture.cs 410 行"
+   ],
+   "vars": []
+  },
+  "劇情自動存檔": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "Capture.cs 411 行"
+   ],
+   "vars": []
+  },
+  "養成自動存檔": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "Capture.cs 412 行"
+   ],
+   "vars": []
+  },
+  "劇情開放存檔": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "Capture.cs 413 行"
+   ],
+   "vars": []
+  },
+  "遊戲尚未就緒": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "GameBridge.cs 36 行"
+   ],
+   "vars": []
+  },
+  "場景載入中，請稍候": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "GameBridge.cs 41 行"
+   ],
+   "vars": []
+  },
+  "算命仙網頁沒辦法啟動：連接埠 {0}～{1} 都被其他程式佔用。請在 BepInEx\\config 的設定檔改 Guide.Port 後重開遊戲。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "GuideServer.cs 77 行"
+   ],
+   "vars": [
+    "basePort",
+    "basePort + 9"
+   ]
+  },
+  "找不到頁面檔案：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "GuideServer.cs 266 行"
+   ],
+   "vars": []
+  },
+  "格式錯誤": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "GuideServer.cs 512 行"
+   ],
+   "vars": []
+  },
+  "沒有這一旬的時光機存檔": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "GuideServer.cs 521 行"
+   ],
+   "vars": []
+  },
+  "讀檔失敗：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "GuideServer.cs 533 行"
+   ],
+   "vars": []
+  },
+  "葉家兄妹（客棧）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 31 行"
+   ],
+   "vars": []
+  },
+  "第1年8月～第2年1月：觸發「讀報」事件後一個月內，點大門到客棧": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 32 行"
+   ],
+   "vars": []
+  },
+  "留學（月會）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 33 行"
+   ],
+   "vars": []
+  },
+  "第2年2月上旬月會：選「我想去崆峒派留學」或不留學": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 34 行"
+   ],
+   "vars": []
+  },
+  "破廟（不留學）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 35 行"
+   ],
+   "vars": []
+  },
+  "第2年6月上旬：住破廟或住客棧": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 36 行"
+   ],
+   "vars": []
+  },
+  "江陵": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 37 行"
+   ],
+   "vars": []
+  },
+  "約第2年9月上旬剛到江陵（住進南宮世家大宅）；之後第2年10月小梅現身時跟她走是小梅線，選「祝妳好運」是郁竹線": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 38 行"
+   ],
+   "vars": []
+  },
+  "大師兄下山": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 39 行"
+   ],
+   "vars": []
+  },
+  "第3年1月中旬：選要不要陪大師兄下山（心上人是小師妹時一定得去）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 40 行"
+   ],
+   "vars": []
+  },
+  "第3年5月上旬：小師妹招親": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 42 行"
+   ],
+   "vars": []
+  },
+  "大雪山（月會）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 43 行"
+   ],
+   "vars": []
+  },
+  "月會出現「雪山行」選項的那個月（約第3年6月上旬）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 44 行"
+   ],
+   "vars": []
+  },
+  "武林大會（出發）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 45 行"
+   ],
+   "vars": []
+  },
+  "第3年9月上旬：出發前往武林大會": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 46 行"
+   ],
+   "vars": []
+  },
+  "決策（武林盟／退隱）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 47 行"
+   ],
+   "vars": []
+  },
+  "第3年12月上旬決議：成立武林盟／響應武林盟／退隱江湖／戰他娘親": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "KeyNodes.cs 48 行"
+   ],
+   "vars": []
+  },
+  "上": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 28 行"
+   ],
+   "vars": []
+  },
+  "中": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 28 行"
+   ],
+   "vars": []
+  },
+  "下": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 28 行"
+   ],
+   "vars": []
+  },
+  "無法讀取時光機資料：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 112 行"
+   ],
+   "vars": []
+  },
+  "已取消變更快捷鍵。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 181 行"
+   ],
+   "vars": []
+  },
+  "不能用 {0}：{1}。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 196 行"
+   ],
+   "vars": [
+    "key",
+    "conflict"
+   ]
+  },
+  "「{0}」改為 {1}（已寫入設定檔）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 200 行"
+   ],
+   "vars": [
+    "KeyName(target)",
+    "key"
+   ]
+  },
+  "時光機": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 208 行",
+    "TimeMachineWindow.cs 296 行"
+   ],
+   "vars": []
+  },
+  "已經是「{0}」的快捷鍵": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 216 行"
+   ],
+   "vars": [
+    "KeyName(other)"
+   ]
+  },
+  "遊戲本身用在「{0}」": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 221 行"
+   ],
+   "vars": [
+    "action"
+   ]
+  },
+  "插件「{0}」的 {1} 已經使用": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 238 行"
+   ],
+   "vars": [
+    "info.Metadata.Name",
+    "pair.Key.Key"
+   ]
+  },
+  "讀取存檔失敗：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 264 行"
+   ],
+   "vars": []
+  },
+  "自動存檔暫停中": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 329 行"
+   ],
+   "vars": []
+  },
+  " 暫停自動存檔": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 354 行"
+   ],
+   "vars": []
+  },
+  "已暫停自動存檔：時光機存檔與關鍵節點都不會寫入，直到取消勾選（重開遊戲也會保持暫停）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 358 行"
+   ],
+   "vars": []
+  },
+  "已恢復自動存檔。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 358 行"
+   ],
+   "vars": []
+  },
+  " 快速讀取": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 361 行"
+   ],
+   "vars": []
+  },
+  "快速讀取：雙擊時間點直接讀取，按「讀取這個時間點」也不再確認。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 366 行"
+   ],
+   "vars": []
+  },
+  "已關閉快速讀取。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 366 行"
+   ],
+   "vars": []
+  },
+  "重新整理": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 369 行"
+   ],
+   "vars": []
+  },
+  "關閉（{0}）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 373 行"
+   ],
+   "vars": [
+    "Plugin.ToggleKey.Value"
+   ]
+  },
+  "請按新按鍵（Esc 取消）": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 382 行"
+   ],
+   "vars": []
+  },
+  "請按下「{0}」的新快捷鍵，按 Esc 取消。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 386 行"
+   ],
+   "vars": [
+    "KeyName(entry)"
+   ]
+  },
+  "存檔路線：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 394 行"
+   ],
+   "vars": []
+  },
+  "已切換到路線「{0}」，之後的時光機存檔只會寫進這條路線。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 403 行"
+   ],
+   "vars": [
+    "route"
+   ]
+  },
+  "新增：從目前時間分岔": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 415 行"
+   ],
+   "vars": []
+  },
+  "新增：空白": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 419 行"
+   ],
+   "vars": []
+  },
+  "確定刪除路線「{0}」？裡面 {1} 個時光機存檔會一起刪除，無法復原。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 433 行"
+   ],
+   "vars": [
+    "_deleteRoute",
+    "TimeStore.CountSaves(_deleteRoute)"
+   ]
+  },
+  "刪除後切回「預設」。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 434 行"
+   ],
+   "vars": []
+  },
+  "確定刪除": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 435 行"
+   ],
+   "vars": []
+  },
+  "刪除路線失敗：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 446 行"
+   ],
+   "vars": []
+  },
+  "已刪除路線「{0}」。目前路線：{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 453 行"
+   ],
+   "vars": [
+    "name",
+    "TimeStore.CurrentRoute"
+   ]
+  },
+  "取消": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 457 行",
+    "TimeMachineWindow.cs 744 行"
+   ],
+   "vars": []
+  },
+  "建立路線失敗：": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 489 行"
+   ],
+   "vars": []
+  },
+  "已新增路線「{0}」並切換過去：複製了「{1}」到目前時間為止的存檔，之後兩條路線互不覆蓋。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 498 行"
+   ],
+   "vars": [
+    "name",
+    "from"
+   ]
+  },
+  "已新增空白路線「{0}」並切換過去。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 499 行"
+   ],
+   "vars": [
+    "name"
+   ]
+  },
+  "還沒有時光機存檔。遊戲進入每一旬第一個可存檔的時間點時會自動建立。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 536 行"
+   ],
+   "vars": []
+  },
+  "關鍵節點：{0}　{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 690 行"
+   ],
+   "vars": [
+    "_selectedNode.Name",
+    "_selectedNode.When"
+   ]
+  },
+  "這次還沒經過這個節點。經過時會自動保存「觸發後第一個可存檔的時間點」的狀態。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 694 行"
+   ],
+   "vars": []
+  },
+  "這次還沒經過這個節點。經過時會自動保存「觸發前最後一個養成回合開始」的狀態（還有行動次數，可以先準備再觸發）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 695 行"
+   ],
+   "vars": []
+  },
+  "上次在第{0}年{1}月{2}旬觸發（{3}）；下面是觸發後第一個可存檔時間點的存檔。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 701 行"
+   ],
+   "vars": [
+    "ty",
+    "tm",
+    "StageShort[ts]",
+    "script"
+   ]
+  },
+  "上次在第{0}年{1}月{2}旬觸發（{3}）；下面是觸發前的存檔。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 702 行"
+   ],
+   "vars": [
+    "ty",
+    "tm",
+    "StageShort[ts]",
+    "script"
+   ]
+  },
+  "每個月分上／中／下旬三格。點選有存檔的旬查看細節，再按「讀取」回到那個時間點。藍色（或 ▲）是目前所在的旬。格子下方拉線的是關鍵節點，標在事件觸發的旬（灰色＝還沒經過）。": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 707 行"
+   ],
+   "vars": []
+  },
+  "第{0}年{1}月{2}　{3}　腳本：{4}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 711 行"
+   ],
+   "vars": [
+    "entry.Year",
+    "entry.Month",
+    "entry.Stage",
+    "SceneName(entry.Scene)",
+    "entry.Script"
+   ]
+  },
+  "存檔時間：{0:yyyy-MM-dd HH:mm}　來源：{1}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 712 行"
+   ],
+   "vars": [
+    "entry.SavedAt",
+    "Sources.Describe(entry.Source)"
+   ]
+  },
+  "讀取這個時間點": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 718 行"
+   ],
+   "vars": []
+  },
+  "目前未存檔的進度會遺失。讀取後，選單的「存檔」仍會寫入目前欄位 {0}。確定讀取？": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 737 行"
+   ],
+   "vars": [
+    "SaveSystem.Instance.CurrentSlot"
+   ]
+  },
+  "確定讀取": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 739 行"
+   ],
+   "vars": []
+  },
+  "目前在標題畫面": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 762 行"
+   ],
+   "vars": []
+  },
+  "目前：第{0}年{1}月{2}": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 765 行"
+   ],
+   "vars": [
+    "time.Year",
+    "time.Month",
+    "time.Stage"
+   ]
+  },
+  "序章": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 770 行"
+   ],
+   "vars": []
+  },
+  "本篇": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeMachineWindow.cs 770 行"
+   ],
+   "vars": []
+  },
+  "請輸入路線名稱": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeStore.cs 97 行"
+   ],
+   "vars": []
+  },
+  "名稱不能包含 \\ / : * ? \" < > | 等符號": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeStore.cs 101 行"
+   ],
+   "vars": []
+  },
+  "已經有同名的路線": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeStore.cs 105 行"
+   ],
+   "vars": []
+  },
+  "這條路線不能刪除": {
+   "zh-TW": "",
+   "ja": "",
+   "ko": "",
+   "note": "",
+   "group": "mod",
+   "also": [],
+   "where": [
+    "TimeStore.cs 142 行"
+   ],
+   "vars": []
+  }
+ }
+}

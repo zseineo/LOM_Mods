@@ -13,4 +13,5 @@ python -I "$ROOT/tools/build_graph.py" "$DATA/so2.json" "$DATA/lua_tc" "$DATA/lo
 python -I "$ROOT/tools/render_preview.py" "$DATA/graph.json" "$ROOT/tools/flowchart_template.html" "$ROOT/preview/flowchart_preview.html" "$ROOT/tools/guides.json"
 mkdir -p "$GAME/BepInEx/plugins/LOM_TimeMachine/guide"
 cp "$ROOT/preview/flowchart_preview.html" "$GAME/BepInEx/plugins/LOM_TimeMachine/guide/index.html"
+python -I "$ROOT/tools/i18n.py" tsv "$GAME/BepInEx/plugins/LOM_TimeMachine/strings.tsv"
 echo "已安裝：$GAME/BepInEx/plugins/LOM_TimeMachine/guide/index.html"

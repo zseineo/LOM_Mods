@@ -8,6 +8,8 @@ data_old_*/
 preview/
 
 # 暫存
+i18n/strings.xlsx
+i18n/~$*
 refresh.log
 xm*.txt
 __pycache__/

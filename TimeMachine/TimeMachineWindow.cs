@@ -25,7 +25,7 @@ internal sealed class TimeMachineWindow
     private const float CellHeight = 44f;
     private const float NodeRowHeight = 30f;
 
-    private static readonly string[] StageShort = { "", "上", "中", "下" };
+    private static readonly string[] StageShort = { "", L.T("上"), L.T("中"), L.T("下") };
 
     private static readonly string[] FontNames =
     {
@@ -109,7 +109,7 @@ internal sealed class TimeMachineWindow
         }
         catch (Exception e)
         {
-            _message = "無法讀取時光機資料：" + e.Message;
+            _message = L.T("無法讀取時光機資料：") + e.Message;
             Plugin.Log.LogError($"[TimeMachine] {e}");
         }
         _open = true;
@@ -178,7 +178,7 @@ internal sealed class TimeMachineWindow
         if (keyboard.escapeKey.wasPressedThisFrame)
         {
             _capturing = null;
-            _message = "已取消變更快捷鍵。";
+            _message = L.T("已取消變更快捷鍵。");
             return;
         }
         foreach (KeyControl control in keyboard.allKeys)
@@ -193,11 +193,11 @@ internal sealed class TimeMachineWindow
             string conflict = FindKeyConflict(target, key);
             if (conflict != null)
             {
-                _message = $"不能用 {key}：{conflict}。";
+                _message = L.T("不能用 {0}：{1}。", key, conflict);
                 return;
             }
             target.Value = key;
-            _message = $"「{KeyName(target)}」改為 {key}（已寫入設定檔）。";
+            _message = L.T("「{0}」改為 {1}（已寫入設定檔）。", KeyName(target), key);
             Plugin.Log.LogInfo($"[TimeMachine] {target.Definition.Key} = {key}");
             return;
         }
@@ -205,7 +205,7 @@ internal sealed class TimeMachineWindow
 
     private static string KeyName(ConfigEntry<Key> entry)
     {
-        return entry == Plugin.ToggleKey ? "時光機" : "算命仙";
+        return entry == Plugin.ToggleKey ? L.T("時光機") : L.T("算命仙");
     }
 
     private string FindKeyConflict(ConfigEntry<Key> target, Key key)
@@ -213,12 +213,12 @@ internal sealed class TimeMachineWindow
         ConfigEntry<Key> other = target == Plugin.ToggleKey ? Plugin.GuideKey : Plugin.ToggleKey;
         if (other.Value == key)
         {
-            return $"已經是「{KeyName(other)}」的快捷鍵";
+            return L.T("已經是「{0}」的快捷鍵", KeyName(other));
         }
         string action = _blocker.FindBinding(key);
         if (action != null)
         {
-            return $"遊戲本身用在「{action}」";
+            return L.T("遊戲本身用在「{0}」", action);
         }
         // 其他插件設定裡名稱含 Key 的項目（Key、KeyCode 或字串）
         try
@@ -235,7 +235,7 @@ internal sealed class TimeMachineWindow
                     if (value != null && pair.Key.Key.IndexOf("key", StringComparison.OrdinalIgnoreCase) >= 0
                         && string.Equals(value.ToString().Trim(), key.ToString(), StringComparison.OrdinalIgnoreCase))
                     {
-                        return $"插件「{info.Metadata.Name}」的 {pair.Key.Key} 已經使用";
+                        return L.T("插件「{0}」的 {1} 已經使用", info.Metadata.Name, pair.Key.Key);
                     }
                 }
             }
@@ -261,7 +261,7 @@ internal sealed class TimeMachineWindow
         }
         catch (Exception e)
         {
-            _message = "讀取存檔失敗：" + e.Message;
+            _message = L.T("讀取存檔失敗：") + e.Message;
             return;
         }
         Close();
@@ -293,7 +293,7 @@ internal sealed class TimeMachineWindow
         {
             _rect = new Rect((width - WindowWidth) / 2f, (height - WindowHeight) / 2f, WindowWidth, WindowHeight);
         }
-        _rect = GUI.Window(WindowId, _rect, DrawWindow, "時光機", _window);
+        _rect = GUI.Window(WindowId, _rect, DrawWindow, L.T("時光機"), _window);
         GUI.matrix = previous;
     }
 
@@ -326,7 +326,7 @@ internal sealed class TimeMachineWindow
         if (!Plugin.AutoCapture.Value)
         {
             GUILayout.Space(12f);
-            GUILayout.Label("自動存檔暫停中", _warn);
+            GUILayout.Label(L.T("自動存檔暫停中"), _warn);
         }
         GUILayout.FlexibleSpace();
         if (_modes.Count > 1)
@@ -351,26 +351,26 @@ internal sealed class TimeMachineWindow
             DrawKeyButton(Plugin.GuideKey);
         }
         GUILayout.Space(16f);
-        bool paused = GUILayout.Toggle(!Plugin.AutoCapture.Value, " 暫停自動存檔", _toggle, GUILayout.Width(170f));
+        bool paused = GUILayout.Toggle(!Plugin.AutoCapture.Value, L.T(" 暫停自動存檔"), _toggle, GUILayout.Width(170f));
         if (paused == Plugin.AutoCapture.Value)
         {
             Plugin.AutoCapture.Value = !paused;
-            _message = paused ? "已暫停自動存檔：時光機存檔與關鍵節點都不會寫入，直到取消勾選（重開遊戲也會保持暫停）。" : "已恢復自動存檔。";
+            _message = paused ? L.T("已暫停自動存檔：時光機存檔與關鍵節點都不會寫入，直到取消勾選（重開遊戲也會保持暫停）。") : L.T("已恢復自動存檔。");
             Plugin.Log.LogInfo($"[TimeMachine] 自動存檔{(paused ? "暫停" : "恢復")}");
         }
-        bool quick = GUILayout.Toggle(Plugin.QuickLoad.Value, " 快速讀取", _toggle, GUILayout.Width(120f));
+        bool quick = GUILayout.Toggle(Plugin.QuickLoad.Value, L.T(" 快速讀取"), _toggle, GUILayout.Width(120f));
         if (quick != Plugin.QuickLoad.Value)
         {
             Plugin.QuickLoad.Value = quick;
             _confirm = false;
-            _message = quick ? "快速讀取：雙擊時間點直接讀取，按「讀取這個時間點」也不再確認。" : "已關閉快速讀取。";
+            _message = quick ? L.T("快速讀取：雙擊時間點直接讀取，按「讀取這個時間點」也不再確認。") : L.T("已關閉快速讀取。");
         }
         GUILayout.Space(8f);
-        if (GUILayout.Button("重新整理", _button, GUILayout.Width(110f)))
+        if (GUILayout.Button(L.T("重新整理"), _button, GUILayout.Width(110f)))
         {
             Refresh();
         }
-        if (GUILayout.Button($"關閉（{Plugin.ToggleKey.Value}）", _button, GUILayout.Width(130f)))
+        if (GUILayout.Button(L.T("關閉（{0}）", Plugin.ToggleKey.Value), _button, GUILayout.Width(130f)))
         {
             Close();
         }
@@ -379,11 +379,11 @@ internal sealed class TimeMachineWindow
 
     private void DrawKeyButton(ConfigEntry<Key> entry)
     {
-        string text = _capturing == entry ? "請按新按鍵（Esc 取消）" : $"{KeyName(entry)}：{entry.Value}";
+        string text = _capturing == entry ? L.T("請按新按鍵（Esc 取消）") : $"{KeyName(entry)}：{entry.Value}";
         if (GUILayout.Button(text, _button, GUILayout.MinWidth(130f)))
         {
             _capturing = _capturing == entry ? null : entry;
-            _message = _capturing != null ? $"請按下「{KeyName(entry)}」的新快捷鍵，按 Esc 取消。" : null;
+            _message = _capturing != null ? L.T("請按下「{0}」的新快捷鍵，按 Esc 取消。", KeyName(entry)) : null;
         }
     }
 
@@ -391,7 +391,7 @@ internal sealed class TimeMachineWindow
     private void DrawRoutes()
     {
         GUILayout.BeginHorizontal();
-        GUILayout.Label("存檔路線：", _label, GUILayout.Width(110f));
+        GUILayout.Label(L.T("存檔路線："), _label, GUILayout.Width(110f));
         string current = TimeStore.CurrentRoute;
         foreach (string route in TimeStore.Routes())
         {
@@ -400,7 +400,7 @@ internal sealed class TimeMachineWindow
             {
                 TimeStore.SwitchRoute(route);
                 ResetSelection();
-                _message = $"已切換到路線「{route}」，之後的時光機存檔只會寫進這條路線。";
+                _message = L.T("已切換到路線「{0}」，之後的時光機存檔只會寫進這條路線。", route);
                 Refresh();
             }
             if (route != TimeStore.DefaultRoute && GUILayout.Button("×", _button, GUILayout.Width(30f)))
@@ -412,11 +412,11 @@ internal sealed class TimeMachineWindow
         }
         GUILayout.FlexibleSpace();
         _newRoute = GUILayout.TextField(_newRoute, 24, _field, GUILayout.Width(180f));
-        if (GUILayout.Button("新增：從目前時間分岔", _button, GUILayout.Width(220f)))
+        if (GUILayout.Button(L.T("新增：從目前時間分岔"), _button, GUILayout.Width(220f)))
         {
             CreateRoute(copy: true);
         }
-        if (GUILayout.Button("新增：空白", _button, GUILayout.Width(120f)))
+        if (GUILayout.Button(L.T("新增：空白"), _button, GUILayout.Width(120f)))
         {
             CreateRoute(copy: false);
         }
@@ -430,9 +430,9 @@ internal sealed class TimeMachineWindow
     private void DrawDeleteRoute()
     {
         GUILayout.BeginHorizontal();
-        GUILayout.Label($"確定刪除路線「{_deleteRoute}」？裡面 {TimeStore.CountSaves(_deleteRoute)} 個時光機存檔會一起刪除，無法復原。"
-            + (_deleteRoute == TimeStore.CurrentRoute ? "刪除後切回「預設」。" : ""), _small);
-        if (GUILayout.Button("確定刪除", _button, GUILayout.Width(120f)))
+        GUILayout.Label(L.T("確定刪除路線「{0}」？裡面 {1} 個時光機存檔會一起刪除，無法復原。", _deleteRoute, TimeStore.CountSaves(_deleteRoute))
+            + (_deleteRoute == TimeStore.CurrentRoute ? L.T("刪除後切回「預設」。") : ""), _small);
+        if (GUILayout.Button(L.T("確定刪除"), _button, GUILayout.Width(120f)))
         {
             string name = _deleteRoute;
             _deleteRoute = null;
@@ -443,18 +443,18 @@ internal sealed class TimeMachineWindow
             }
             catch (Exception e)
             {
-                error = "刪除路線失敗：" + e.Message;
+                error = L.T("刪除路線失敗：") + e.Message;
                 Plugin.Log.LogError($"[TimeMachine] {e}");
             }
             if (error == null)
             {
                 Plugin.Log.LogInfo($"[TimeMachine] 刪除路線「{name}」");
             }
-            _message = error ?? $"已刪除路線「{name}」。目前路線：{TimeStore.CurrentRoute}";
+            _message = error ?? L.T("已刪除路線「{0}」。目前路線：{1}", name, TimeStore.CurrentRoute);
             ResetSelection();
             Refresh();
         }
-        if (GUILayout.Button("取消", _button, GUILayout.Width(100f)))
+        if (GUILayout.Button(L.T("取消"), _button, GUILayout.Width(100f)))
         {
             _deleteRoute = null;
         }
@@ -486,7 +486,7 @@ internal sealed class TimeMachineWindow
         }
         catch (Exception e)
         {
-            error = "建立路線失敗：" + e.Message;
+            error = L.T("建立路線失敗：") + e.Message;
             Plugin.Log.LogError($"[TimeMachine] {e}");
         }
         if (error != null)
@@ -495,8 +495,8 @@ internal sealed class TimeMachineWindow
             return;
         }
         Plugin.Log.LogInfo($"[TimeMachine] 新增路線「{name}」（{(copy ? "從「" + from + "」分岔" : "空白")}）");
-        _message = copy ? $"已新增路線「{name}」並切換過去：複製了「{from}」到目前時間為止的存檔，之後兩條路線互不覆蓋。"
-            : $"已新增空白路線「{name}」並切換過去。";
+        _message = copy ? L.T("已新增路線「{0}」並切換過去：複製了「{1}」到目前時間為止的存檔，之後兩條路線互不覆蓋。", name, from)
+            : L.T("已新增空白路線「{0}」並切換過去。", name);
         _newRoute = "";
         ResetSelection();
         Refresh();
@@ -533,7 +533,7 @@ internal sealed class TimeMachineWindow
         }
         if (years.Count == 0)
         {
-            GUILayout.Label("還沒有時光機存檔。遊戲進入每一旬第一個可存檔的時間點時會自動建立。", _label);
+            GUILayout.Label(L.T("還沒有時光機存檔。遊戲進入每一旬第一個可存檔的時間點時會自動建立。"), _label);
             return;
         }
 
@@ -542,13 +542,13 @@ internal sealed class TimeMachineWindow
         for (int month = 1; month <= 12; month++)
         {
             float cx = StageCenter(month, 2);
-            GUI.Label(new Rect(cx - CellWidth / 2f, monthRow.y, CellWidth, monthRow.height), $"{month}月", _header);
+            GUI.Label(new Rect(cx - CellWidth / 2f, monthRow.y, CellWidth, monthRow.height), L.T("{0}月", month), _header);
         }
 
         foreach (int year in years)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"第{year}年", _header, GUILayout.Width(YearLabelWidth), GUILayout.Height(CellHeight));
+            GUILayout.Label(L.T("第{0}年", year), _header, GUILayout.Width(YearLabelWidth), GUILayout.Height(CellHeight));
             for (int month = 1; month <= 12; month++)
             {
                 GUILayout.BeginHorizontal(GUILayout.Width(CellWidth));
@@ -687,34 +687,35 @@ internal sealed class TimeMachineWindow
     {
         if (_selectedNode != null)
         {
-            GUILayout.Label($"關鍵節點：{_selectedNode.Name}　{_selectedNode.When}", _label);
+            GUILayout.Label(L.T("關鍵節點：{0}　{1}", _selectedNode.Name, _selectedNode.When), _label);
             if (_selected == null)
             {
                 GUILayout.Label(_selectedNode.AfterTrigger
-                    ? "這次還沒經過這個節點。經過時會自動保存「觸發後第一個可存檔的時間點」的狀態。"
-                    : "這次還沒經過這個節點。經過時會自動保存「觸發前最後一個養成回合開始」的狀態（還有行動次數，可以先準備再觸發）。", _small);
+                    ? L.T("這次還沒經過這個節點。經過時會自動保存「觸發後第一個可存檔的時間點」的狀態。")
+                    : L.T("這次還沒經過這個節點。經過時會自動保存「觸發前最後一個養成回合開始」的狀態（還有行動次數，可以先準備再觸發）。"), _small);
                 return;
             }
             if (KeyNodes.TryParseTrigger(_selected.Source, out int ty, out int tm, out int ts, out string script))
             {
-                string which = _selectedNode.AfterTrigger ? "後第一個可存檔時間點" : "前";
-                GUILayout.Label($"上次在第{ty}年{tm}月{StageShort[ts]}旬觸發（{script}）；下面是觸發{which}的存檔。", _small);
+                GUILayout.Label(_selectedNode.AfterTrigger
+                    ? L.T("上次在第{0}年{1}月{2}旬觸發（{3}）；下面是觸發後第一個可存檔時間點的存檔。", ty, tm, StageShort[ts], script)
+                    : L.T("上次在第{0}年{1}月{2}旬觸發（{3}）；下面是觸發前的存檔。", ty, tm, StageShort[ts], script), _small);
             }
         }
         if (_selected == null)
         {
-            GUILayout.Label("每個月分上／中／下旬三格。點選有存檔的旬查看細節，再按「讀取」回到那個時間點。藍色（或 ▲）是目前所在的旬。格子下方拉線的是關鍵節點，標在事件觸發的旬（灰色＝還沒經過）。", _small);
+            GUILayout.Label(L.T("每個月分上／中／下旬三格。點選有存檔的旬查看細節，再按「讀取」回到那個時間點。藍色（或 ▲）是目前所在的旬。格子下方拉線的是關鍵節點，標在事件觸發的旬（灰色＝還沒經過）。"), _small);
             return;
         }
         TimeEntry entry = _selected;
-        GUILayout.Label($"第{entry.Year}年{entry.Month}月{entry.Stage}　{SceneName(entry.Scene)}　腳本：{entry.Script}", _label);
-        GUILayout.Label($"存檔時間：{entry.SavedAt:yyyy-MM-dd HH:mm}　來源：{Sources.Describe(entry.Source)}", _small);
+        GUILayout.Label(L.T("第{0}年{1}月{2}　{3}　腳本：{4}", entry.Year, entry.Month, entry.Stage, SceneName(entry.Scene), entry.Script), _label);
+        GUILayout.Label(L.T("存檔時間：{0:yyyy-MM-dd HH:mm}　來源：{1}", entry.SavedAt, Sources.Describe(entry.Source)), _small);
         bool canLoad = GameBridge.CanLoad(out string reason);
         GUILayout.BeginHorizontal();
         if (!_confirm)
         {
             GUI.enabled = canLoad;
-            if (GUILayout.Button("讀取這個時間點", _button, GUILayout.Width(200f)))
+            if (GUILayout.Button(L.T("讀取這個時間點"), _button, GUILayout.Width(200f)))
             {
                 if (Plugin.QuickLoad.Value)
                 {
@@ -733,14 +734,14 @@ internal sealed class TimeMachineWindow
         }
         else
         {
-            GUILayout.Label($"目前未存檔的進度會遺失。讀取後，選單的「存檔」仍會寫入目前欄位 {SaveSystem.Instance.CurrentSlot}。確定讀取？", _small);
+            GUILayout.Label(L.T("目前未存檔的進度會遺失。讀取後，選單的「存檔」仍會寫入目前欄位 {0}。確定讀取？", SaveSystem.Instance.CurrentSlot), _small);
             GUI.enabled = canLoad;
-            if (GUILayout.Button("確定讀取", _button, GUILayout.Width(140f)))
+            if (GUILayout.Button(L.T("確定讀取"), _button, GUILayout.Width(140f)))
             {
                 _pendingLoad = entry;
             }
             GUI.enabled = true;
-            if (GUILayout.Button("取消", _button, GUILayout.Width(100f)))
+            if (GUILayout.Button(L.T("取消"), _button, GUILayout.Width(100f)))
             {
                 _confirm = false;
             }
@@ -758,23 +759,23 @@ internal sealed class TimeMachineWindow
     {
         if (!InGame())
         {
-            return "目前在標題畫面";
+            return L.T("目前在標題畫面");
         }
         GameTime time = PlayerStatManagerData.Instance.GameTime;
-        return $"目前：第{time.Year}年{time.Month}月{time.Stage}";
+        return L.T("目前：第{0}年{1}月{2}", time.Year, time.Month, time.Stage);
     }
 
     private static string ModeName(string mode)
     {
-        return mode == TimeStore.ActMode ? "序章" : (mode == TimeStore.MainMode ? "本篇" : mode);
+        return mode == TimeStore.ActMode ? L.T("序章") : (mode == TimeStore.MainMode ? L.T("本篇") : mode);
     }
 
     private static string SceneName(string scene)
     {
         switch (scene)
         {
-            case "Free": return "養成";
-            case "Story": return "劇情";
+            case "Free": return L.T("養成");
+            case "Story": return L.T("劇情");
             default: return scene;
         }
     }

@@ -27,6 +27,7 @@
 | General.QuickLoad | false | 雙擊時間點直接讀取、讀取不再確認 |
 | General.ToggleKey | F6 | 開關時光機視窗（視窗上方可直接改，會檢查和遊戲／其他插件衝突） |
 | General.EventLog | true | 事件紀錄（見第 3 節） |
+| General.Language | zh-TW | 介面語言（zh-TW／ja／ko）：時光機視窗讀 `strings.tsv`；F7 開網頁時帶 `?lang=`。沒翻譯的字顯示繁中 |
 | Guide.Enabled | true | 啟用算命仙網頁 |
 | Guide.Port | 8642 | 網頁連接埠（http://127.0.0.1:8642/）；被佔用就往後試到 +9，都不行時 F7 在時光機視窗顯示原因、不開瀏覽器 |
 | Guide.OpenKey | F7 | 用瀏覽器開網頁 |
@@ -276,11 +277,25 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 更新後    → python -I tools/diff_graph.py data_old_<時間>/graph.json data/graph.json  # 事件條件、劇本分歧、手寫條件用到的旗標有變的，逐項對照 TARGETS／guides.json 改寫
 改規則    → bash tools/rebuild_guide.sh  # 發布版；build_graph.py → data/graph.json → render_preview.py → 安裝到遊戲（--save 用自己的已讀）
 改 Mod    → cd TimeMachine && dotnet build -c Release，複製 bin/Release/LOM_TimeMachine.dll 到 BepInEx/plugins/LOM_TimeMachine/
+改文字    → python -I tools/i18n.py extract → export → 改 i18n/strings.xlsx → import → bash tools/rebuild_guide.sh
 ```
 
 - `data/`、`preview/` 不進 git（遊戲文字、可重建）。
 - 遊戲資產字串是 Big5 誤存，UnityPy 讀出會亂碼：一律用在地化文字或 ASCII 名稱。
 - 存檔旗標：`tools/SaveDump`（`SaveDump.exe <存檔> [旗標前綴...]`）。
+
+### 多語言（時光機＋算命仙）
+
+- 範圍：時光機視窗（F6）、算命仙網頁（F7）的介面文字，含 `guides.json` 與 `TARGETS` 的手寫條件。遊戲本身的文字（事件名稱、角色名、台詞、選項）不在內；日誌、事件紀錄、設定檔說明維持繁中。
+- gettext 式：key 就是繁中原文。網頁 `T("原文{0}…", 參數)`、C# `L.T("原文{0}…", 參數)`；`{0}{1}` 是填進去的值（句型模板），改寫／翻譯時保留、順序可換。
+- 主檔 `i18n/strings.json`（進 git）：每筆 `zh-TW`（改寫後的繁中）、`ja`、`ko`、`note`，以及 extract 自動填的 `group`（web／guide／mod）、`where`、`vars`。空的就顯示原文。原文從程式消失但有內容的標 `unused`，不刪。
+- Excel `i18n/strings.xlsx` 只是編輯用（不進 git）：分頁「算命仙網頁／結緣與其他條件／時光機視窗」；`import` 會檢查 `{n}` 參數與 HTML 標籤數是否和原文一致。Excel 存不了控制字元，` ` 寫成文字、匯回時還原。
+- 網頁：`render_preview.py` 把有內容的條目嵌進 `<script id="i18n">`；語言順序 `?lang=` → 偏好 `wukuai.prefs.lang` → zh-TW。固定 HTML（分頁名、勾選項、title／placeholder）由 `i18nStatic` 換。說明頁有語言選單。
+- Mod：`rebuild_guide.sh` 用 `i18n.py tsv` 產生 `BepInEx/plugins/LOM_TimeMachine/strings.tsv`（發布時一起打包）。`L.Load` 在 `Plugin.Awake` 最前面，關鍵節點名稱等靜態字串才吃得到。
+- 規則：
+  - 顯示文字一律包 `T()`；內部條件格式（`旗標 X = 1 且 …`、`以上皆非（不是：…）`、`好感·X`、`還沒選過「X」`、`（無條件）` 等 build_graph 產生、JS 再改寫的字）保持原文不包。
+  - 不要用正規表示式比對網頁自己產生的顯示文字（翻譯後會對不上）：產生時記下種類（`choiceText`／`battleText` → `CHOICE_NAME`、`CHOICE_LABEL`、`BATTLE_TEXTS`），或用 `T()` 的結果比對（`tHead`、`needTail`）。
+  - 一句一個 `T()`，不要把整頁 HTML 包成一個（說明頁就是逐句拆開的）。
 
 ### build_graph.py 常改的表
 

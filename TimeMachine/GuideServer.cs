@@ -74,7 +74,7 @@ internal sealed class GuideServer
                 Plugin.Log.LogWarning($"[Guide] 連接埠 {port} 無法使用：{e.Message}");
             }
         }
-        StartError = $"算命仙網頁沒辦法啟動：連接埠 {basePort}～{basePort + 9} 都被其他程式佔用。請在 BepInEx\\config 的設定檔改 Guide.Port 後重開遊戲。";
+        StartError = L.T("算命仙網頁沒辦法啟動：連接埠 {0}～{1} 都被其他程式佔用。請在 BepInEx\\config 的設定檔改 Guide.Port 後重開遊戲。", basePort, basePort + 9);
         Plugin.Log.LogError("[Guide] " + StartError);
     }
 
@@ -263,7 +263,7 @@ internal sealed class GuideServer
     {
         if (!File.Exists(file))
         {
-            Write(context, "找不到頁面檔案：" + file, "text/plain; charset=utf-8");
+            Write(context, L.T("找不到頁面檔案：") + file, "text/plain; charset=utf-8");
             return;
         }
         byte[] bytes = File.ReadAllBytes(file);
@@ -509,7 +509,7 @@ internal sealed class GuideServer
         string[] parts = key.Split('|');
         if (parts.Length != 4 || !int.TryParse(parts[1], out int y) || !int.TryParse(parts[2], out int m) || !int.TryParse(parts[3], out int s))
         {
-            return "格式錯誤";
+            return L.T("格式錯誤");
         }
         if (!GameBridge.CanLoad(out string reason))
         {
@@ -518,7 +518,7 @@ internal sealed class GuideServer
         string path = TimeStore.PathFor(parts[0], y, m, (MonthStageType)s);
         if (!File.Exists(path))
         {
-            return "沒有這一旬的時光機存檔";
+            return L.T("沒有這一旬的時光機存檔");
         }
         try
         {
@@ -530,7 +530,7 @@ internal sealed class GuideServer
         catch (Exception e)
         {
             Plugin.Log.LogError($"[Guide] 讀檔失敗：{e}");
-            return "讀檔失敗：" + e.Message;
+            return L.T("讀檔失敗：") + e.Message;
         }
     }
 }

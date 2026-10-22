@@ -33,12 +33,12 @@ internal static class GameBridge
         SceneController sceneController = SceneController.Instance;
         if (sceneController == null)
         {
-            reason = "遊戲尚未就緒";
+            reason = L.T("遊戲尚未就緒");
             return false;
         }
         if (sceneController.IsPrepare || sceneController.IsLoading)
         {
-            reason = "場景載入中，請稍候";
+            reason = L.T("場景載入中，請稍候");
             return false;
         }
         reason = null;
