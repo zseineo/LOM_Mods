@@ -42,8 +42,6 @@ public class Plugin : BaseUnityPlugin
         _window = new TimeMachineWindow();
         Harmony.CreateAndPatchAll(typeof(CapturePatches), GUID);
         Harmony.CreateAndPatchAll(typeof(EventLogPatches), GUID + ".eventlog");
-        Cheats.Bind(Config);
-        Harmony.CreateAndPatchAll(typeof(Cheats), GUID + ".cheats");
         if (GuideEnabled.Value)
         {
             string pageDir = Path.Combine(Path.GetDirectoryName(Info.Location), "guide");

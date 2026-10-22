@@ -39,7 +39,6 @@ internal sealed class GuideServer
     // 遊戲目前的已讀台詞鍵（ReadStorySystem 的字典，依加入順序）：主執行緒在數量變了時重新拍一份
     private static readonly FieldInfo ReadIndexField = AccessTools.Field(typeof(ReadStorySystem), "_dicStoryIndex");
     private volatile string[] _readKeys = new string[0];
-    private volatile string _relsJson = "[]";
 
     // 直接寫 127.0.0.1：Mono 的 HttpListener 解析不到 localhost 時會改聽所有網路介面
     internal string Url => $"http://127.0.0.1:{_port}/";
@@ -101,7 +100,6 @@ internal sealed class GuideServer
         {
             BuildIcons();
         }
-        Cheats.RunPending();
         bool active = DateTime.UtcNow.Ticks - Interlocked.Read(ref _lastRequestTicks) < TimeSpan.FromSeconds(10).Ticks;
         if (!active || Time.unscaledTime < _nextSnapshot)
         {
@@ -116,10 +114,6 @@ internal sealed class GuideServer
             }
             _stateJson = BuildState();
             _timeMachineJson = BuildTimeMachineList();
-            if (SceneController.Instance != null && SceneController.Instance.CurrentScene != GameBridge.TitleScene)
-            {
-                _relsJson = Cheats.RelationshipsJson();
-            }
             // 地點隨機事件的目前權重：只有網頁正在看「唐門地點事件」時才算
             if (DateTime.UtcNow.Ticks - Interlocked.Read(ref _lastPositionsRequestTicks) < TimeSpan.FromSeconds(10).Ticks)
             {
@@ -219,45 +213,6 @@ internal sealed class GuideServer
                 return;
             case "/api/lastload":
                 Write(context, "{\"result\":" + Json.Str(_lastLoadResult) + "}", "application/json; charset=utf-8");
-                return;
-            case "/api/rels":
-                Write(context, _relsJson, "application/json; charset=utf-8");
-                return;
-            case "/api/rel":
-                // 中文角色名：自己解碼，不靠 QueryString 的預設編碼
-                Dictionary<string, string> q = new Dictionary<string, string>();
-                foreach (string pair in context.Request.Url.Query.TrimStart('?').Split('&'))
-                {
-                    int eq = pair.IndexOf('=');
-                    if (eq > 0)
-                    {
-                        q[pair.Substring(0, eq)] = Uri.UnescapeDataString(pair.Substring(eq + 1));
-                    }
-                }
-                q.TryGetValue("key", out string relKey);
-                q.TryGetValue("set", out string relSet);
-                q.TryGetValue("add", out string relAdd);
-                q.TryGetValue("meet", out string relMeet);
-                q.TryGetValue("flag", out string relFlag);
-                if (context.Request.HttpMethod != "POST" || !Cheats.QueueRelationship(relKey ?? "", relSet, relAdd, relMeet == "1", relFlag))
-                {
-                    context.Response.StatusCode = 400;
-                    context.Response.Close();
-                    return;
-                }
-                Write(context, "{\"queued\":true}", "application/json; charset=utf-8");
-                return;
-            case "/api/cheats":
-                Write(context, Cheats.Json(), "application/json; charset=utf-8");
-                return;
-            case "/api/cheat":
-                if (context.Request.HttpMethod != "POST" || !Cheats.Set(context.Request.QueryString["id"] ?? "", context.Request.QueryString["on"] == "1"))
-                {
-                    context.Response.StatusCode = 400;
-                    context.Response.Close();
-                    return;
-                }
-                Write(context, Cheats.Json(), "application/json; charset=utf-8");
                 return;
             case "/api/readkeys":
                 // 從第 from 個開始的已讀台詞鍵；數量比 from 少（重新讀了已讀紀錄）就從頭給、標 reset

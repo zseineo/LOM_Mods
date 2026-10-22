@@ -8,11 +8,12 @@
 
 | Mod | 資料夾 | 版本 | 用途 |
 |---|---|---|---|
-| LOM TimeMachine | `TimeMachine/` | 0.8.0 | 時光機存檔（F6）＋「算命仙」網頁（F7）＋事件紀錄＋作弊 |
+| LOM TimeMachine | `TimeMachine/` | 0.8.0 | 時光機存檔（F6）＋「算命仙」網頁（F7）＋事件紀錄 |
+| LOM Cheats | `Cheats/` | 0.1.0 | 作弊視窗（F9）：決策時顯示全部選項、好感與結識 |
 | LOM CombatSpeed | `CombatSpeed/` | 0.1.0 | 戰鬥加速倍率（設定 `General.SpeedMultiplier`，預設 x6） |
 | LOM DialogTweaks | `DialogTweaks/` | 0.1.0 | 滾輪下一句（`General.WheelNext`）、F8 自動跳過已讀（`AutoSkip.*`） |
 
-快捷鍵：遊戲本身沒有用 F 鍵。SaveSlotExpander 用 F2／F3，時光機 F6／F7，DialogTweaks F8。
+快捷鍵：遊戲本身沒有用 F 鍵。SaveSlotExpander 用 F2／F3，時光機 F6／F7，DialogTweaks F8，Cheats F9。
 
 ---
 
@@ -29,7 +30,6 @@
 | Guide.Enabled | true | 啟用算命仙網頁 |
 | Guide.Port | 8642 | 網頁連接埠（http://127.0.0.1:8642/）；被佔用就往後試到 +9，都不行時 F7 在時光機視窗顯示原因、不開瀏覽器 |
 | Guide.OpenKey | F7 | 用瀏覽器開網頁 |
-| Cheat.ShowAllDecisions | false | 見第 4 節作弊 |
 
 ### 存檔位置與檔名
 
@@ -79,7 +79,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 ### API（GuideServer.cs）
 
 遊戲資料一律在主執行緒（`Tick()`）讀取，HTTP 執行緒只回傳快照。中文參數自己從 `Url.Query` 解碼。
-只聽 127.0.0.1（不寫 localhost：Mono 解析失敗會改聽所有介面）。Host 不是 `127.0.0.1:<port>` 的請求、Origin 不是本網頁的 POST 一律 403（擋其他網站偷送讀檔／作弊請求、DNS rebinding）。
+只聽 127.0.0.1（不寫 localhost：Mono 解析失敗會改聽所有介面）。Host 不是 `127.0.0.1:<port>` 的請求、Origin 不是本網頁的 POST 一律 403（擋其他網站偷送讀檔、強制地點事件的請求、DNS rebinding）。
 
 | 路徑 | 說明 |
 |---|---|
@@ -91,8 +91,6 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 | `/api/force`（POST） | 地點事件強制觸發開關（ForcedDraws） |
 | `/api/readkeys?from=N` | 遊戲已讀台詞鍵（增量） |
 | `/api/icons`、`/api/icon?name=` | 角色頭像（從遊戲 sprite 轉 PNG，不存檔） |
-| `/api/cheats`、`/api/cheat`（POST） | 作弊開關 |
-| `/api/rels`、`/api/rel`（POST） | 好感一覽、改好感／設成已結識 |
 
 ### 分頁
 
@@ -104,7 +102,6 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 | 其他條件 | 其他目標（`build_graph.py` 的 `TARGETS`；`brief` 只列條件／步驟，不附詳細追溯） |
 | 說明（點左上角「算命仙」，不是分頁） | 版本（頁面資料的遊戲版本與建立時間 vs 目前遊戲版本、Mod 版本，不同時警告）、Mod 功能簡介、✓／✗ 的意思、五塊錢未讀怎麼算與標記 |
 | ▸ 流程圖 | 預設分段的直式時間軸（見下）；「全部（大圖）」是原本的橫向大圖。點事件看觸發條件、劇情分支 |
-| ▸ 作弊 | 見第 4 節 |
 
 上方開關：「防雷」（未讀內容模糊）、「列入差分」、「顯示腳本推算時間」；篩選器狀態記在瀏覽器 localStorage。
 切換分頁、選事件會記進瀏覽器歷史（含捲動位置），可用上一頁／下一頁。遊戲版本：`refresh_data.sh` 從 PlayerSettings.bundleVersion 記到 `data/game_version.txt`；Mod 的 `/api/state` 回報 `gameVersion`（Application.version）、`modVersion`。
@@ -189,7 +186,9 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 
 ---
 
-## 4. 作弊（F7 ▸ 作弊）
+## 4. LOM Cheats：作弊（F9）
+
+獨立的 Mod（2026-10-22 從時光機拆出來，使用者決定），不依賴時光機；遊戲內視窗，`General.ToggleKey` 預設 F9。地點事件的「強制」仍留在算命仙。
 
 - **決策時顯示全部選項**（`Cheat.ShowAllDecisions`）：滿足西武林盟條件時遊戲會藏起「戰他娘親」「退隱江湖」，開了就照樣顯示。
 - **好感與結識**：任意角色好感 ±1／±10／設成指定值（0～100）；「設成已結識」＝人際關係顯示＋把「認識 X」旗標（G1000x／G300xx）設成 1。改完約 1 秒後更新，記得存檔。
