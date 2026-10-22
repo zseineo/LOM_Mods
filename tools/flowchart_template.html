@@ -63,6 +63,14 @@ body.arcmode #canvas { display: none; }
 /* 右側欄寬度：拖拉中間的分隔線，或按 ½／¾ */
 #splitter { width: 6px; cursor: col-resize; background: transparent; flex: 0 0 6px; margin-right: -6px; z-index: 5; }
 #splitter:hover, #splitter.drag { background: rgba(233,135,91,.35); }
+/* 右側欄開合：點事件才展開，✕／Esc 收起，收起後右邊緣「◂」再打開 */
+body.dclosed #detail, body.dclosed #splitter { display: none; }
+#detail > h2:first-child { padding-right: 30px; }
+#dclose { position: fixed; right: 14px; z-index: 6; display: none; background: var(--panel); border: 1px solid var(--line); color: var(--muted); border-radius: 6px; width: 26px; height: 26px; cursor: pointer; font: inherit; }
+#dclose:hover, #dopen:hover { color: var(--accent); border-color: var(--accent); }
+body:not(.dclosed) #dclose { display: block; }
+#dopen { position: fixed; right: 0; top: 45%; z-index: 6; display: none; background: var(--panel); border: 1px solid var(--line); border-right: 0; color: var(--muted); border-radius: 6px 0 0 6px; padding: 10px 4px; cursor: pointer; font: inherit; writing-mode: vertical-rl; }
+body.dclosed.dhas #dopen { display: block; }
 /* 劇情流程圖 */
 .ftools { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 2px 0 8px; font-size: 12px; }
 .ftools button { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 12px; padding: 0 10px; cursor: pointer; font: inherit; }
@@ -248,7 +256,7 @@ body.show-time .stime { display: inline; }
 @media (max-width: 760px) { main { flex-direction: column; } #detail { width: auto; max-width: none; height: 45vh; border-left: 0; border-top: 1px solid var(--line); } }
 </style>
 </head>
-<body class="spoil">
+<body class="spoil dclosed">
 <header>
   <h1 id="brand" title="說明與版本">算命仙</h1>
   <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabMore" title="展開更多分頁">▸</button><button id="tabChart" class="extra">流程圖</button></span>
@@ -269,6 +277,8 @@ body.show-time .stime { display: inline; }
   <div id="splitter" title="拖拉調整寬度；雙擊在 1/2 和 3/4 間切換"></div>
   <aside id="detail"><p class="empty">點選左側事件查看觸發條件、選項分支與結果。<br>點月份標題：遊戲內版本會讀取該月的時光機存檔。</p></aside>
 </main>
+<button id="dclose" title="收起右側欄（Esc）">✕</button>
+<button id="dopen" title="打開右側欄">◂ 詳細</button>
 <div id="flagpop"></div>
 <script id="data" type="application/json">__DATA__</script>
 <script id="guides" type="application/json">__GUIDES__</script>
@@ -1185,7 +1195,18 @@ body.show-time .stime { display: inline; }
     const hits = sets.filter(x => sat(x.v, op, n) && x.v !== 0);
     if (hits.length) return T("已{0}", originList(hits));
     const misses = sets.filter(x => !sat(x.v, op, n) && x.v !== 0);
-    if (sat(0, op, n) && misses.length) return T("沒有{0}", originList(misses));
+    if (sat(0, op, n) && misses.length) {
+      // 這個事件自己的劇情裡設的＝做過這個事件：除了地點事件，事件本來就不會重複，不寫（由 dropSelfGuards 拿掉）
+      const others = onceEvent(ctx) ? misses.filter(x => !ctx.scripts.includes(x.s)) : misses;
+      if (!others.length) return T("這個事件還沒發生過");
+      // 別的事件有兩段以上的劇情都會設（做完那個事件的記號）：寫成「沒有觸發過「X」」，不逐一列選項
+      const byEv = new Map();
+      others.forEach(x => { if (x.ev) byEv.set(x.ev, (byEv.get(x.ev) || new Set()).add(x.s)); });
+      const whole = [...byEv].filter(([, ss]) => ss.size >= 2).map(([id]) => byId.get(id.toLowerCase())).filter(Boolean);
+      const rest = others.filter(x => !whole.some(ev => ev.id === x.ev));
+      const evText = ev => T("觸發過「{0}」", evShort(ev)) + (ev.time && valid(ev.time.from) && !(NAME_COUNT.get(evShort(ev)) >= 3) ? `（${tstr(ev.time.from)}）` : '');
+      return T("沒有{0}", [...whole.map(evText), ...(rest.length ? [originList(rest)] : [])].join(T("，也沒有")));
+    }
     if (note) return notePhrase(noteHead(f), op, val) || `${noteHead(f)}${op}${val}`;
     if (!all.length) return sat(0, op, n) ? T("（劇本中沒有地方會改它，一定成立）") : T("（劇本中沒有地方會設定它，實際上不會成立）");
     return T("劇情記錄 {0} {1}", op, val);
@@ -1195,8 +1216,21 @@ body.show-time .stime { display: inline; }
   function plainCondText(text, ctx, near) {
     if (phraseDepth >= 2) return text;
     phraseDepth++;
-    try { return tidy(String(text).replace(/旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) (-?\d+)/g, (m, f, op, v) => flagPhrase(f, op, v, ctx, near))); }
+    try { return tidy(dropSelfGuards(String(text), ctx).replace(/旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) (-?\d+)/g, (m, f, op, v) => flagPhrase(f, op, v, ctx, near))); }
     finally { phraseDepth--; }
+  }
+  // 「且」裡面事件自己做完會設的旗標（= 0 才觸發）：事件本來就不會重複，「這個事件還沒發生過」不寫；地點事件會重複，照寫
+  // 只會發生一次的事件：不是地點事件、也不是同名好幾個的（每月的唐門會議）
+  const onceEvent = ctx => !!(ctx && ctx.scripts && ctx.id && !ctx.pos && !(NAME_COUNT.get(evShort(ctx)) >= 2));
+  function dropSelfGuards(text, ctx) {
+    if (!onceEvent(ctx)) return text;
+    const ands = splitTop(text, ' 且 ');
+    if (ands.length < 2) return text;
+    const keep = ands.filter(a => {
+      const m = a.trim().match(/^旗標 ([A-Za-z0-9_]+)(?:（[^）]*）)? (=|≠|<|≤|>|≥) (-?\d+)$/);
+      return !m || flagPhrase(m[1], m[2], m[3], ctx) !== T("這個事件還沒發生過");
+    });
+    return keep.length ? keep.join(' 且 ') : text;
   }
   // 遊戲目前做不到的旗標（和 build_graph.py 的 NEVER_FLAGS 一致）：條件裡「或 X」一定不成立的選項、「且 X」一定成立的部分不寫
   const NEVER_FLAGS = {G11001: 0, G11007: 0, G11008: 0, Demo: 0, Prologue: 0};
@@ -1245,7 +1279,7 @@ body.show-time .stime { display: inline; }
   }
   const MAYBE_TAG = T("<span class=\"maybe\" title=\"劇本裡找不到把這個旗標設成需要的值的地方；遊戲程式也可能會設，所以只是可能\">⚠可能無法達成</span>");
   function plainCondHtml(text, ctx, near) {
-    text = String(text).trim().replace(/^（(.*)）$/, '$1');
+    text = dropSelfGuards(String(text).trim().replace(/^（(.*)）$/, '$1'), ctx);
     const pruned = pruneNever(text);
     if (pruned.val === null) text = pruned.text;
     // 「且」連起來、比同一個數值的上下限：合成範圍
@@ -1741,6 +1775,7 @@ body.show-time .stime { display: inline; }
     return T("　對手：<span class=\"{0}\">{1}</span>", fought ? '' : 'unreadtxt', esc(enemy));
   }
   function renderDetail(e, focus) {
+    openDetail();
     const t = e.time;
     let when = T("不限時間");
     if (t && t.type === 'at' && valid(t.from)) when = tstr(t.from);
@@ -1859,6 +1894,7 @@ body.show-time .stime { display: inline; }
     return `<div class="script">${stime(s) ? `<div class="sname"><span>${stime(s)}</span></div>` : ''}${body}</div>`;
   }
   function showScript(s, focus) {
+    openDetail();
     const owner = G.events.find(e => e.scripts.includes(s));
     const need = focus ? `<h3>${focusHead(focus)}</h3><div class="pt bond">${entryHtml(focus) ? T("在這段劇情裡要：") + entryHtml(focus) : T("進到這段劇情就會設，不用選特定選項。")}</div>` : '';
     const ur = hasUnread(s) ? T("　·　<span class=\"golink\" data-ur=\"{0}\">到五塊錢看沒讀到的台詞 ›</span>", esc(s)) : '';
@@ -2546,13 +2582,26 @@ body.show-time .stime { display: inline; }
   function routeText(r, ctx) {
     r = mergeRoute(r, ctx);
     // 已經走過的分支（那段台詞讀過）是已滿足的步驟，省略；養成選單的地點、所在事件一律保留
-    const keep = r.filter(x => x.hub || x.ev || x.pos || !x.done);
+    let keep = r.filter(x => x.hub || x.ev || x.pos || !x.done);
+    // 最後一個動作（去哪、選什麼）之後的條件另起一行「條件：…」，不接在箭頭後面
+    let tail = '';
+    const last = keep[keep.length - 1];
+    if (last && !last.ev && !last.pos && !last.hub && !last.done && (last.path || []).length) {
+      const labels = last.path.slice(), conds = [];
+      const isCond = l => { const p = stepPart(l); return !p || p.kind === 'cond'; };
+      while (labels.length && isCond(labels[labels.length - 1])) conds.unshift(labels.pop());
+      if (conds.length && (labels.length || keep.length > 1)) {
+        tail = [...new Set(conds.map(l => pathHtml([l], ctx, last.from)).filter(Boolean))].join('、');
+        keep = labels.length ? [...keep.slice(0, -1), {...last, path: labels}] : keep.slice(0, -1);
+      }
+    }
     // 同一句條件在路線上重複出現（選單來回進出）只寫第一次
     const raw = keep.map(x => stepHtml(x, ctx));
     const parts = [...new Set(raw.filter(Boolean))];
-    const skipped = r.length - keep.length;
-    if (!parts.length || raw.every((p, i) => !p || keep[i].ev || keep[i].pos)) return skipped ? T("<span class=\"need\">（{0}，要看當下的條件或擲骰）</span>", T("路線上的選擇都走過了")) : '';
-    return (skipped ? T("<span class=\"need\" title=\"已經走過的 {0} 個步驟\">（已走過 {1} 步）</span> → ", skipped, skipped) : '') + parts.join(' → ');
+    const skipped = r.filter(x => !(x.hub || x.ev || x.pos || !x.done)).length;
+    if (!tail && (!parts.length || raw.every((p, i) => !p || keep[i].ev || keep[i].pos))) return skipped ? T("<span class=\"need\">（{0}，要看當下的條件或擲骰）</span>", T("路線上的選擇都走過了")) : '';
+    return (skipped ? T("<span class=\"need\" title=\"已經走過的 {0} 個步驟\">（已走過 {1} 步）</span> → ", skipped, skipped) : '') + parts.join(' → ')
+      + (tail ? (parts.length ? '<br>' : '') + T("條件：{0}", tail) : '');
   }
   // 一條路線拆成「要做的事」（選項、擲骰、戰鬥、到哪個事件／地點）和「要符合的條件」
   function compactRoute(r, ctx) {
@@ -3027,6 +3076,18 @@ body.show-time .stime { display: inline; }
     window.addEventListener('mouseup', () => { if (!drag) return; drag = false; sp.classList.remove('drag'); if (selected && PREFS.plotView !== 'text') renderDetail(byId.get(selected)); });
     sp.addEventListener('dblclick', () => { setDetailWidth(window.innerWidth * ((PREFS.detailW || 0.5) > 0.6 ? 0.5 : 0.75)); if (selected) renderDetail(byId.get(selected)); });
   }
+  // ---- 右側欄開合：要寫內容進去的地方先打開（流程圖要量寬度）；✕／Esc 收起 ----
+  function openDetail(open = true) {
+    document.body.classList.toggle('dclosed', !open);
+    if (!open) return;
+    document.body.classList.add('dhas');
+    document.getElementById('dclose').style.top = detail.getBoundingClientRect().top + 8 + 'px';
+  }
+  document.getElementById('dclose').onclick = () => openDetail(false);
+  document.getElementById('dopen').onclick = () => openDetail();
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape' && !document.body.classList.contains('dclosed') && !/^(INPUT|SELECT|TEXTAREA)$/.test(ev.target.tagName)) openDetail(false);
+  });
   // ---- 瀏覽器上一頁／下一頁：切換分頁、選事件都記一筆（連同捲動位置），按上一頁回到前一個畫面 ----
   let navRestoring = true;
   function navPush(st) {
@@ -3105,8 +3166,9 @@ body.show-time .stime { display: inline; }
   document.getElementById('showHidden').addEventListener('change', renderRomance);
 
   async function showMonth(mc) {
+    openDetail();
     const title = mc.title.split('：')[0];
-    const [y, m] = title.match(/\d+/g).map(Number);
+    const [y, m] = mc.dataset.ym.split('-').map(Number);
     if (!ONLINE || !LIVE) { detail.innerHTML = T("<h2>{0}</h2><p class=\"empty\">沒有連到遊戲。用遊戲內的 F7 開啟這個頁面，就能在這裡讀取時光機存檔。</p>", esc(title)); return; }
     let list = [];
     try { list = await (await fetch('/api/timemachine', {cache: 'no-store'})).json(); } catch (e) {}
