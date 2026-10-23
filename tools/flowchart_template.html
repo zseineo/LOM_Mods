@@ -1078,8 +1078,8 @@ body.show-time .stime { display: inline; }
   }
   let phraseDepth = 0;
   function flagPhrase(f, op, val, ctx, near) {
-    // 序章旗標只有試玩版會設成 1
-    if (f === 'Prologue') return sat(0, op, Number(val)) ? T("（正式版一定成立）") : T("試玩版序章（正式版不會出現）");
+    // 序章旗標：序章倒敘（「掌門的安排」選「能不能不用努力就變厲害。」）期間是 1，其他時候都是 0
+    if (f === 'Prologue') return sat(0, op, Number(val)) ? T("不是序章倒敘時") : T("序章倒敘中（「掌門的安排」選「能不能不用努力就變厲害。」）");
     if (f === 'Demo') return sat(0, op, Number(val)) ? T("（正式版一定成立）") : T("試玩版（正式版不會出現）");
     const bond = bondPhrase(f, op, val);
     if (bond) return bond;
@@ -1237,7 +1237,7 @@ body.show-time .stime { display: inline; }
     return keep.length ? keep.join(' 且 ') : text;
   }
   // 遊戲目前做不到的旗標（和 build_graph.py 的 NEVER_FLAGS 一致）：條件裡「或 X」一定不成立的選項、「且 X」一定成立的部分不寫
-  const NEVER_FLAGS = {G11001: 0, G11007: 0, G11008: 0, Demo: 0, Prologue: 0};
+  const NEVER_FLAGS = {G11001: 0, G11007: 0, G11008: 0, Demo: 0};
   function splitTop(t, sep) {
     const out = [];
     let depth = 0, cur = '';
@@ -1793,7 +1793,7 @@ body.show-time .stime { display: inline; }
     const head = full.length > 40 ? full.slice(0, 40) + '…' : full;
     let html = `<h2>${esc(head)}</h2>
       <div class="meta">${esc(e.main ? T("主線") : T("支線"))}${e.active ? '' : T("（停用）")}　·　${read}${routeTag(e)}${e.wikiPath ? `　·　<a href="https://smilin.net/LoM-wiki/event/simple/${encodeURIComponent(e.wikiPath)}.html" target="_blank" rel="noopener">wiki</a>` : ''}${e.devDesc ? T("　·　遊戲內名稱：{0}", esc(e.devDesc)) : ''}</div>
-      <div><span class="chip">🕒 ${esc(when)}</span>${e.place ? `<span class="chip">🏯 ${esc(e.place)}</span>` : ''}${e.pos ? T("<span class=\"chip\">📍 到「{0}」觸發</span>", esc(e.pos)) : e.part ? T("<span class=\"chip\">接續前一段劇情</span>") : T("<span class=\"chip\">時間到自動觸發</span>")}</div>`;
+      <div><span class="chip">🕒 ${esc(when)}${e.storyTime && e.storyTime.from ? T("（序章倒敘，劇中是{0}）", tstr(e.storyTime.from)) : ''}</span>${e.place ? `<span class="chip">🏯 ${esc(e.place)}</span>` : ''}${e.pos ? T("<span class=\"chip\">📍 到「{0}」觸發</span>", esc(e.pos)) : e.part ? T("<span class=\"chip\">接續前一段劇情</span>") : T("<span class=\"chip\">時間到自動觸發</span>")}</div>`;
     html += T("<h3>觸發條件</h3>") + (e.part ? T("<div class=\"cond\">接續 {0}</div>", partFromHtml(e)) : e.conds.length ? e.conds.map(c => `<div class="cond">${plainCondHtml(c, e)}</div>`).join('') : T("<div class=\"empty\">時間到就觸發</div>"));
     // 自由行動選單：每個留學事件結束都會回來，不用列從哪裡進
     if (e.note) html += `<div class="when">※ ${esc(e.note)}</div>`;
@@ -2558,7 +2558,7 @@ body.show-time .stime { display: inline; }
       if (labelAlways(u.label)) continue;
       const text = pathHtml([u.label], ctx, u.x.from).replace(/<[^>]+>/g, '');
       const bare = text.replace(/^[✓✗]/, '');
-      if (bare === T("（這段劇情裡一定成立）") || bare === T("（正式版一定成立）")) continue;
+      if (bare === T("（這段劇情裡一定成立）") || bare === T("（正式版一定成立）") || bare === T("不是序章倒敘時")) continue;
       const echo = bare.startsWith(tHead("先前{0}{1}")) ? CHOICE_LABEL.get(bare.slice(tHead("先前{0}{1}").length)) : null;
       if (echo && seen.some(t => t.includes(`「${echo}」`))) continue;
       seen.push(text);

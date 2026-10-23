@@ -807,6 +807,30 @@ def strip_legend_keys(node):
 
 strip_legend_keys(script_info)
 
+# 走不到的跳轉（使用者確認拿掉）：假字據結尾「A00001 ≠ 0 就回江陵選單」是從「小竹在江陵」複製來的，在唐門走不到
+DEAD_JUMPS = {("s0101_01", "ch3_6_1_break_01")}
+
+
+def drop_dead(name, items):
+    out = []
+    for it in items:
+        if it["t"] == "branch":
+            brs = [br for br in it["branches"] if not any(x["t"] == "next" and (name, x["s"].lower()) in DEAD_JUMPS for x in br["items"])]
+            for br in brs:
+                br["items"] = drop_dead(name, br["items"])
+            # 只剩一個分支：判斷本身沒意義了，直接接在後面
+            if len(brs) == 1 < len(it["branches"]):
+                out.extend(brs[0]["items"])
+                continue
+            it = dict(it, branches=brs)
+        out.append(it)
+    return out
+
+
+for _name in {n for n, _ in DEAD_JUMPS}:
+    if _name in script_info:
+        script_info[_name]["items"] = drop_dead(_name, script_info[_name]["items"])
+
 
 def next_scripts(name):
     out = []
@@ -1609,9 +1633,9 @@ def label_constraints(label):
     return out
 
 
-# 遊戲目前做不到的旗標（使用者確認）：瑞杏、上官螢、魏菊沒有實裝結緣；試玩版（序章）
+# 遊戲目前做不到的旗標（使用者確認）：瑞杏、上官螢、魏菊沒有實裝結緣；試玩版（序章倒敘正式版也走得到，不算）
 # 要它們不是 0 的條件、路線、事件、地點事件結果都不列
-NEVER_FLAGS = {"G11001": 0, "G11007": 0, "G11008": 0, "Demo": 0, "Prologue": 0}
+NEVER_FLAGS = {"G11001": 0, "G11007": 0, "G11008": 0, "Demo": 0}
 
 
 def split_top(text, sep):
@@ -2730,6 +2754,24 @@ for e in events:
 for e in events:
     if e["id"] in untimed_start and e["time"] and e["time"].get("from", {}).get("y", 0) >= 1:
         trace_chain(e["start"], e["time"]["from"], cuts={})
+# 序章倒敘：「掌門的安排」（第1年6月上旬）選「能不能不用努力就變厲害。」進 ch0_1，劇中時鐘跳到第3年11月，
+# 演完 ch0_6 設回第1年6月上旬。玩家是在第1年6月看到的：流程圖放在那裡，劇中時間另外記
+PROLOGUE_AT = {"y": 1, "m": 6, "s": 1}
+for e in events:
+    if any(re.search(r"旗標 Prologue = 1(?!\d)", c) for c in e["conds"]):
+        e["storyTime"] = e["time"]
+        e["time"] = {"type": "at", "from": PROLOGUE_AT}
+        for sc in e["scripts"]:
+            script_time[sc] = PROLOGUE_AT
+for sc in script_time:
+    if sc.startswith("ch0_"):
+        script_time[sc] = PROLOGUE_AT
+# 同一旬裡排在「掌門的安排」後面、照劇中時間順序（流程圖同一格依事件順序列）
+_pro = sorted((e for e in events if e.get("storyTime")), key=lambda e: (e["storyTime"]["from"]["y"], e["storyTime"]["from"]["m"], e["storyTime"]["from"]["s"]) if e["storyTime"] else (99, 0, 0))
+if _pro:
+    events[:] = [e for e in events if not e.get("storyTime")]
+    _at = next((i for i, e in enumerate(events) if "ch0_1" in e["scripts"]), len(events) - 1)
+    events[_at + 1:_at + 1] = _pro
 
 # ---------- 限定路線 ----------
 # 劇情分岔的旗標（開發備註逐行寫了各數值的意思）：事件要求其中一個值，就是限定那條路線。
