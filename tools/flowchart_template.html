@@ -28,7 +28,11 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
 body { background: var(--bg); color: var(--ink); font: 14px/1.5 "Microsoft JhengHei UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif; display: flex; flex-direction: column; }
-header { padding: 10px 16px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; background: var(--panel); }
+header { padding: 10px 16px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; background: var(--panel); position: relative; }
+/* 問題回報：右上，勾選列的下方 */
+#report { position: absolute; right: 16px; bottom: 8px; font-size: 12px; padding: 2px 10px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted); text-decoration: none; background: var(--bg); }
+#report:hover { color: var(--accent); border-color: var(--accent); }
+@media (max-width: 760px) { #report { position: static; } }
 header h1 { font-size: 17px; margin: 0; letter-spacing: .05em; cursor: pointer; }
 header h1.on { color: var(--accent); }
 header .stats { color: var(--muted); font-size: 12px; }
@@ -271,6 +275,7 @@ body.show-time .stime { display: inline; }
   <label class="chartonly"><input type="checkbox" id="onlyChoice">只看有選項的事件</label>
   <label class="chartonly">分組 <select id="groupBy"><option value="place">劇情地點</option><option value="romance">結緣線</option></select></label>
   <label id="hiddenToggle" style="display:none"><input type="checkbox" id="showHidden">顯示隱藏的角色</label>
+  <a id="report" href="https://forms.gle/W72pb44DnDHVd3ET9" target="_blank" rel="noopener" title="回報錯誤、條件寫錯、建議（Google 表單）">問題回報</a>
   <span class="legend"><span><i style="background:var(--read)"></i>已讀</span><span><i style="background:var(--part)"></i>部分</span><span><i style="background:var(--unread)"></i>未讀</span><span>◆ 有選項　📍 指定地點　⚑ 有條件　🏆 有要成就解鎖的劇情　🖼 結緣結局</span></span>
 </header>
 <main>
