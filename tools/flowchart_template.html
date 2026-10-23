@@ -3158,7 +3158,7 @@ body.show-time .stime { display: inline; }
     const top = romance.scrollTop;
     // 一句一個 T()：改寫、翻譯時一格一句
     const card = (h, items) => `<div class="hcard"><h2>${h}</h2><ul class="guide">${items.map(x => `<li>${x}</li>`).join('')}</ul></div>`;
-    const langs = [['zh-TW', '繁體中文'], ['ja', '日本語（未做）'], ['ko', '한국어（未做）']];
+    const langs = [['zh-TW', '繁體中文'], ['ja', '日本語（未対応）'], ['ko', '한국어（미지원）']];
     romance.innerHTML = card(T("版本"), [
       T("頁面資料：遊戲 {0}，{1} 建立", esc(B.gameVersion || T("（沒有記錄）")), esc(B.built || '')),
       T("目前遊戲：{0}", now ? esc(now) : LIVE && LIVE.live ? T("已連上，但這版 Mod 沒有回報版本") : T("沒連上遊戲（從遊戲裡按 F7 開才看得到）")),
