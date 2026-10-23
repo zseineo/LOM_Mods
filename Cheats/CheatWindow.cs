@@ -30,6 +30,9 @@ internal sealed class CheatWindow
         { "小梅", "虞小梅" }, { "小蘭", "夏侯蘭" }, { "小竹", "郁竹" }, { "小菊", "魏菊" }, { "馬富貴", "李富貴" }, { "毛二壯", "王二壯" }
     };
     private static readonly Regex MeetFlagName = new Regex("^G(1000|300)\\d+$");
+    // 劇情用旗標當好感的角色：遊戲的人際關係好感沒有任何劇本會改、也沒有條件用到，改顯示／修改這個旗標
+    //（孟仙謠：H04003「孟仙謠好感」，投奔的擲骰門檻等都看它）。遊戲更新後要確認是不是改回一般好感度
+    private static readonly Dictionary<string, string> FlagAffection = new Dictionary<string, string> { { "孟仙謠", "H04003" } };
 
     private readonly InputBlocker _blocker = new InputBlocker();
     private readonly Dictionary<string, string> _setText = new Dictionary<string, string>();
@@ -96,7 +99,8 @@ internal sealed class CheatWindow
         GUILayout.Space(14f);
 
         GUILayout.Label("好感與結識", _label);
-        GUILayout.Label("直接改目前遊戲裡的好感（0～100）。「設成已結識」會讓角色出現在人際關係，並把劇情條件用的「認識 X」旗標設成 1（有這個旗標的角色才會設）。", _small);
+        GUILayout.Label("直接改目前遊戲裡的好感（0～100）。「設成已結識」會讓角色出現在人際關係，並把劇情條件用的「認識 X」旗標設成 1（有這個旗標的角色才會設）。"
+            + "名字後面有旗標的（孟仙謠）：劇情看的是那個旗標，顯示和修改的是它，不是人際關係裡的好感。", _small);
         PlayerStatManagerData player = PlayerStatManagerData.Instance;
         if (player == null || player.Relationships == null || SceneManager.GetActiveScene().name == "Title")
         {
@@ -125,15 +129,30 @@ internal sealed class CheatWindow
             meetFlags.TryGetValue(name, out string flag);
             FlagData flagData = flag != null ? MissionManagerData.Instance?.GetFlag(flag) : null;
             bool met = stat.Active && (flagData == null || flagData.State == 1);
+            FlagAffection.TryGetValue(name, out string affFlag);
+            FlagData affData = affFlag != null ? MissionManagerData.Instance?.GetFlag(affFlag) : null;
+            int current = affData != null ? affData.State : stat.Value;
+            void Set(int v)
+            {
+                if (affData != null)
+                {
+                    MissionManagerData.Instance.SetFlag(affFlag, Mathf.Clamp(v, 0, 100));
+                    Note($"{name} 好感（{affFlag}）{affData.State}");
+                }
+                else
+                {
+                    stat.SetValue(Mathf.Clamp(v, 0, 100));
+                    Note($"{name} 好感 {stat.Value}");
+                }
+            }
             GUILayout.BeginHorizontal();
-            GUILayout.Label(name, _label, GUILayout.Width(150f));
-            GUILayout.Label(stat.Value.ToString(), _label, GUILayout.Width(56f));
+            GUILayout.Label(affData != null ? $"{name}（{affFlag}）" : name, _label, GUILayout.Width(150f));
+            GUILayout.Label(current.ToString(), _label, GUILayout.Width(56f));
             foreach (int delta in new[] { -10, -1, 1, 10 })
             {
                 if (GUILayout.Button(delta > 0 ? "+" + delta : delta.ToString(), _button, GUILayout.Width(52f)))
                 {
-                    stat.AddValue(delta);
-                    Note($"{name} 好感 {stat.Value}");
+                    Set(current + delta);
                 }
             }
             GUILayout.Space(10f);
@@ -141,8 +160,7 @@ internal sealed class CheatWindow
             _setText[name] = GUILayout.TextField(text ?? "", 3, _field, GUILayout.Width(60f));
             if (GUILayout.Button("設成", _button, GUILayout.Width(64f)) && int.TryParse(_setText[name], out int value))
             {
-                stat.SetValue(Mathf.Clamp(value, 0, 100));
-                Note($"{name} 好感 {stat.Value}");
+                Set(value);
             }
             GUILayout.Space(10f);
             if (met)
