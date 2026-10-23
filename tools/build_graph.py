@@ -1175,7 +1175,10 @@ hub_span = {}
 own_part = {sc for e in events for sc in e["scripts"] if sub_chapter(sc) and sub_chapter(sc) == sub_chapter(e["start"])}
 # 開發者說明裡沒有段落名稱的，照內容取名
 PART_NAMES = {"ch2_5": "抵達崆峒", "ch5_3": "比武招親", "ch4_6": "臥雲崗約戰", "ch8_5": "六大派攻山", "ch3_10": "江陵決戰泥教",
-              "ch8_4": "南溪大戰南宮深", "ch3_15": "襄陽城外遇小竹", "ch6_9": "武林大會後歇宿", "ch6_10": "聽說武林大會後續"}
+              "ch8_4": "南溪大戰南宮深", "ch3_15": "襄陽城外遇小竹", "ch6_9": "武林大會後歇宿", "ch6_10": "聽說武林大會後續",
+              "ch3_6": "江陵停留：自由行動"}
+# 停留期間重複回來的選單（和留學的自由行動一樣：選一個行動，看完回到選單，用完行動次數換旬）
+STAY_MENUS = {"ch3_6"}
 
 
 def cut_event(e, start, start_time):
@@ -1242,6 +1245,8 @@ for e in events:
         hub = re.fullmatch(r"hub(\d+)", e["part"])
         # 決鬥說明的名稱有時是整章的名字（ch5_3 的「小師妹出嫁」和前一段同名），有手動取名的優先
         e["desc"] = HUB_DESC.get(hub.group(1), "留學：自由行動") if hub else PART_NAMES.get(e["part"]) or part_desc(e["scripts"])
+        if e["part"] in STAY_MENUS:
+            e["menu"] = True
 
 # 同名的段落（武林大會分好幾段）加上序號
 desc_count = collections.Counter(e["desc"] for e in events if e.get("part") and e["desc"])
@@ -2046,7 +2051,7 @@ PLACE_OVERRIDES = {
     "Main/M2006_03": "崆峒", "S0014/S0014_01": "崆峒", "S2200/S2200_01": "崆峒", "S2310/S2310_01": "崆峒",
     "S3004/S3004_01": "青城",
     "Main/M2008_01": "江陵／襄陽", "S0208/S0208_01": "江陵／襄陽", "S0301/S0301_01": "江陵／襄陽",
-    "S0302/S0302_01": "江陵／襄陽", "S0304/S0304_01": "江陵／襄陽", "S0305/S0305_01": "江陵／襄陽",
+    "S0302/S0302_01": "江陵／襄陽", "S0304/S0304_01": "江陵／襄陽", "S0305/S0305_01": "江陵／襄陽", "Part/ch3_6": "江陵／襄陽",
     "Main/M5001_04": "武林大會・錦香宮",
     "S2504/S2504_01": "大雪山",
     "S0213/S0213_01": "唐門山下", "S0801/S0801_01_01": "唐門山下",

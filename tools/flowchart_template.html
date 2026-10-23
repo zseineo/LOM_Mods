@@ -1617,6 +1617,8 @@ body.show-time .stime { display: inline; }
   // 會改變走向：分支裡（含更深層）有接到別段、場景切換（死亡、回標題）或結局；只換台詞的選項留在節點細節裡
   const hasFlow = items => (items || []).some(x => ['next', 'scene', 'ending'].includes(x.t) || (x.t === 'branch' && x.branches.some(b => hasFlow(b.items))));
   let flowState = null;
+  // 重複回來的選單：留學的自由行動（hubN）、江陵停留這種（menu）
+  const isMenu = e => /^hub/.test(e.part || '') || !!e.menu;
   function flowModel(e) {
     const hub = /^hub/.test(e.part || ''), nodes = [], placed = new Map();
     const mk = (kind, props) => { const n = {id: nodes.length, kind, kids: [], ...props}; nodes.push(n); return n; };
@@ -1802,7 +1804,7 @@ body.show-time .stime { display: inline; }
       const locked = e.scripts.filter(sc => (G.scripts[sc] || {}).achieveLock).length;
       html += `<div class="when">🏆 ${e.achieveLock ? T("這個事件要先取得成就（風雲史）才會出現") : locked ? T("有些段落整段要先取得成就（風雲史）才會出現") : T("有成就（風雲史）才會多出一些台詞，不用成就也看得到這個事件")}：${e.achieve.map(a => `「${esc(a)}」`).join('、')}</div>`;
     }
-    if (e.via && !/^hub/.test(e.part || '')) html += T("<h3>從這裡觸發</h3><div class=\"cond\">{0}</div>", routesBlock(e.via, e, T("觸發方式")));
+    if (e.via && !isMenu(e)) html += T("<h3>從這裡觸發</h3><div class=\"cond\">{0}</div>", routesBlock(e.via, e, T("觸發方式")));
     if (e.activate) html += T("<h3>要先啟動</h3><div class=\"cond\">{0}</div>", routesBlock(e.activate, e, T("在前面的劇情裡")));
     const from = e._from.filter(id => !byId.get(id).quiet), next = e._triggers.filter(id => !byId.get(id).quiet);
     if (from.length && !e.part) html += T("<h3>由這些事件啟動</h3>") + from.map(evLink).join('');
@@ -1820,6 +1822,7 @@ body.show-time .stime { display: inline; }
       html += T("<h3>劇情　<span class=\"ftools\" style=\"display:inline-flex;margin:0;letter-spacing:0\"><button data-pv=\"flow\" class=\"{0}\">流程圖</button><button data-pv=\"text\" class=\"{1}\">文字</button>", text ? '' : 'on', text ? 'on' : '')
         + T("<span style=\"color:var(--muted);font-weight:400;margin-left:8px\">寬度</span><button data-dw=\"0.5\">½</button><button data-dw=\"0.75\">¾</button></span></h3>");
       if (/^hub/.test(e.part || '') && text) html += T("<div class=\"hubnote\">這是<b>每旬重複的選單</b>：選一個地點，看完回到選單（「↩ 回到選單」）。地點前的 ✓／◐／○ 是讀過多少。</div>");
+      else if (e.menu) html += T("<div class=\"hubnote\">這是<b>停留期間重複的選單</b>：選一個行動，看完回到選單；行動次數用完就換旬，到時間接下一段劇情。</div>");
       html += text ? (eventTree(e) || T("<div class=\"empty\">只有過場對話，沒有選項或分歧。</div>")) : flowHtml(e);
     }
     if (!(PREFS.plotView !== 'text' && !focus)) html += T("<div class=\"note\">只列出：選項、擲骰、戰鬥勝敗、會改變劇情走向的條件。有底線的條件可以點開看它在哪裡決定。</div>");
@@ -2669,7 +2672,7 @@ body.show-time .stime { display: inline; }
     const rows = [];
     if (!opt.noTime) rows.push([T("時間"), esc(whenText(ev))]);
     if (ev.part) rows.push([T("接續"), partFromHtml(ev)]);
-    else if (ev.via && !/^hub/.test(ev.part || '')) rows.push([T("觸發"), routesBlock(ev.via, ev, '')]);
+    else if (ev.via && !isMenu(ev)) rows.push([T("觸發"), routesBlock(ev.via, ev, '')]);
     else if (!opt.noPlace) rows.push([T("地點"), ev.pos ? T("到「{0}」觸發", esc(ev.pos)) : ev.place && ev.place !== T("旅途／其他") ? T("在{0}，時間到自動觸發", esc(ev.place)) : T("時間到自動觸發")]);
     if (!opt.noCond && !ev.via && !ev.part) {
       const conds = ev.conds.filter(c => c !== '（無條件）').map(c => plainCondHtml(c, ev));
@@ -2810,7 +2813,7 @@ body.show-time .stime { display: inline; }
     }
     // 事件的觸發說明：還沒觸發就分欄寫時間、地點、前置；觸發過的事件從別處接進來的，還是寫怎麼觸發
     const evIntro = (ev, opt) => notStarted(ev) ? factsHtml(ev, {noTime: true, ...opt})
-      : ev.via && !/^hub/.test(ev.part || '') ? T("<div class=\"facts\"><span class=\"k\">觸發</span><div>{0}</div></div>", routesBlock(ev.via, ev, '')) : '';
+      : ev.via && !isMenu(ev) ? T("<div class=\"facts\"><span class=\"k\">觸發</span><div>{0}</div></div>", routesBlock(ev.via, ev, '')) : '';
     // 合併：同時間、同前置、只差地點的地點事件；同名同時間的事件（偷懶怪的幾個階段）
     const clusterKey = key => {
       const ev = key.includes('|') ? null : byId.get(key);
