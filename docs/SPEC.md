@@ -8,7 +8,7 @@
 
 | Mod | 資料夾 | 版本 | 用途 |
 |---|---|---|---|
-| LOM TimeMachine | `TimeMachine/` | 0.9.0 | 時光機存檔（F6）＋「算命仙」網頁（F7）＋事件紀錄 |
+| LOM TimeMachine | `TimeMachine/` | 0.9.1 | 時光機存檔（F6）＋「算命仙」網頁（F7）＋事件紀錄 |
 | LOM Cheats | `Cheats/` | 0.1.0 | 作弊視窗（F9）：決策時顯示全部選項、好感與結識 |
 | LOM CombatSpeed | `CombatSpeed/` | 0.1.0 | 戰鬥加速倍率（設定 `General.SpeedMultiplier`，預設 x6） |
 | LOM DialogTweaks | `DialogTweaks/` | 0.1.0 | 滾輪下一句（`General.WheelNext`）、F8 自動跳過已讀（`AutoSkip.*`） |

@@ -1032,7 +1032,11 @@ body.show-time .stime { display: inline; }
     return null;
   }
   // 開發備註尾巴的「(0/1)」只是說明它是開關
-  const noteHead = f => ((G.flagNotes || {})[f] || '').split(/\r?\n/)[0].trim().replace(/\s*[（(]0\/1[)）]$/, '');
+  // 相識／結緣旗標（G1000x、G1100x）的備註用小名（攻略小竹、認識小梅）：統一成全名
+  const noteHead = f => {
+    const h = ((G.flagNotes || {})[f] || '').split(/\r?\n/)[0].trim().replace(/\s*[（(]0\/1[)）]$/, '');
+    return /^G1[01]00\d$/.test(f) ? h.replace(/^(攻略|認識)(.+)$/, (m, a, n) => a + fullName(n)) : h;
+  };
   // 不只 0／1 的旗標（進度、次數）：條件要寫出數值
   // 有 0/1 以外的值、或真的在累加（兩處以上加、或沒有直接設成 1 的）才算多值；只在一處 +1 當開關用的（主角不在唐門）不算
   const isMulti = f => {
