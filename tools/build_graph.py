@@ -2428,7 +2428,7 @@ for setters in flag_setters.values():
 # 只因性格／技能而換台詞的分歧（走向相同）算「差分」：看過其中一個版本就算讀過
 IGNORE_STAT = re.compile(r"^(性情|道德|處世|修養|學問|嘴力|心相|陰陽|內力|體力|廚藝|輕功|變心|全武學點數|全毒藥點數|全鍛造點數|天賦·.*)$")
 ATOM_LHS = re.compile(r"^(.*?) (=|≠|<|≤|>|≥) (.*)$")
-HEROINE_NAMES = [v for k, v in loc.items() if k.startswith("PlayerInfo/Lover/") and v != "自己"] + ["瑞笙", "南溪", "孟仙謠"]
+HEROINE_NAMES = [v for k, v in loc.items() if k.startswith("PlayerInfo/Lover/") and v != "自己"] + ["瑞笙", "南溪", "孟仙謠", "梁有詩"]
 NICKNAMES = {"小竹": "郁竹", "小梅": "虞小梅", "小蘭": "夏侯蘭", "小菊": "魏菊"}
 
 
