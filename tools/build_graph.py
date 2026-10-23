@@ -2052,6 +2052,7 @@ PLACE_OVERRIDES = {
     "S3004/S3004_01": "青城",
     "Main/M2008_01": "江陵／襄陽", "S0208/S0208_01": "江陵／襄陽", "S0301/S0301_01": "江陵／襄陽",
     "S0302/S0302_01": "江陵／襄陽", "S0304/S0304_01": "江陵／襄陽", "S0305/S0305_01": "江陵／襄陽", "Part/ch3_6": "江陵／襄陽",
+    "S2321/S2321_01": "江陵／襄陽",
     "Main/M5001_04": "武林大會・錦香宮",
     "S2504/S2504_01": "大雪山",
     "S0213/S0213_01": "唐門山下", "S0801/S0801_01_01": "唐門山下",
@@ -3028,6 +3029,12 @@ for e in events:
     e["devDesc"] = e.get("desc") or ""
     e["wikiPath"] = w["path"]
     e["desc"] = w["name"] if wiki_count[w["name"]] == 1 or not old or old == w["name"] else f"{w['name']}（{old[:10]}）"
+# wiki 沒有、開發備註同名的：手動加註區分（使用者指定）
+EVENT_NAMES = {"S2321/S2321_01": "崆峒探險隊（襄陽）"}   # 跟小梅去襄陽、中途去泥教；第2年4月崆峒的是 S2320
+for e in events:
+    if e["id"] in EVENT_NAMES:
+        e["devDesc"] = e.get("devDesc") or e.get("desc") or ""
+        e["desc"] = EVENT_NAMES[e["id"]]
 
 for e in events:
     cast = set()

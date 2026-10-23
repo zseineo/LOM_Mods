@@ -183,7 +183,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 ### 事件名稱
 
 優先用 smilin.net wiki「主支線簡易表格」的事件名（`tools/match_wiki.py` 依選項文字＋時間自動配對，結果在 `tools/wiki_names.json`；
-配錯的直接改那個檔、加 `"manual": true`，重跑時會保留）。事件細節會附 wiki 連結和遊戲內名稱。沒對上的照舊用開發者備註或第一句台詞（和傳奇同一段文字的旁白不用）。
+配錯的直接改那個檔、加 `"manual": true`，重跑時會保留）。事件細節會附 wiki 連結和遊戲內名稱。沒對上的照舊用開發者備註或第一句台詞（和傳奇同一段文字的旁白不用）。wiki 沒有、又和別的事件同名的，在 `build_graph.py` 的 `EVENT_NAMES` 手動加註（崆峒探險隊（襄陽））。
 
 ### 事件備註
 
