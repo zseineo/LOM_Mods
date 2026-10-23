@@ -1642,7 +1642,7 @@ body.show-time .stime { display: inline; }
     // 一段劇情裡的節點：會改變走向的分歧、接到的段落、結局
     function itemsKids(items, s, depth) {
       const out = [], seenNext = new Set();
-      if (depth > 16 || nodes.length > 400) { if ((items || []).length) out.push(mk('ref', {label: T("⋯（太深，切到文字版看）")})); return out; }
+      if (depth > 80 || nodes.length > 400) { if ((items || []).length) out.push(mk('ref', {label: T("⋯（太深，切到文字版看）")})); return out; }
       for (const it of items || []) {
         if (it.t === 'branch' && hasFlow(it.branches.flatMap(b => b.items))) {
           const chain = chainOf(it);
