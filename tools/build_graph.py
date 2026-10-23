@@ -291,6 +291,8 @@ RE = {
     "story": re.compile(r'statmodifymanager\.AddStory\("([^"]+)"\)'),
     "text": re.compile(r'GetStoryText\("([^"]+)"\)'),
     "time": re.compile(r"luamanager\.SetGameTime\((\d+), (\d+), (\d+)\)"),
+    # 劇本直接把時間往後推：下個月上旬／下一旬（崆峒往江陵的路上、回唐門的路上）
+    "timeadv": re.compile(r"luamanager\.(NextMonth|NextRound)\(\)"),
     "ending": re.compile(r'endgamepanel\.Open\("(\d+)"'),
     "cg": re.compile(r'cgpanel\.Open\("(\d+)"'),
     "lover": re.compile(r'statmodifymanager\.SetPlayer\("lover", (\d+)\)'),
@@ -393,7 +395,7 @@ def parse_script(text):
         if m:
             vars_[m.group(1)] = {"kind": "position", "name": m.group(2)}
         stmt = []
-        for k in ("next", "curscript", "travel", "lover", "scene", "mission", "setflag", "story", "text", "time", "ending", "cg", "save", "char"):
+        for k in ("next", "curscript", "travel", "lover", "scene", "mission", "setflag", "story", "text", "time", "timeadv", "ending", "cg", "save", "char"):
             for mm in RE[k].finditer(s):
                 stmt.append((k, mm.groups()))
         for k, g in stmt:
@@ -426,6 +428,8 @@ def parse_script(text):
                 cur().append({"t": "text", "k": g[0]})
             elif k == "time":
                 cur().append({"t": "time", "y": int(g[0]), "m": int(g[1]), "st": int(g[2])})
+            elif k == "timeadv":
+                cur().append({"t": "timeadv", "by": "month" if g[0] == "NextMonth" else "round"})
             elif k == "ending":
                 cur().append({"t": "ending", "id": g[0]})
             elif k == "cg":
@@ -617,7 +621,7 @@ def summarize(block, vars_, depth=0, seq=None):
                         if x["t"] == "flag" and kind in ("switch", "cond", "dice") and not label.startswith("以上皆非"):
                             x = dict(x, when=x.get("when", []) + [label])
                         items.append(x)
-        elif t in ("next", "next_var", "scene", "mission", "ending", "cg", "time", "battle", "lover"):
+        elif t in ("next", "next_var", "scene", "mission", "ending", "cg", "time", "timeadv", "battle", "lover"):
             items.append(it)
         elif t == "flag":
             items.append(it)
@@ -881,20 +885,37 @@ def time_from_conditions(conditions):
 script_time = {}
 
 
-def time_after(script):
-    """腳本內最後一次 SetGameTime 的值（之後接續的腳本從這個時間開始）。"""
-    last = None
+def advance(t, by):
+    """遊戲的 GameTime.NextMonth（下個月上旬）／NextRound（下一旬）"""
+    y, m, s = t["y"], t["m"], t["s"]
+    if by == "month":
+        m, s = m + 1, 1
+    elif s < 3:
+        s += 1
+    else:
+        m, s = m + 1, 1
+    if m > 12:
+        y, m = y + 1, 1
+    return {"y": y, "m": m, "s": s}
+
+
+def time_after(script, start=None):
+    """腳本跑完時的遊戲時間（之後接續的腳本從這個時間開始）：最後一次 SetGameTime，加上之後的 NextMonth／NextRound。
+    分支裡的也照順序算（和原本一樣不分走哪條）；沒改時間就是 None。"""
+    last, changed = start, False
 
     def walk(items):
-        nonlocal last
+        nonlocal last, changed
         for it in items:
             if it["t"] == "time":
-                last = {"y": it["y"], "m": it["m"], "s": it["st"]}
+                last, changed = {"y": it["y"], "m": it["m"], "s": it["st"]}, True
+            elif it["t"] == "timeadv" and last:
+                last, changed = advance(last, it["by"]), True
             elif it["t"] == "branch":
                 for br in it["branches"]:
                     walk(br["items"])
     walk(script_info.get(script, {}).get("items", []))
-    return last
+    return last if changed else None
 
 
 FREE_HUB = re.compile(r"^section_0*(\d+)_free_start_\d+$")
@@ -916,7 +937,7 @@ def trace_chain(start, start_time, stop=(), cuts=None):
     cuts：有給就在劇情換段的地方停（見 should_cut），記下 {斷點腳本: 到那裡的時間}。"""
     chain, queue = [], [(start, start_time, part_key(start))] if start else []
     # 多條路徑到同一支腳本時取較晚的時間；時間變晚才重新往下傳
-    in_chain, t_of = set(), {}
+    in_chain, t_of, visits = set(), {}, {}
     tkey = lambda t: (t["y"], t["m"], t["s"]) if t else (0, 0, 0)
     while queue:
         s, t, cur = queue.pop(0)
@@ -924,11 +945,15 @@ def trace_chain(start, start_time, stop=(), cuts=None):
             continue
         if s in in_chain and tkey(t) <= tkey(t_of.get(s)):
             continue
+        # 迴圈裡有 NextRound 時時間會一直往後推：同一支腳本最多重算幾次
+        visits[s] = visits.get(s, 0) + 1
+        if visits[s] > 4:
+            continue
         if s not in in_chain:
             chain.append(s)
             in_chain.add(s)
         t_of[s] = t
-        after = time_after(s) or t
+        after = time_after(s, t) or t
         cur = part_key(s) or cur
         for n in next_scripts(s):
             if n in entry_scripts or n in stop:
@@ -955,6 +980,24 @@ for mission_name in [main_name] + sub_names:
         if c and c.get("_startScript"):
             entry_scripts.add(c["_startScript"].lower())
 
+# 會被啟動的檢查點：劇本裡有 Mission("X", "key")，或是別的檢查點完成後接到它（nextState）
+def _mission_items(items):
+    for it in items:
+        if it["t"] == "mission":
+            yield it["m"], it["k"]
+        elif it["t"] == "branch":
+            for br in it["branches"]:
+                yield from _mission_items(br["items"])
+
+
+activated_keys = {mk for info in script_info.values() for mk in _mission_items(info.get("items", []))}
+for mission_name in [main_name] + sub_names:
+    for r in (missions.get(mission_name) or {}).get("_missions", []):
+        c = cps.get(ref_name(r)) if r else None
+        if c and c["_nextStateName"]:
+            activated_keys.add((mission_name, c["_nextStateName"]))
+untimed_start = set()   # 檢查點不會觸發、時間先不用的事件（之後依接進來的地方定時間再補算腳本時間）
+
 for mission_name in [main_name] + sub_names:
     m = missions.get(mission_name)
     if not m:
@@ -974,6 +1017,10 @@ for mission_name in [main_name] + sub_names:
         if time is None:
             time = time_from_conditions(c.get("_conditions", []))
         start_time = time.get("from") if time and time.get("from", {}).get("y", 0) >= 1 else None
+        # 停用、也沒有任何地方啟動的檢查點不會觸發：它的時間是假的，不拿來往下推（只會從別的劇情直接跳進來）
+        if not c["_active"] and (mission_name, c["_key"]) not in activated_keys:
+            start_time = None
+            untimed_start.add(f"{mission_name}/{c['_key']}")
         chain = trace_chain(c["_startScript"].lower(), start_time)
         events.append({
             "id": f"{mission_name}/{c['_key']}",
@@ -1129,7 +1176,7 @@ def cut_event(e, start, start_time):
 for e in list(events):
     if e.get("meeting"):
         continue
-    t = (e["time"] or {}).get("from")
+    t = None if e["id"] in untimed_start else (e["time"] or {}).get("from")
     cut_event(e, e["start"], t if t and t.get("y", 0) >= 1 else None)
 # 段落本身也可能再接到下一段：一直做到沒有新入口為止
 done = {}
@@ -1154,7 +1201,9 @@ while True:
         if key.startswith("hub"):
             times = hub_span.get(key, times)
         elif times:
-            times = times[-1:]
+            # 主要入口（chX_Y_1）抵達之後，還有別的事件接回這段（江陵院中練武的選單）：停留期間，寫成範圍
+            first = ent.get(starts[0]) if re.fullmatch(r"ch\d+_\d+_1", starts[0]) else None
+            times = [first, times[-1]] if first and tk(first) < tk(times[-1]) else times[-1:]
         e["time"] = None if not times else {"type": "at", "from": times[0]} if times[0] == times[-1] else {"type": "range", "from": times[0], "to": times[-1]}
         if key.startswith("hub") and times:
             e["time"] = {"type": "range", "from": times[0], "to": {"y": 4, "m": 3, "s": 3}, "open": True}
@@ -2636,6 +2685,7 @@ for pos in positions:
                 if "readAll" in info:
                     c["readAll"] = info["readAll"]
 
+ev_by_id = {e["id"]: e for e in events}
 for e in events:
     act = event_activate(e)
     if act:
@@ -2663,6 +2713,23 @@ for e in events:
                 hi = max(his) if all(his) else None
                 tt = lambda t: {"y": t[0], "m": t[1], "s": t[2]}
                 e["time"] = {"type": "at", "from": tt(lo)} if hi == lo else                     {"type": "range", "from": tt(lo), "to": tt(hi)} if hi else {"type": "range", "from": tt(lo), "to": {"y": 4, "m": 3, "s": 3}, "open": True}
+            elif not act:
+                # 沒有時間條件、也沒有任何地方啟動這個任務（檢查點根本不會觸發）：只會從別的事件直接跳進來，
+                # 時間用那個事件的時間（崆峒探險隊的檢查點寫第2年10月下旬，實際是江陵大戰第2年10月上旬接進來）
+                srcs = {r[0]["ev"] for r in via if r and r[0].get("ev")}
+                src_t = [ev_by_id[x]["time"]["from"] for x in srcs if (ev_by_id.get(x) or {}).get("time") and ev_by_id[x]["time"]["type"] == "at"]
+                if srcs and len(src_t) == len(srcs) and len({(t["y"], t["m"], t["s"]) for t in src_t}) == 1:
+                    t, cur = src_t[0], e["time"]
+                    ti = lambda x: x["y"] * 36 + x["m"] * 3 + x["s"]
+                    lo = ti(cur["from"]) if cur and cur.get("from") else None
+                    hi = ti(cur["to"]) if cur and cur["type"] == "range" and not cur.get("open") else lo
+                    # 和檢查點時間只差一旬內的照舊（停留期間的選單，檢查點的範圍比較準）
+                    if lo is None or not (lo - 1 <= ti(t) <= hi + 1):
+                        e["time"] = {"type": "at", "from": t}
+# 檢查點時間沒拿來推的事件：時間定了之後補算它自己腳本的時間（cuts 給空的：不再往後面的段落傳）
+for e in events:
+    if e["id"] in untimed_start and e["time"] and e["time"].get("from", {}).get("y", 0) >= 1:
+        trace_chain(e["start"], e["time"]["from"], cuts={})
 
 # ---------- 限定路線 ----------
 # 劇情分岔的旗標（開發備註逐行寫了各數值的意思）：事件要求其中一個值，就是限定那條路線。

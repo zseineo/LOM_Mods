@@ -1473,6 +1473,7 @@ body.show-time .stime { display: inline; }
       else if (it.t === 'mission') { const id = `${it.m}/${it.k}`.toLowerCase(); if (byId.has(id) && !byId.get(id).quiet) out.push(T("→ 之後觸發 {0}", evLink(id))); }
       else if (it.t === 'ending') out.push(T("<b>★ 結局</b>"));
       else if (it.t === 'time') out.push(T("時間跳到 {0}", tstr({y: it.y, m: it.m, s: it.st})));
+      else if (it.t === 'timeadv') out.push(it.by === 'month' ? T("時間跳到下個月上旬") : T("時間跳到下一旬"));
       else if (it.t === 'flag' && G.flagNames[it.f]) named.push(it.op === 'AddFlag' ? `${G.flagNames[it.f]} ${it.v > 0 ? '+' : ''}${it.v}` : `${G.flagNames[it.f]} = ${it.v}`);
       else if (it.t === 'flag' && !TEMP_FLAG.test(it.f)) {
         (G.readers[it.f] || []).forEach(r => { if (!ctx || r.toLowerCase() !== ctx.id.toLowerCase()) used.add(r.toLowerCase()); });
