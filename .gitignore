@@ -16,3 +16,4 @@ __pycache__/
 
 # 別人的 Mod（只在本機修，不上傳）
 DiceMaster/
+i18n/.~lock*
