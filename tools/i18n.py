@@ -122,6 +122,9 @@ def extract_guides(found):
                     add(found, it["text"], "guide", where, [])
                     items(it.get("sub", []))
             items(guide["items"])
+    # 稱號列表的取得方式
+    for name, text in g.get("titles", {}).items():
+        add(found, text, "guide", f"稱號列表：{name}", [])
     # 其他條件的精簡版（build_graph.py 的 TARGETS）：從產生好的 graph.json 抽
     if not os.path.exists(GRAPH):
         print("（沒有 data/graph.json，略過其他條件的 TARGETS 文字；先跑 rebuild_guide.sh）")
