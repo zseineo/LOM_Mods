@@ -162,6 +162,11 @@ body.view-romance #romance { display: block; }
 body.view-romance #chart { display: none; }
 body.view-romance .chartonly { display: none; }
 .rintro { color: var(--muted); font-size: 13px; max-width: 900px; margin-bottom: 14px; }
+.ttable { border-collapse: collapse; max-width: 1000px; font-size: 14px; }
+.ttable th, .ttable td { border: 1px solid var(--line); padding: 7px 12px; text-align: left; vertical-align: top; }
+.ttable th { color: var(--muted); font-weight: 400; }
+.ttable td:first-child { white-space: nowrap; }
+.ttable tr.now td { background: var(--chip); }
 .hcard { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 12px 16px; margin-bottom: 14px; max-width: 980px; }
 .hcard h2 { margin: 0 0 6px; font-size: 18px; }
 .hcard h2 .tag { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 8px; }
@@ -265,7 +270,7 @@ body.show-time .stime { display: inline; }
 <body class="spoil dclosed">
 <header>
   <h1 id="brand" title="說明與版本">算命仙</h1>
-  <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabMore" title="展開更多分頁">▸</button><button id="tabChart" class="extra">流程圖</button></span>
+  <span class="tabs"><button id="tabUnread">五塊錢</button><button id="tabPlaces">地點事件</button><button id="tabRomance">結緣條件</button><button id="tabTargets">其他條件</button><button id="tabTitles">稱號列表</button><button id="tabMore" title="展開更多分頁">▸</button><button id="tabChart" class="extra">流程圖</button></span>
   <span class="stats" id="stats"></span>
   <span class="live" id="live">離線預覽</span>
   <input type="search" id="q" placeholder="搜尋事件、選項、腳本、旗標…">
@@ -498,6 +503,7 @@ body.show-time .stime { display: inline; }
     }
     if (currentView === 'romance') renderRomance(true);
     else if (currentView === 'targets') renderTargets(true);
+    else if (currentView === 'titles') renderTitles(true);
     else if (currentView === 'places') renderPlaces(true);
     else if (currentView === 'help') renderHelp(true);
     else drawNowLine();
@@ -1483,6 +1489,7 @@ body.show-time .stime { display: inline; }
       else if (it.t === 'ending') out.push(T("<b>★ 結局</b>"));
       else if (it.t === 'time') out.push(T("時間跳到 {0}", tstr({y: it.y, m: it.m, s: it.st})));
       else if (it.t === 'timeadv') out.push(it.by === 'month' ? T("時間跳到下個月上旬") : T("時間跳到下一旬"));
+      else if (it.t === 'flag' && /^Title_/.test(it.f)) named.push(T("稱號變成「{0}」", ((G.titles || []).find(x => 'Title_' + x.id === it.f) || {}).name || it.f));
       else if (it.t === 'flag' && G.flagNames[it.f]) named.push(it.op === 'AddFlag' ? `${G.flagNames[it.f]} ${it.v > 0 ? '+' : ''}${it.v}` : `${G.flagNames[it.f]} = ${it.v}`);
       else if (it.t === 'flag' && !TEMP_FLAG.test(it.f)) {
         (G.readers[it.f] || []).forEach(r => { if (!ctx || r.toLowerCase() !== ctx.id.toLowerCase()) used.add(r.toLowerCase()); });
@@ -1881,7 +1888,8 @@ body.show-time .stime { display: inline; }
       const how = need ? T("，要：{0}{1}", need, more ? T("（怎麼進到這段點開看）") : '') : more ? T("，要走特定分支（點開看）") : T("，跑完就會設");
       const where = owner ? T("在「{0}」（{1}）中{2}", esc(evShort(owner)), esc(whenText(owner)), how)
         : x.pos ? T("在地點行動「{0}」{1}", esc(x.pos), how) : T("在日常、閒聊的劇情裡{0}", how);
-      html += `<div class="row" ${target}>${x.op === 'AddFlag' ? (x.v > 0 ? '+' : '') + x.v + T("（累加）") : '= ' + x.v}　${where}</div>`;
+      // 稱號（Title_N）只有「拿到」，不寫值
+      html += `<div class="row" ${target}>${/^Title_/.test(f) ? '' : x.op === 'AddFlag' ? (x.v > 0 ? '+' : '') + x.v + T("（累加）") : '= ' + x.v + '　'}${where}</div>`;
     }
     pop.innerHTML = html;
     pop.style.display = 'block';
@@ -2227,6 +2235,21 @@ body.show-time .stime { display: inline; }
       html += '</div>';
     }
     romance.innerHTML = html;
+  }
+  // ---------- 稱號列表 ----------
+  // 取得方式是手寫的（guides.json 的 titles，參考 wiki 再對照遊戲資料）；點稱號列出劇本裡設定的位置（和旗標一樣）
+  function renderTitles(keepScroll) {
+    const top = romance.scrollTop;
+    const cur = LIVE && LIVE.inGame ? liveValue('stat', 'title') : null;
+    let html = T("<div class=\"rintro\">稱號同時只有一個，之後拿到的會蓋掉；序章倒敘裡拿到的，倒敘結束時存檔還原就沒了。點稱號列出劇本裡給這個稱號的位置。取得方式參考 smilin.net 活俠傳 wiki 的稱號列表，再對照遊戲資料修正。</div>");
+    html += `<table class="ttable"><tr><th>${T("稱號")}</th><th>${T("取得方式")}</th></tr>`;
+    for (const t of G.titles || []) {
+      const f = 'Title_' + t.id, text = (GUIDES.titles || {})[t.name];
+      const name = (G.flags[f] || []).length ? `<span class="flag" data-flag="${f}">${esc(t.name)}</span>` : esc(t.name);
+      html += `<tr${cur === t.id ? ' class="now"' : ''}><td>${name}${cur === t.id ? T("<span class=\"tag\">目前</span>") : ''}</td><td>${text ? esc(tidy(T(text))) : T("<span class=\"empty\">（點稱號看劇本裡的位置）</span>")}</td></tr>`;
+    }
+    romance.innerHTML = html + '</table>';
+    if (keepScroll) romance.scrollTop = top;
   }
   function renderTargets(keepScroll) {
     const top = romance.scrollTop;
@@ -3071,7 +3094,7 @@ body.show-time .stime { display: inline; }
     else if (el.dataset.flag) showFlag(el.dataset.flag, ev);
     else el.classList.add('reveal');
   });
-  const TAB_IDS = {unread: 'tabUnread', places: 'tabPlaces', romance: 'tabRomance', targets: 'tabTargets', chart: 'tabChart'};
+  const TAB_IDS = {unread: 'tabUnread', places: 'tabPlaces', romance: 'tabRomance', targets: 'tabTargets', titles: 'tabTitles', chart: 'tabChart'};
   // 流程圖平常摺疊在「▸」裡，點開才顯示；正在看的話一直顯示
   function setMoreTabs(open) {
     document.body.classList.toggle('moretabs', open);
@@ -3148,6 +3171,7 @@ body.show-time .stime { display: inline; }
     currentView = v;
     if (v === 'romance') renderRomance();
     if (v === 'targets') renderTargets();
+    if (v === 'titles') renderTitles();
     if (v === 'places') renderPlaces();
     if (v === 'unread') renderUnread();
     if (v === 'help') renderHelp();
@@ -3236,6 +3260,7 @@ body.show-time .stime { display: inline; }
   if (ONLINE) setInterval(poll, 3000);
   if (/view=romance/.test(location.hash)) setView('romance');
   if (/view=targets/.test(location.hash)) setView('targets');
+  if (/view=titles/.test(location.hash)) setView('titles');
   if (/view=libcg/.test(location.hash)) setView('romance');
   if (/view=chart/.test(location.hash)) setView('chart');
   if (/view=help/.test(location.hash)) setView('help');

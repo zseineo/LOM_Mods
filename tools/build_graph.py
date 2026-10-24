@@ -296,6 +296,7 @@ RE = {
     "ending": re.compile(r'endgamepanel\.Open\("(\d+)"'),
     "cg": re.compile(r'cgpanel\.Open\("(\d+)"'),
     "lover": re.compile(r'statmodifymanager\.SetPlayer\("lover", (\d+)\)'),
+    "title": re.compile(r'statmodifymanager\.SetPlayer\("title", (\d+)\)'),
     "travel": re.compile(r'luamanager\.(?:SetCurrentTravelScript\(|SetTempScript\(\d+, )"([^"]+)"\)'),
     "curscript": re.compile(r'luamanager\.SetCurrentStoryScript\("([^"]+)"\)'),
     "save": re.compile(r"luamanager\.(ToggleSaveButton\(1\)|AutoSave\(\))"),
@@ -395,7 +396,7 @@ def parse_script(text):
         if m:
             vars_[m.group(1)] = {"kind": "position", "name": m.group(2)}
         stmt = []
-        for k in ("next", "curscript", "travel", "lover", "scene", "mission", "setflag", "story", "text", "time", "timeadv", "ending", "cg", "save", "char"):
+        for k in ("next", "curscript", "travel", "lover", "title", "scene", "mission", "setflag", "story", "text", "time", "timeadv", "ending", "cg", "save", "char"):
             for mm in RE[k].finditer(s):
                 stmt.append((k, mm.groups()))
         for k, g in stmt:
@@ -404,6 +405,9 @@ def parse_script(text):
                 cur().append({"t": "next", "s": g[0], "via": "travel"})
             elif k == "lover":
                 cur().append({"t": "lover", "v": int(g[0])})
+            elif k == "title":
+                # 稱號：當成旗標 Title_N = 1 記（設定位置、怎麼進來都和旗標一樣查）
+                cur().append({"t": "flag", "op": "SetFlag", "f": f"Title_{g[0]}", "v": 1})
             elif k == "curscript":
                 # 戰鬥前指定戰後接續的腳本（也用於直接切回劇情場景）
                 cur().append({"t": "next", "s": g[0], "via": "after"})
@@ -3079,7 +3083,10 @@ out = {
     "flags": dict(flag_setters),
     "lovers": {str(k): v for k, v in lover_points.items()},
     "loverNames": {k[len("PlayerInfo/Lover/"):]: v for k, v in loc.items() if k.startswith("PlayerInfo/Lover/")},
-    "flagNames": {k[len("Flag/Name/"):]: v for k, v in loc.items() if k.startswith("Flag/Name/")},
+    "flagNames": {**{k[len("Flag/Name/"):]: v for k, v in loc.items() if k.startswith("Flag/Name/")},
+                  **{f"Title_{k[len('PlayerInfo/Title/'):]}": f"稱號：{v}" for k, v in loc.items() if k.startswith("PlayerInfo/Title/")}},
+    # 稱號列表（PlayerInfo/Title/N），設定位置在 flags 的 Title_N
+    "titles": sorted(({"id": int(k[len("PlayerInfo/Title/"):]), "name": v} for k, v in loc.items() if k.startswith("PlayerInfo/Title/")), key=lambda x: x["id"]),
     "readers": {k: sorted(v)[:12] for k, v in readers.items()},
     "places": PLACE_ORDER,
     "library": library,
