@@ -996,7 +996,7 @@ body.show-time .stime { display: inline; }
       if (p) return p.kind === 'cond' ? p.text : null;
       return /^(以上皆非|其他)/.test(label) || !/[≥≤≠<>=]/.test(label) ? null : label.replace(/　〔.*〕$/, '');
     }).filter(Boolean).map(c => plainCondText(c, ctx, x.s)).filter(c => !VAGUE.test(c));
-    if (conds.length) return T("{0}時", conds.join('、'));
+    if (conds.length) return T("{0}時", conds.join('、').replace(/ 且 /g, '、'));
     // 一進選單就設（旅途休息、閒聊選單 break_start_01／02…）：第幾次進到這個選單
     const brk = !(x.path || []).length && x.s.match(/_break_start_0*(\d+)$/);
     return brk ? T("第 {0} 次進到這個選單時", brk[1]) : null;
@@ -1155,8 +1155,16 @@ body.show-time .stime { display: inline; }
       // 設定點全是「某條件成立時」設的（沒有選項）：反過來寫成那些條件不成立（「先前沒有 X、Y 時、X 時」讀不懂）
       if (sat(0, op, n) && missX.length && missX.every(x => !choiceOf(x))) {
         const own = new RegExp(`旗標 ${f}(?![A-Za-z0-9_])`);
-        const sets = missX.map(x => (x.path || []).map(l => l.replace(/　〔.*〕$/, '')).filter(l => !own.test(l) && /[≥≤≠<>=]/.test(l) && !/^(以上皆非|其他|勝利|落敗)/.test(l)));
-        if (sets.every(a => a.length)) {
+        // 「以上皆非（不是：A；B）」換成它本身的條件（不是 A 且 不是 B）；換出來帶「或」的拆不開，整句不用這個寫法
+        let mixed = false;
+        const sets = missX.map(x => (x.path || []).map(l => l.replace(/　〔.*〕$/, '')).flatMap(l => {
+          const neg = l.match(/^以上皆非（不是：(.*)）$/);
+          if (!neg) return [l];
+          const c = negatedCond(neg[1]);
+          if (/ 或 /.test(c)) mixed = true;
+          return c.split(' 且 ');
+        }).filter(l => !own.test(l) && /[≥≤≠<>=]/.test(l) && !/^(以上皆非|其他|勝利|落敗)/.test(l)));
+        if (!mixed && sets.every(a => a.length)) {
           const uniq = [...new Set(sets.map(a => a.join(' 且 ')))];
           return plainCondText(negatedCond(uniq.join('；')), ctx, near);
         }

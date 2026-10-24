@@ -621,8 +621,8 @@ def summarize(block, vars_, depth=0, seq=None):
                     texts.extend(sub.pop("_texts"))
                     stories.extend(sub.get("legend_keys", []))
                     for x in sub["items"]:
-                        # 分支收起來後，旗標仍要知道是在什麼條件下設的
-                        if x["t"] == "flag" and kind in ("switch", "cond", "dice") and not label.startswith("以上皆非"):
+                        # 分支收起來後，旗標仍要知道是在什麼條件下設的（「以上皆非（不是：…）」也是條件；只寫「以上皆非」「其他」的沒有資訊，不記）
+                        if x["t"] == "flag" and kind in ("switch", "cond", "dice") and label not in ("以上皆非", "其他"):
                             x = dict(x, when=x.get("when", []) + [label])
                         items.append(x)
         elif t in ("next", "next_var", "scene", "mission", "ending", "cg", "time", "timeadv", "battle", "lover"):
