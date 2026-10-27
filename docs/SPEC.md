@@ -294,7 +294,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 
 ```
 遊戲更新 → bash tools/refresh_data.sh   # 重抽 Lua、在地化、設定物件、戰鬥、反編譯到 data/（舊的改名 data_old_<時間>；data/wiki_events 快取會沿用）
-更新後    → python -I tools/diff_graph.py data_old_<時間>/graph.json data/graph.json  # 事件條件、劇本分歧、手寫條件用到的旗標有變的，逐項對照 TARGETS／guides.json 改寫
+更新後    → python -I tools/diff_graph.py data_old_<時間>/graph.json data/graph.json  # 事件條件、劇本分歧、手寫條件用到的旗標、地點事件候選有變的，逐項對照 TARGETS／guides.json 改寫
 改規則    → bash tools/rebuild_guide.sh  # 發布版；build_graph.py → data/graph.json → render_preview.py → 安裝到遊戲（--save 用自己的已讀）
 改 Mod    → cd TimeMachine && dotnet build -c Release，複製 bin/Release/LOM_TimeMachine.dll 到 BepInEx/plugins/LOM_TimeMachine/
 改文字    → python -I tools/i18n.py extract → export → 改 i18n/strings.xlsx → import → bash tools/rebuild_guide.sh

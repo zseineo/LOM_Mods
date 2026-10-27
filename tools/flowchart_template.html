@@ -1333,7 +1333,7 @@ body.show-time .stime { display: inline; }
     // 其他旗標加總（「天道」「餓鬼道」…六道遇過幾個）
     text = text.replace(/旗標 [A-Za-z0-9_]+(?:（[^）]*）)?(?: \+ 旗標 [A-Za-z0-9_]+(?:（[^）]*）)?)+/g, m => {
       const nouns = m.split(' + ').map(x => flagNoun(x.replace(/^旗標 /, '').replace(/（.*$/, '')));
-      return T("{0}{1}的合計", nouns.slice(0, 3).join('、'), nouns.length > 3 ? T(" 等 {0} 項", nouns.length) : '');
+      return T("{0}{1}的合計", nouns.slice(0, 3).join('＋'), nouns.length > 3 ? T(" 等 {0} 項", nouns.length) : '');
     });
     text = text.replace(/旗標 [A-Za-z0-9_]+（([^）]+)）(?! (?:=|≠|<|≤|>|≥) -?\d)/g, '$1');
     // 遊戲內建的條件數值：= 1 就是成立、= 0 就是不成立

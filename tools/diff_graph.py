@@ -60,3 +60,21 @@ for f in sorted(set(re.findall(r"\b([A-Z]{1,2}\d{4,5}(?:_\d+)?)\b", hand))):
             print("  -", ka[k]["s"], ka[k]["op"], ka[k]["v"], ka[k].get("path"))
         for k in kb.keys() - ka.keys():
             print("  +", kb[k]["s"], kb[k]["op"], kb[k]["v"], kb[k].get("path"))
+
+# 地點事件：候選事件的開啟條件、權重、加成（遊戲更新常改「需認識某人」這類條件）
+def cands(g):
+    out = {}
+    for p in g.get("positions", []):
+        for ly in p["layers"]:
+            for c in ly["candidates"]:
+                out[(p["place"], p["action"], c["id"])] = (c.get("cond"), c.get("rate"), json.dumps(c.get("bonus"), ensure_ascii=False), c.get("note"))
+    return out
+
+
+print("\n==== 地點事件候選（條件、權重）")
+ca, cb = cands(old), cands(new)
+for k in sorted(set(ca) | set(cb)):
+    if ca.get(k) != cb.get(k):
+        print("·".join(k[:2]), k[2], (cb.get(k) or ca.get(k))[3] or "")
+        print("  -", ca.get(k))
+        print("  +", cb.get(k))
