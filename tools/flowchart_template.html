@@ -1995,7 +1995,7 @@ body.show-time .stime { display: inline; }
     });
   }
   function plainCond(text) {
-    text = itemSums(text);
+    text = itemSums(text).replace(/條件·(\S+?) (= 1|≠ 0)(?![0-9])/g, '$1').replace(/條件·(\S+?) (= 0|≠ 1)(?![0-9])/g, T("不是「$1」"));
     const groups = text.split(' 或 ').map(g => g.split(' 且 ').map(a => a.trim().replace(/^（(.*)）$/, '$1')).filter(a => a && !isFlagAtom(a)));
     if (groups.some(g => !g.length)) return '';      // 其中一組只有旗標：視為由旗標決定，交給下方說明
     return groups.map(g => g.join('、')).join(T(" 或 "));

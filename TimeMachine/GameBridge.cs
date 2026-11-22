@@ -7,7 +7,7 @@ namespace LOM.TimeMachine;
 // 透過反射呼叫 SaveSystem 的私有方法，存讀檔流程與遊戲本身完全相同。
 internal static class GameBridge
 {
-    private static readonly MethodInfo CreateSaveDataMethod = AccessTools.Method(typeof(SaveSystem), "CreateSaveData");
+    private static readonly MethodInfo CreateSaveDataMethod = AccessTools.Method(typeof(SaveSystem), "CreateSaveData", new[] { typeof(bool) });
     private static readonly MethodInfo ExecuteLoadGameDataMethod = AccessTools.Method(typeof(SaveSystem), "ExecuteLoadGameData");
     private static readonly MethodInfo GetUserFolderMethod = AccessTools.Method(typeof(SaveSystem), "GetUserFolder");
     private static readonly FieldInfo IsDemoField = AccessTools.Field(typeof(SaveSystem), "_isDemo");
@@ -17,7 +17,7 @@ internal static class GameBridge
     internal static GameSave CreateSaveData()
     {
         SaveSystem saveSystem = SaveSystem.Instance;
-        GameSave gameSave = (GameSave)CreateSaveDataMethod.Invoke(saveSystem, null);
+        GameSave gameSave = (GameSave)CreateSaveDataMethod.Invoke(saveSystem, new object[] { true }); // includeStoryLog：反射不會套用預設值
         gameSave.IsDemo = (bool)IsDemoField.GetValue(saveSystem);
         return gameSave;
     }
@@ -50,6 +50,7 @@ internal static class GameBridge
     {
         SoundManager.Instance.StopMusic();
         ExecuteLoadGameDataMethod.Invoke(SaveSystem.Instance, new object[] { save.GameSave });
+        StoryLogData.Load(save.GameSave); // 1.0.6001.0 起回想不在 ExecuteLoadGameData 裡，遊戲每個讀檔入口都另外呼叫
         SaveSystem.Instance.SaveUniverseData();
         MissionManagerData.Instance.UpdateCheckMissions();
         SceneController.Instance.LoadCurrentScene();

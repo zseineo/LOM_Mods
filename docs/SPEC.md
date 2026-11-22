@@ -8,7 +8,7 @@
 
 | Mod | 資料夾 | 版本 | 用途 |
 |---|---|---|---|
-| LOM TimeMachine | `TimeMachine/` | 0.9.1 | 時光機存檔（F6）＋「算命仙」網頁（F7）＋事件紀錄 |
+| LOM TimeMachine | `TimeMachine/` | 0.9.2 | 時光機存檔（F6）＋「算命仙」網頁（F7）＋事件紀錄 |
 | LOM Cheats | `Cheats/` | 0.1.0 | 作弊視窗（F9）：決策時顯示全部選項、好感與結識 |
 | LOM CombatSpeed | `CombatSpeed/` | 0.1.0 | 戰鬥加速倍率（設定 `General.SpeedMultiplier`，預設 x6） |
 | LOM DialogTweaks | `DialogTweaks/` | 0.1.0 | 滾輪下一句（`General.WheelNext`）、F8 自動跳過已讀（`AutoSkip.*`） |
@@ -39,6 +39,12 @@
 - 每旬一檔：`<模式>\Y{年}_M{月:00}_S{旬}.dat`（AutoGameSave 格式；模式＝main／act1…）
 - 關鍵節點：`<模式>\N_<節點id>.dat`
 - 路線：預設路線＝根目錄本身；其他路線在 `_routes\<名稱>\`，目前路線記在 `route.txt`
+
+### 存讀檔流程（GameBridge.cs，要和遊戲一致）
+
+- 存：反射呼叫 `SaveSystem.CreateSaveData(bool includeStoryLog)`，一定要傳 `true`（反射不會套用預設值）。自動存檔、關鍵節點、算命仙的目前狀態都用它。
+- 讀（F6、網頁共用 `GameBridge.Load`）：`StopMusic` → `ExecuteLoadGameData` → `StoryLogData.Load` → `SaveUniverseData` → `UpdateCheckMissions` → `LoadCurrentScene`，同遊戲 `LoadSlotPanel.OnTitleClick`＋`SaveSystem.LoadGameData`，只是不換存檔欄位。
+- 1.0.6001.0 起才有回想紀錄與上面兩處改動；0.9.2 起不支援更舊的遊戲版本。更舊的時光機存檔可以讀，回想是空的。
 
 ### 覆蓋規則（使用者決定）
 
@@ -295,6 +301,7 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 ```
 遊戲更新 → bash tools/refresh_data.sh   # 重抽 Lua、在地化、設定物件、戰鬥、反編譯到 data/（舊的改名 data_old_<時間>；data/wiki_events 快取會沿用）
 更新後    → python -I tools/diff_graph.py data_old_<時間>/graph.json data/graph.json  # 事件條件、劇本分歧、手寫條件用到的旗標、地點事件候選有變的，逐項對照 TARGETS／guides.json 改寫
+更新後    → Mod 相容性：編譯過、名稱存在都不算數。逐一核對反射目標的參數、Harmony 目標與參數名、已安裝／已發布 DLL 的成員參照；再比對遊戲存讀檔每個入口（SaveSystem、LoadSlotPanel）多了或少了哪一步
 改規則    → bash tools/rebuild_guide.sh  # 發布版；build_graph.py → data/graph.json → render_preview.py → 安裝到遊戲（--save 用自己的已讀）
 改 Mod    → cd TimeMachine && dotnet build -c Release，複製 bin/Release/LOM_TimeMachine.dll 到 BepInEx/plugins/LOM_TimeMachine/
 改文字    → python -I tools/i18n.py extract → export → 改 i18n/strings.xlsx → import → bash tools/rebuild_guide.sh
@@ -303,6 +310,10 @@ Mod 內建本機網頁服務，頁面檔在 `BepInEx/plugins/LOM_TimeMachine/gui
 - `data/`、`preview/` 不進 git（遊戲文字、可重建）。
 - 遊戲資產字串是 Big5 誤存，UnityPy 讀出會亂碼：一律用在地化文字或 ASCII 名稱。
 - 存檔旗標：`tools/SaveDump`（`SaveDump.exe <存檔> [旗標前綴...]`）。
+
+### 條件組合（StatGroupVariable）
+
+- 加總／max／min／相乘照算式寫；And(5)／Or(6)（1.0.6001.0 起）寫成 `條件·<遊戲取的名字>`（去掉 `條件_`／`旗標_`），不展開。遊戲更新時要看新增的這類組合：名字和內容是否一致、`StatGroupType` 有沒有新種類。
 
 ### 多語言（時光機＋算命仙）
 

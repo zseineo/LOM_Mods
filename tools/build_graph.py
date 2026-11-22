@@ -193,7 +193,7 @@ def value_text(v):
     if ct == 15:
         return f"成就「{loc.get('Library/Title/' + ref_name(v['_libraryAchieve'])) or ref_name(v['_libraryAchieve'])}」"
     if ct == 16:
-        return "條件·" + ref_name(v["_condition"])
+        return "條件·" + ref_name(v["_condition"]).removeprefix("條件_")
     return f"?{ct}"
 
 
@@ -211,6 +211,9 @@ def group_text(ref):
         return "min(" + ", ".join(vals) + ")"
     if gt == 4:
         return " × ".join(vals)
+    if gt in (5, 6):
+        # And／Or（1.0.6001.0 起）算出來只有 1／0：用遊戲取的名字當一個條件；展開成且／或會和外層混在一起，網頁拆錯
+        return "條件·" + re.sub(r"^(條件|旗標)_", "", o["m_Name"])
     return " + ".join(vals)
 
 
@@ -710,6 +713,9 @@ def combat_actions(refs):
             flags.append((ref_name(o["_flag"]), o["_state"]))
         elif t == "CombatEventActionPunchSupport":
             texts.append(f"{SIDE.get(o.get('_character'), '')}得到「{ref_tail(o.get('_support'))}」助攻")
+        elif t == "CombatEventActionRemoveAllSupport":
+            how = "的支援全部退場" if o.get("_removeAll") else f"隨機 {o.get('_count')} 個支援退場"
+            texts.append(f"{SIDE.get(o.get('_character'), '')}{how}")
         elif t == "CombatEventActionLoadScene":
             texts.append("戰鬥直接結束")
         elif t == "CombatEventActionSetStoryScript":
@@ -724,7 +730,7 @@ def combat_actions(refs):
                 if sub:
                     texts.append(f"第 {it.get('Count')} 次：" + "、".join(sub))
         elif t in ("CombatEventActionModifyStat", "CombatEventActionModifyWeaponValue", "CombatEventActionRemoveAllStateEffect",
-                   "CombatEventActionRemoveAllSupport", "CombatEventActionCrazyMode", "CombatEventActionReduceEffectCount",
+                   "CombatEventActionCrazyMode", "CombatEventActionReduceEffectCount",
                    "CombatEventActionRelationshipAttack"):
             texts.append(name_text(o["m_Name"]))
     return texts, flags, who
