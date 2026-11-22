@@ -197,6 +197,9 @@ def value_text(v):
     return f"?{ct}"
 
 
+BOOL_GROUP_FLAGS = {}   # 用名字顯示的 And／Or 條件 → 裡面看的旗標（readers 用）
+
+
 def group_text(ref):
     o = deref(ref)
     if not o:
@@ -213,7 +216,9 @@ def group_text(ref):
         return " × ".join(vals)
     if gt in (5, 6):
         # And／Or（1.0.6001.0 起）算出來只有 1／0：用遊戲取的名字當一個條件；展開成且／或會和外層混在一起，網頁拆錯
-        return "條件·" + re.sub(r"^(條件|旗標)_", "", o["m_Name"])
+        label = "條件·" + re.sub(r"^(條件|旗標)_", "", o["m_Name"])
+        BOOL_GROUP_FLAGS[label] = [ref_name(v["_flag"]) for v in o["_value"] if v["_checkType"] == 3 and v.get("_flag")]
+        return label
     return " + ".join(vals)
 
 
@@ -1111,7 +1116,7 @@ for it in script_info[MEETING_MENU]["items"]:
         ids_seen.add(f"Meeting/{start}")
         months = meeting_months
         # 時間條件只在全部用「且」連接時才拿來篩月份
-        if "或" not in need:
+        if " 或 " not in need:
             for op, y, m, st in NOW_COND.findall(need):
                 v = (int(y), int(m), "上中下".index(st) + 1)
                 months = [t for t in months if satisfies(t, op, v)]
@@ -1998,6 +2003,12 @@ def legend_containing(text):
 
 # ---------- 旗標被哪些事件拿來判斷 ----------
 FLAG_IN_TEXT = re.compile(r"旗標 ([A-Za-z0-9_]+)")
+
+
+def flags_read(text):
+    return FLAG_IN_TEXT.findall(text) + [f for label, fs in BOOL_GROUP_FLAGS.items() if label in text for f in fs]
+
+
 readers = collections.defaultdict(set)
 for name, conds in script_cond_names.items():
     ev = find_owner(name)[0]
@@ -2008,11 +2019,11 @@ for name, conds in script_cond_names.items():
         for t in texts:
             if t.startswith("以上皆非"):
                 continue
-            for f in FLAG_IN_TEXT.findall(t):
+            for f in flags_read(t):
                 readers[f].add(ev)
 for e in events:
     for c in e["conds"]:
-        for f in FLAG_IN_TEXT.findall(c):
+        for f in flags_read(c):
             readers[f].add(e["id"])
 
 
